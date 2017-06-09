@@ -31,7 +31,6 @@ fid.in=[fid.res,run_name,'_in.nc'];
 Nm=2;				% Number of modes to include in the input file
 dt=500;			% Approximate time step for sponge layer
 H_min=16;			% Turn off forcing and mask for shallow water
-GRID_MOD=0;         % Modify the grid (only need to do this once)
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -77,38 +76,6 @@ H(H<H_min)=0;
 bad.lon=45<lon & lon<60;
 bad.lat=35<lat & lat<50;
 H(bad.lon,bad.lat)=0;
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Modify the grid
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if GRID_MOD
-    
-	% Smooth the coupling coefficients at the grid scale
-    T=ncread(ncfile,'T_x');
-    for n=1:Nm
-        for m=1:Nm
-            tmp=T(:,:,m,n);
-            tmp(tmp>100)=0;
-            tmp=[tmp(end,:); tmp; tmp(1,:)];
-            %tmp=AVE2D_v2(tmp,3);
-            T(:,:,m,n)=tmp(2:end-1,:);            
-        end
-    end
-    ncwrite(ncfile,'T_x',T);
-
-    T=ncread(ncfile,'T_y');
-    for n=1:Nm
-        for m=1:Nm
-            tmp=T(:,:,m,n);
-            tmp(tmp>100)=0;
-            tmp=[tmp(end,:); tmp; tmp(1,:)];
-            %tmp=AVE2D_v2(tmp,3);
-            T(:,:,m,n)=tmp(2:end-1,:);            
-        end
-    end
-    ncwrite(ncfile,'T_y',T);
-     	
-end
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
