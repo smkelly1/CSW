@@ -1,0 +1,26 @@
+#!/bin/bash -l
+#PBS -l walltime=2:00:00,nodes=8:ppn=8
+#PBS -q devel
+#PBS -j oe
+#PBS -o log
+# %PBS -m abe 
+# %PBS -M smkelly@umn.edu 
+#PBS -S /bin/bash
+
+#-------Load compilers----------------------
+module unload ompi/gnu
+module unload ompi/intel
+module load ompi/intel
+
+#-------Change to working directory---------
+cd $PBS_O_WORKDIR
+
+#-------Copy configuration files------------
+cp ../*_in.nc ./
+cp ../make_input.m ./make_input.m
+cp ../src_diag/csw.h ./csw.h
+
+#-------Start process-----------------------
+time mpirun -np 64 ../src_diag/cswexec
+
+# Run this job with "qsub CSW.pbs"

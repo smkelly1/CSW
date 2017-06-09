@@ -1,0 +1,20 @@
+#!/bin/bash -l
+#PBS -l walltime=24:00:00,nodes=1:ppn=8,mem=22gb 
+#PBS -q batch
+#PBS -j oe
+#PBS -o ./logs/job
+# %PBS -m abe 
+# %PBS -M smkelly@umn.edu 
+#PBS -S /bin/bash
+
+#-------Load modules------------------------
+module load matlab/R2016b
+
+#-------Change to working directory---------
+#cd ~/simulations/SWOT/global_grids
+cd $PBS_O_WORKDIR
+
+#-------Start processes---------------------
+matlab -nodisplay -r "maxNumCompThreads(8); $(echo make_grid_v2"("$PBS_ARRAYID-1,160,8,1")"); quit;"
+
+# Run this job with "qsub -t 1-20 make_grid.pbs"

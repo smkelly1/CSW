@@ -1,0 +1,326 @@
+%% Coupled Shallow Water model (CSW)
+clear
+
+% If on MSI add paths that are sometimes lost using qsub
+MSI=0; 
+if MSI
+	addpath(genpath('/home/kellys/smkelly/software/matlab_libraries/sam_ware'))
+	addpath(genpath('/home/kellys/smkelly/software/matlab_libraries/seawater'))
+	addpath(genpath('/home/kellys/smkelly/software/data_products/OTPS'))
+end
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Identify file names
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+disp('Setting paths and parameters');
+
+fid.res='25th_deg';
+run_name=''; % Special name for this run (e.g., "high_visc" etc.)
+
+% Grid file
+%folder.grid='../global_grids/';
+folder.grid='./';
+fid.grid=[fid.res,'_grid.nc']; 
+
+% Input file
+folder.in='./';
+fid.in=[fid.res,run_name,'_in.nc'];
+
+% Set input parameters 
+Nm=2;				% Number of modes to include in the input file
+dt=500;			% Approximate time step for sponge layer
+H_min=16;			% Turn off forcing and mask for shallow water
+GRID_MOD=0;         % Modify the grid (only need to do this once)
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%                    Technical code below here
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Load grid
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+disp('Loading grid');
+
+% First, load some data from the grid file
+ncfile=[folder.grid,fid.grid];
+
+Nx=ncread(ncfile,'Nx')-2;
+Ny=ncread(ncfile,'Ny')-2;
+
+dx=ncread(ncfile,'dx');
+dy=ncread(ncfile,'dy');
+
+H=ncread(ncfile,'H'); 
+f=ncread(ncfile,'f');
+lon=ncread(ncfile,'lon');
+lat=ncread(ncfile,'lat');    
+
+c=ncread(ncfile,'c'); 
+c=c(:,:,1:Nm);
+phi_bott=ncread(ncfile,'phi_bott');
+phi_bott=phi_bott(:,:,1:Nm);
+
+% Set depth to zero where c_1=0;
+H(c(:,:,1)==0)=0;
+
+% Set depth to zero if it's less than the minimum depth
+H(H<H_min)=0;
+
+% Mask out the Caspian Sea (seems to create a CFL instability)
+bad.lon=45<lon & lon<60;
+bad.lat=35<lat & lat<50;
+H(bad.lon,bad.lat)=0;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Modify the grid
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+if GRID_MOD
+    
+	% Smooth the coupling coefficients at the grid scale
+    T=ncread(ncfile,'T_x');
+    for n=1:Nm
+        for m=1:Nm
+            tmp=T(:,:,m,n);
+            tmp(tmp>100)=0;
+            tmp=[tmp(end,:); tmp; tmp(1,:)];
+            %tmp=AVE2D_v2(tmp,3);
+            T(:,:,m,n)=tmp(2:end-1,:);            
+        end
+    end
+    ncwrite(ncfile,'T_x',T);
+
+    T=ncread(ncfile,'T_y');
+    for n=1:Nm
+        for m=1:Nm
+            tmp=T(:,:,m,n);
+            tmp(tmp>100)=0;
+            tmp=[tmp(end,:); tmp; tmp(1,:)];
+            %tmp=AVE2D_v2(tmp,3);
+            T(:,:,m,n)=tmp(2:end-1,:);            
+        end
+    end
+    ncwrite(ncfile,'T_y',T);
+     	
+end
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Land/boundary masks (Note: we don't use border data for H, f, or c here)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+disp('Generating land mask');
+
+% Initiate with 1 (good/ocean) everywhere
+mask.u=ones([Nx+1 Ny]);
+mask.v=ones([Nx Ny+1]);
+mask.p=ones([Nx Ny]);
+
+% Set velocities on land at at boundaries to zero
+mask.u(1:end-1,:)=min(H(2:end-1,2:end-1)~=0,mask.u(1:end-1,:));
+mask.u(2:end,:)=min(H(2:end-1,2:end-1)~=0,mask.u(2:end,:));
+
+mask.v(:,1:end-1)=min(H(2:end-1,2:end-1)~=0,mask.v(:,1:end-1));
+mask.v(:,2:end)=min(H(2:end-1,2:end-1)~=0,mask.v(:,2:end));
+
+% Add in mode dimension
+mask.u=repmat(mask.u,[1 1 Nm]);
+mask.v=repmat(mask.v,[1 1 Nm]);
+mask.p=repmat(mask.p,[1 1 Nm]);
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Add Coriolis "wave resolution" mask
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+disp('Generating wave resolution mask');
+
+a=6371e3; % Radius of the earth
+dx_f=repmat(a*cos(lat(2:end-1)'*pi/180)*dx/360*2*pi,[Nx 1]); % grid spacing in m at each latitude
+
+f_crit=abs(f);
+%f_crit(f_crit < 2*pi/(24*3600))=2*pi/(24*3600);
+c_crit=repmat(f_crit(2:end-1,2:end-1).*dx_f/2,[1 1 Nm]);
+
+maskf=1-c(2:end-1,2:end-1,:)./(2*c_crit); % "High res" Adcroft 1999
+maskf(maskf<0)=0;
+maskf=1-maskf*dt/(1*3600); % Create a sponge with a 1 hour decay time scale
+
+% Use the Coriolis mask if it provides more damping
+mask.p=min(maskf,mask.p);
+
+mask.u(1:end-1,:,:)=min(maskf,mask.u(1:end-1,:,:));
+mask.u(2:end,:,:)=min(maskf,mask.u(2:end,:,:));
+
+mask.v(:,1:end-1,:)=min(maskf,mask.v(:,1:end-1,:));
+mask.v(:,2:end,:)=min(maskf,mask.v(:,2:end,:));    
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Surface-tide forcing
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+disp('Loading TPXO surface tides');
+
+ii=complex(0,1);
+warning off;
+
+% Convert dx and longitude to radians
+a=6371e3; % Radius of the earth
+lat_R=lat(2:end-1)/180*pi;
+dx_R=dx/180*pi;
+dy_R=dy/180*pi;
+
+% Compute Reduced slope
+dHdx=1./(a*repmat(cos(lat_R)',[Nx 1])).*(H(3:end,2:end-1)-H(1:end-2,2:end-1))/(2*dx_R)./H(2:end-1,2:end-1);
+dHdy=1/a*(H(2:end-1,3:end)-H(2:end-1,1:end-2))/(2*dy_R)./H(2:end-1,2:end-1);
+	
+% Obtain TPXO surface tide velocities
+Nc=1;
+[U V junk ITGF.omega]=TPXO(lon(2:end-1),lat(2:end-1),[1],datenum(2015,1,1));
+if isnan(U(1,1,1))
+	U(1,:,:)=(U(end,:,:)+U(2,:,:))/2;
+	V(1,:,:)=(V(end,:,:)+V(2,:,:))/2;
+end
+
+U=U./repmat(H(2:end-1,2:end-1),[1 1 Nc]);
+V=V./repmat(H(2:end-1,2:end-1),[1 1 Nc]);
+	
+% Remove bad slopes and surface tides
+U(isinf(U) | isnan(U))=0;
+V(isinf(V) | isnan(V))=0;
+dHdx(isnan(dHdx) | isinf(dHdx))=0;
+dHdy(isnan(dHdy) | isinf(dHdy))=0;
+
+% Limit surface tides to 1 m/s
+thresh=1; 
+fast=thresh<abs(U);
+U(fast)=U(fast).*thresh./abs(U(fast));
+fast=thresh<abs(V);
+V(fast)=V(fast).*thresh./abs(V(fast));
+
+% Ignore surface tides in less than 50 m depth
+U(repmat(H(2:end-1,2:end-1),[1 1 Nc])<H_min)=0+ii*0;
+V(repmat(H(2:end-1,2:end-1),[1 1 Nc])<H_min)=0+ii*0;
+	
+% Compute ITGF forcing
+ITGF.p=U.*repmat(dHdx,[1 1 Nc])+V.*repmat(dHdy,[1 1 Nc]); 
+
+% Multiply by phi_bottom 
+ITGF.p=repmat(permute(ITGF.p,[1 2 4 3]),[1 1 Nm 1]).*repmat(phi_bott(2:end-1,2:end-1,:),[1 1 1 Nc]);
+
+% Smooth at grid scale and ignore forcing in less than 50 m depth
+for j=1:Nc
+    for i=1:Nm
+		ITGF.p(:,:,i,j)=AVE2D(ITGF.p(:,:,i,j),3);
+    end
+end
+
+% Turn off tidal forcing in locations with insufficient wave resolution 
+ITGF.p(repmat(mask.p,[1 1 1 Nc])~=1)=0+ii*0;	
+
+% One last check for bad forcing
+ITGF.p(isnan(ITGF.p) | isinf(ITGF.p))=0+ii*0;  
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Write NetCDF file
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+disp('Writing NetCDF input file');
+
+%% start netcdf file
+currentFolder=pwd;
+cd(folder.in);
+
+mode = netcdf.getConstant('CLOBBER');
+mode = bitor(mode,netcdf.getConstant('NETCDF4'));
+ncid=netcdf.create(fid.in,mode);
+
+% define dimensions
+netcdf.defDim(ncid,'x',Nx);
+netcdf.defDim(ncid,'xu',Nx+1);
+netcdf.defDim(ncid,'xH',Nx+2);
+netcdf.defDim(ncid,'y',Ny);
+netcdf.defDim(ncid,'yv',Ny+1);
+netcdf.defDim(ncid,'yH',Ny+2);
+netcdf.defDim(ncid,'mode',Nm);
+netcdf.defDim(ncid,'con',Nc);
+netcdf.endDef(ncid)
+
+% Close file and return to data directory
+netcdf.close(ncid);
+
+cd(currentFolder);
+name=[folder.in,fid.in];
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Create variables and write data
+
+% Dimmensions  
+nccreate(name,'Nx');
+ncwrite(name,'Nx',Nx);
+
+nccreate(name,'Ny');
+ncwrite(name,'Ny',Ny);
+
+nccreate(name,'Nm');
+ncwrite(name,'Nm',Nm);
+
+
+% Grid spacing
+nccreate(name,'dx');
+ncwrite(name,'dx',dx);
+
+nccreate(name,'dy');
+ncwrite(name,'dy',dy);
+
+
+% Masks
+nccreate(name,'mask_u','Dimensions',{'xu',Nx+1,'y',Ny,'mode',Nm});
+ncwrite(name,'mask_u',mask.u);
+
+nccreate(name,'mask_v','Dimensions',{'x',Nx,'yv',Ny+1,'mode',Nm});
+ncwrite(name,'mask_v',mask.v);
+
+nccreate(name,'mask_p','Dimensions',{'x',Nx,'y',Ny,'mode',Nm});
+ncwrite(name,'mask_p',mask.p);
+
+
+% Lat/lon for spherical grids
+nccreate(name,'lon','Dimensions',{'xH',Nx+2});
+ncwrite(name,'lon',lon);
+
+nccreate(name,'lat','Dimensions',{'yH',Ny+2});      
+ncwrite(name,'lat',lat);  
+
+
+% Internal-tide Forcing
+nccreate(name,'ITGF_omega','Dimensions',{'con',Nc});
+ncwrite(name,'ITGF_omega',ITGF.omega);
+
+nccreate(name,'ITGF_pr','Dimensions',{'x',Nx,'y',Ny,'mode',Nm,'con',Nc});
+ncwrite(name,'ITGF_pr',real(ITGF.p));
+
+nccreate(name,'ITGF_pi','Dimensions',{'x',Nx,'y',Ny,'mode',Nm,'con',Nc});
+ncwrite(name,'ITGF_pi',imag(ITGF.p));
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Run the model
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Edit csw.h for grid size and input/output files
+% Run these terminal commands:
+% $ make clean
+% $ make
+% $ mpirun -np 6 cswexec
+%
+
+
+
