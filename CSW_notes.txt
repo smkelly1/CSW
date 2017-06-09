@@ -1,0 +1,21 @@
+README file for SWOT global CSW simulations:
+
+(i) The grids are built using MATLAB in ...experiments/proc/CSW/global_grids
+
+(ii) The input files are built using MATLAB in directories like .../experiments/proc/CSW/17-5_0.1deg, but the actual files are written to /simulations/CSW/SWOT/17-5_0.1deg. NOTE: This is because "/experiments" is backed-up but "/simulations" is not. I.e., the configuration files will be preserved even if the massive data files are lost.
+
+(iii) The utilized CSW source code (in c) is located in /experiments/proc/CSW/17-5_0.1deg/src, but the output files are, once again, written to "/simulations". A base value of the source code is also stored in "/software"
+
+(iv) The steps to running CSW are:
+
+(1) Generate a grid using MATLAB 
+
+(2) Generate an input file using MATLAB
+
+(3) Compile CSW with the correct file names and dimensions
+
+(4) Run CSW from the command line 
+
+
+
+

@@ -1,0 +1,111 @@
+#include <netcdf.h>
+#include <csw.h>
+
+
+void write_output(int sW, double t, int rank)
+{
+	int i, j, n; 
+	int ncid, status, varid;
+	char name[100];
+	double day;
+
+	size_t start[]={sW, 0, 0, 0};
+	size_t count[]={1, NM, NY, NX};
+	
+	// Get file name
+  	sprintf(name,FILE_OUT ".%03d.nc",rank);    
+
+	// Open the file
+	if ((status = nc_open(name, NC_WRITE, &ncid)))
+		ERR(status);
+
+	#ifdef WRITE_VELOCITY
+		
+		// Write u velocity
+		for(i=0; i<NX; i++){
+			for(j=0; j<NY; j++){
+				for(n=0; n<NM; n++){
+					#ifdef WRITE_DOUBLE
+						tmp[n][j][i]=(U[n][j+1][i+1]+U[n][j+1][i+2])/(2*H[j+1][i+1]);
+					#else
+						tmp[n][j][i]=(float)((U[n][j+1][i+1]+U[n][j+1][i+2])/(2*H[j+1][i+1]));
+					#endif
+				}
+			}
+		}
+		
+		if ((status = nc_inq_varid(ncid, "u", &varid)))
+			ERR(status);
+	
+		#ifdef WRITE_DOUBLE
+			if ((status = nc_put_vara_double(ncid, varid, start, count, &tmp[0][0][0])))
+				ERR(status);
+		#else
+			if ((status = nc_put_vara_float(ncid, varid, start, count, &tmp[0][0][0])))
+				ERR(status);
+		#endif
+			
+		// Write v velocity
+		for(i=0; i<NX; i++){
+			for(j=0; j<NY; j++){
+				for(n=0; n<NM; n++){
+					#ifdef WRITE_DOUBLE
+						tmp[n][j][i]=(V[n][j+1][i+1]+V[n][j+2][i+1])/(2*H[j+1][i+1]);
+					#else
+						tmp[n][j][i]=(float)((V[n][j+1][i+1]+V[n][j+2][i+1])/(2*H[j+1][i+1]));
+					#endif
+				}
+			}
+		}
+	
+		if ((status = nc_inq_varid(ncid, "v", &varid)))
+			ERR(status);
+	
+		#ifdef WRITE_DOUBLE
+			if ((status = nc_put_vara_double(ncid, varid, start, count, &tmp[0][0][0])))
+				ERR(status);
+		#else
+			if ((status = nc_put_vara_float(ncid, varid, start, count, &tmp[0][0][0])))
+				ERR(status);
+		#endif
+	
+	#endif // WRITE_VELOCITY
+	
+	// Write pressure
+	for(i=0; i<NX; i++){
+		for(j=0; j<NY; j++){
+			for(n=0; n<NM; n++){
+				#ifdef WRITE_DOUBLE
+					tmp[n][j][i]=RHO*p1[n][j+1][i+1];
+				#else
+					tmp[n][j][i]=(float)(RHO*p1[n][j+1][i+1]);
+				#endif
+			}
+		}
+	}
+	
+	if ((status = nc_inq_varid(ncid, "p", &varid)))
+		ERR(status);
+
+	#ifdef WRITE_DOUBLE
+		if ((status = nc_put_vara_double(ncid, varid, start, count, &tmp[0][0][0])))
+			ERR(status);
+	#else
+		if ((status = nc_put_vara_float(ncid, varid, start, count, &tmp[0][0][0])))
+			ERR(status);
+	#endif
+	
+    // Write time
+    day=t/(24*3600);
+    
+    if ((status = nc_inq_varid(ncid, "yday", &varid)))
+		ERR(status);
+	
+	if ((status = nc_put_vara_double(ncid, varid, &start[0], &count[0], &day)))
+		ERR(status);
+	
+    
+	// Close the file
+	if ((status = nc_close(ncid)))
+		ERR(status);
+}
