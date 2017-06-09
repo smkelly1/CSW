@@ -219,3 +219,26 @@ ncwrite(name,'T_y',tmp,[1 Ny 1 1]);
 tmp=ncread(name,'T_y',[1 2 1 1],[Nx 1 Nm Nm]);
 ncwrite(name,'T_y',tmp,[1 1 1 1]);
 
+
+% Lastly set missing values to 0 and/or smooth Tx and Ty at grid scale
+if 1
+
+    for n=1:Nm
+        for m=1:Nm
+			tmp=ncread(name,'T_x',[1 1 m n],[Nx Ny 1 1]);  
+            tmp(tmp>100)=0;
+            %tmp=[tmp(end,:); tmp; tmp(1,:)];
+            %tmp=AVE2D_v2(tmp,3);
+            %tmp=tmp(2:end-1,:); 
+			ncwrite(name,'T_x',tmp,[1 1 m n]);
+			
+			tmp=ncread(name,'T_y',[1 1 m n],[Nx Ny 1 1]);  
+            tmp(tmp>100)=0;
+            %tmp=[tmp(end,:); tmp; tmp(1,:)];
+            %tmp=AVE2D_v2(tmp,3);
+            %tmp=tmp(2:end-1,:); 
+			ncwrite(name,'T_y',tmp,[1 1 m n]);
+        end
+    end
+     	
+end
