@@ -4,33 +4,34 @@
 #include <complex.h>
 
 // Input/output files
-#define FILE_GRID  "../25th_deg_grid.nc"
-#define FILE_IN    "25th_deg_in.nc"
-#define FILE_OUT   "25th_deg_out.nc"
+#define FILE_GRID  "../../17-6_global_grids/10th_deg_grid.nc"
+#define FILE_IN    "10th_deg_in.nc"
+#define FILE_OUT   "10th_deg_out.nc"
 
-// Number of processors
-#define NPX 4 
-#define NPY 1
+// Grid spacing
+#define DX ((1.0/10)*M_PI/180) // Grid spacing in m or radians
 
 // Grid size 
-#define DX ((1.0/25)*M_PI/180) // Grid spacing in m or radians
-#define NX (9000/NPX)          // This must be an integer
-#define NY (3650/NPY)          // This must be an integer 
-							   // Note: reducing the total y-grid size will eliminate arctic cells
-#define NM 2			       // Number of modes
-#define NC 1                   // Number of tidal frequencies
+#define NPX 4  				// Number of processors in X
+#define NPY 1				// Number of processors in X
+
+#define NX (3600/NPX)       // Grid size, this must be an integer
+#define NY (1460/NPY)       // This must be an integer 
+							// Note: reducing the total y-grid size will eliminate arctic cells
+#define NM 2			    // Number of modes
+#define NC 1                // Number of tidal frequencies
 
 // Time steps
-#define DT   298.08           // Forward model time step [sec]
-#define DT_W (12.42*3600/1)  // Pressure write time step
-#define DT_D (12.42*3600/1)    // Diagnostics write time step
+#define DT   (12.42*3600/100)    // Forward model time step [sec]
+#define DT_W (12.42*3600/2)      // Pressure write time step
+#define DT_D (12.42*3600/1)      // Diagnostics write time step
 #define NT   (100*12.42*3600/DT) // Simulation duration (time steps)
 
 // Dissipation (commenting these parameters removes the relevant code)
-//#define R	(1.0/(10*24*3600))    // Linear "Rayleigh" damping
-//#define CD	0.0025 	         // Quadratic bottom drag (CD=0.0025 is standard)
-//#define AX	1.0                // Horizontal Laplacian viscosity Bryan (1975) uses Ax=u*DX/2 
-						 	   // Quick reference for U=1 cm/s: 1/10 deg = 50, 1/25 deg = 20, 1/50 deg = 10, 1/100 deg = 5
+#define R	(1.0/(100*12.42*3600)) // Linear "Rayleigh" damping
+//#define CD	0.0025 	           // Quadratic bottom drag (CD=0.0025 is standard)
+#define AX	10.0                   // Horizontal Laplacian viscosity Bryan (1975) uses Ax=u*DX/2 
+						 	       // Quick reference for U=1 cm/s: 1/10 deg = 50, 1/25 deg = 20, 1/50 deg = 10, 1/100 deg = 5
 
 // Flags (These could be written to the input file, but it's quicker to compile than run MATLAB)
 #define CORIOLIS               // Include the Coriolis force
@@ -38,7 +39,7 @@
 #define SPHERE                 // Use spherical coordinates (Cartesian is default)
 #define PERIODICBC             // Use periodic boundary conditions in longitude
 #define IT_FORCING             // Use an Internal-Tide Generating Function
-//#define DIAGNOSTICS            // Compute and write energy diagnostics
+#define DIAGNOSTICS            // Compute and write energy diagnostics
 
 // Constants 
 #define A   6371000.0          // radius of Earth

@@ -1,39 +1,28 @@
 %% Coupled Shallow Water model (CSW)
 clear
 
-% If on MSI add paths that are sometimes lost using qsub
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Set input parameters 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+disp('Setting paths and parameters');
+
 MSI=0; 
+fid.grid='../../../17-6_global_grids/10th_deg_grid.nc';
+fid.in='../../10th_deg_in.nc';
+
+Nm=2;				% Number of modes to include in the input file
+dt=12.42*3600/100;	% Approximate time step for sponge layer
+H_min=16;			% Turn off forcing and mask for shallow water
+
+
+% Add paths on MSI that are sometimes lost using qsub
 if MSI
 	addpath(genpath('/home/kellys/smkelly/software/matlab_libraries/sam_ware'))
 	addpath(genpath('/home/kellys/smkelly/software/matlab_libraries/seawater'))
 	addpath(genpath('/home/kellys/smkelly/software/data_products/OTPS'))
 end
 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Identify file names
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-disp('Setting paths and parameters');
-
-fid.res='100th_deg';
-run_name=''; % Special name for this run (e.g., "high_visc" etc.)
-
-% Grid file
-folder.grid='../../../17-6_global_grids/';
-%folder.grid='./';
-fid.grid=[fid.res,'_grid.nc']; 
-
-% Input file
-folder.in='../../';
-fid.in=[fid.res,run_name,'_in.nc'];
-
-% Set input parameters 
-Nm=2;				% Number of modes to include in the input file
-dt=12.42*3600/500;	% Approximate time step for sponge layer
-H_min=16;			% Turn off forcing and mask for shallow water
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 %                    Technical code below here
@@ -43,27 +32,24 @@ H_min=16;			% Turn off forcing and mask for shallow water
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Load grid
+% Load grid
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 disp('Loading grid');
 
-% First, load some data from the grid file
-ncfile=[folder.grid,fid.grid];
+Nx=ncread(fid.grid,'Nx')-2;
+Ny=ncread(fid.grid,'Ny')-2;
 
-Nx=ncread(ncfile,'Nx')-2;
-Ny=ncread(ncfile,'Ny')-2;
+dx=ncread(fid.grid,'dx');
+dy=ncread(fid.grid,'dy');
 
-dx=ncread(ncfile,'dx');
-dy=ncread(ncfile,'dy');
+H=ncread(fid.grid,'H'); 
+f=ncread(fid.grid,'f');
+lon=ncread(fid.grid,'lon');
+lat=ncread(fid.grid,'lat');    
 
-H=ncread(ncfile,'H'); 
-f=ncread(ncfile,'f');
-lon=ncread(ncfile,'lon');
-lat=ncread(ncfile,'lat');    
-
-c=ncread(ncfile,'c'); 
+c=ncread(fid.grid,'c'); 
 c=c(:,:,1:Nm);
-phi_bott=ncread(ncfile,'phi_bott');
+phi_bott=ncread(fid.grid,'phi_bott');
 phi_bott=phi_bott(:,:,1:Nm);
 
 % Set depth to zero where c_1=0;
@@ -112,7 +98,6 @@ a=6371e3; % Radius of the earth
 dx_f=repmat(a*cos(lat(2:end-1)'*pi/180)*dx/360*2*pi,[Nx 1]); % grid spacing in m at each latitude
 
 f_crit=abs(f);
-%f_crit(f_crit < 2*pi/(24*3600))=2*pi/(24*3600);
 c_crit=repmat(f_crit(2:end-1,2:end-1).*dx_f/2,[1 1 Nm]);
 
 maskf=1-c(2:end-1,2:end-1,:)./(2*c_crit); % "High res" Adcroft 1999
@@ -156,6 +141,12 @@ if isnan(U(1,1,1))
 	V(1,:,:)=(V(end,:,:)+V(2,:,:))/2;
 end
 
+% Round the tidal frequency
+period=(2*pi/ITGF.omega)/3600; % in hours
+period=round(period*100)/100; % Round to second decimal place (i.e., 12.42 for the M2 tide)
+ITGF.omega=(2*pi)/(period*3600);
+
+% Compute velocities
 U=U./repmat(H(2:end-1,2:end-1),[1 1 Nc]);
 V=V./repmat(H(2:end-1,2:end-1),[1 1 Nc]);
 	
@@ -197,14 +188,11 @@ ITGF.p(isnan(ITGF.p) | isinf(ITGF.p))=0+ii*0;
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Write NetCDF file
+%% Write NetCDF file
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 disp('Writing NetCDF input file');
 
-%% start netcdf file
-currentFolder=pwd;
-cd(folder.in);
-
+% start netcdf file
 mode = netcdf.getConstant('CLOBBER');
 mode = bitor(mode,netcdf.getConstant('NETCDF4'));
 ncid=netcdf.create(fid.in,mode);
@@ -223,71 +211,54 @@ netcdf.endDef(ncid)
 % Close file and return to data directory
 netcdf.close(ncid);
 
-cd(currentFolder);
-name=[folder.in,fid.in];
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Create variables and write data
+% Create variables and write data
 
 % Dimmensions  
-nccreate(name,'Nx');
-ncwrite(name,'Nx',Nx);
+nccreate(fid.in,'Nx');
+ncwrite(fid.in,'Nx',Nx);
 
-nccreate(name,'Ny');
-ncwrite(name,'Ny',Ny);
+nccreate(fid.in,'Ny');
+ncwrite(fid.in,'Ny',Ny);
 
-nccreate(name,'Nm');
-ncwrite(name,'Nm',Nm);
+nccreate(fid.in,'Nm');
+ncwrite(fid.in,'Nm',Nm);
 
 
 % Grid spacing
-nccreate(name,'dx');
-ncwrite(name,'dx',dx);
+nccreate(fid.in,'dx');
+ncwrite(fid.in,'dx',dx);
 
-nccreate(name,'dy');
-ncwrite(name,'dy',dy);
+nccreate(fid.in,'dy');
+ncwrite(fid.in,'dy',dy);
 
 
 % Masks
-nccreate(name,'mask_u','Dimensions',{'xu',Nx+1,'y',Ny,'mode',Nm});
-ncwrite(name,'mask_u',mask.u);
+nccreate(fid.in,'mask_u','Dimensions',{'xu',Nx+1,'y',Ny,'mode',Nm});
+ncwrite(fid.in,'mask_u',mask.u);
 
-nccreate(name,'mask_v','Dimensions',{'x',Nx,'yv',Ny+1,'mode',Nm});
-ncwrite(name,'mask_v',mask.v);
+nccreate(fid.in,'mask_v','Dimensions',{'x',Nx,'yv',Ny+1,'mode',Nm});
+ncwrite(fid.in,'mask_v',mask.v);
 
-nccreate(name,'mask_p','Dimensions',{'x',Nx,'y',Ny,'mode',Nm});
-ncwrite(name,'mask_p',mask.p);
+nccreate(fid.in,'mask_p','Dimensions',{'x',Nx,'y',Ny,'mode',Nm});
+ncwrite(fid.in,'mask_p',mask.p);
 
 
 % Lat/lon for spherical grids
-nccreate(name,'lon','Dimensions',{'xH',Nx+2});
-ncwrite(name,'lon',lon);
+nccreate(fid.in,'lon','Dimensions',{'xH',Nx+2});
+ncwrite(fid.in,'lon',lon);
 
-nccreate(name,'lat','Dimensions',{'yH',Ny+2});      
-ncwrite(name,'lat',lat);  
+nccreate(fid.in,'lat','Dimensions',{'yH',Ny+2});      
+ncwrite(fid.in,'lat',lat);  
 
 
 % Internal-tide Forcing
-nccreate(name,'ITGF_omega','Dimensions',{'con',Nc});
-ncwrite(name,'ITGF_omega',ITGF.omega);
+nccreate(fid.in,'ITGF_omega','Dimensions',{'con',Nc});
+ncwrite(fid.in,'ITGF_omega',ITGF.omega);
 
-nccreate(name,'ITGF_pr','Dimensions',{'x',Nx,'y',Ny,'mode',Nm,'con',Nc});
-ncwrite(name,'ITGF_pr',real(ITGF.p));
+nccreate(fid.in,'ITGF_pr','Dimensions',{'x',Nx,'y',Ny,'mode',Nm,'con',Nc});
+ncwrite(fid.in,'ITGF_pr',real(ITGF.p));
 
-nccreate(name,'ITGF_pi','Dimensions',{'x',Nx,'y',Ny,'mode',Nm,'con',Nc});
-ncwrite(name,'ITGF_pi',imag(ITGF.p));
-
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Run the model
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Edit csw.h for grid size and input/output files
-% Run these terminal commands:
-% $ make clean
-% $ make
-% $ mpirun -np 6 cswexec
-%
-
-
+nccreate(fid.in,'ITGF_pi','Dimensions',{'x',Nx,'y',Ny,'mode',Nm,'con',Nc});
+ncwrite(fid.in,'ITGF_pi',imag(ITGF.p));
 
