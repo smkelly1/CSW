@@ -15,21 +15,21 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 disp('Setting paths and parameters');
 
-fid.res='25th_deg';
+fid.res='100th_deg';
 run_name=''; % Special name for this run (e.g., "high_visc" etc.)
 
 % Grid file
-%folder.grid='../global_grids/';
-folder.grid='./';
+folder.grid='../../../17-6_global_grids/';
+%folder.grid='./';
 fid.grid=[fid.res,'_grid.nc']; 
 
 % Input file
-folder.in='./';
+folder.in='../../';
 fid.in=[fid.res,run_name,'_in.nc'];
 
 % Set input parameters 
 Nm=2;				% Number of modes to include in the input file
-dt=500;			% Approximate time step for sponge layer
+dt=12.42*3600/500;	% Approximate time step for sponge layer
 H_min=16;			% Turn off forcing and mask for shallow water
 
 

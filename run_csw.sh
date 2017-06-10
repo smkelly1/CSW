@@ -2,12 +2,12 @@
 
 #-------Copy configuration files------------
 cp ../*_in.nc ./
-cp ../make_input.m ./make_input.m
-cp ../src_v1/csw.h ./csw.h
+cp ../csw1.0/matlab/make_input.m ./make_input.m
+cp ../csw1.0/src/csw.h ./csw.h
 
 #-------Start process-----------------------
 #time -o log mpirun -np 6 ../src_diag/cswexec > log &
-{ time mpirun -np 4 ../src_v1/cswexec; } >> log 2>&1 &
+{ time mpirun -np 4 ../csw1.0/src/cswexec; } >> log 2>&1 &
 # Run this job with "sh ../run_CSW.sh"
 
 

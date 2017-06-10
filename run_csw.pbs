@@ -17,10 +17,10 @@ cd $PBS_O_WORKDIR
 
 #-------Copy configuration files------------
 cp ../*_in.nc ./
-cp ../make_input.m ./make_input.m
-cp ../src_diag/csw.h ./csw.h
+cp ../csw1.0/matlab/make_input.m ./make_input.m
+cp ../csw1.0/src/csw.h ./csw.h
 
 #-------Start process-----------------------
-time mpirun -np 64 ../src_diag/cswexec
+time mpirun -np 64 ../csw1.0/src/cswexec
 
 # Run this job with "qsub CSW.pbs"
