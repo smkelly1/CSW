@@ -6,7 +6,7 @@
 // Input/output files
 #define FILE_GRID  "../../17-6_global_grids/10th_deg_grid.nc"
 #define FILE_IN    "10th_deg_in.nc"
-#define FILE_OUT   "10th_deg_out.nc"
+#define FILE_OUT   "10th_deg_out"
 
 // Grid spacing
 #define DX ((1.0/10)*M_PI/180) // Grid spacing in m or radians
@@ -18,7 +18,7 @@
 #define NX (3600/NPX)       // Grid size, this must be an integer
 #define NY (1460/NPY)       // This must be an integer 
 							// Note: reducing the total y-grid size will eliminate arctic cells
-#define NM 2			    // Number of modes
+#define NM 4			    // Number of modes
 #define NC 1                // Number of tidal frequencies
 
 // Time steps
@@ -28,9 +28,9 @@
 #define NT   (100*12.42*3600/DT) // Simulation duration (time steps)
 
 // Dissipation (commenting these parameters removes the relevant code)
-#define R	(1.0/(100*12.42*3600)) // Linear "Rayleigh" damping
+#define R	(1.0/(10*12.42*3600)) // Linear "Rayleigh" damping
 //#define CD	0.0025 	           // Quadratic bottom drag (CD=0.0025 is standard)
-#define AX	10.0                   // Horizontal Laplacian viscosity Bryan (1975) uses Ax=u*DX/2 
+//#define AX	10.0                   // Horizontal Laplacian viscosity Bryan (1975) uses Ax=u*DX/2 
 						 	       // Quick reference for U=1 cm/s: 1/10 deg = 50, 1/25 deg = 20, 1/50 deg = 10, 1/100 deg = 5
 
 // Flags (These could be written to the input file, but it's quicker to compile than run MATLAB)
@@ -46,7 +46,6 @@
 #define RHO 1000.0		       // Reference density
 
 // NetCDF stuff
-//#define WRITE_DOUBLE
 //#define WRITE_VELOCITY
 #define ERRCODE 2
 #define ERR(e) {printf("Error: %s\n", nc_strerror(e)); exit(ERRCODE);}
@@ -128,20 +127,7 @@ double Fp_1[NM][NY][NX];
 double Fp_2[NM][NY][NX];
 
 // Energy diagnostics and temporary storage for writing output
-#ifdef WRITE_DOUBLE
-	double KE[NM][NY][NX];
-	double PE[NM][NY][NX];
-	double up[NM][NY][NX];
-	double vp[NM][NY][NX];
-	
-	double C0[NM][NY][NX];
-	double Cn[NM][NY][NX];
-	double D[NM][NY][NX];
-	double divF[NM][NY][NX];
-	double err[NM][NY][NX];
-	
-	double tmp[NM][NY][NX];
-#else
+#ifdef DIAGNOSTICS
 	float KE[NM][NY][NX];
 	float PE[NM][NY][NX];
 	float up[NM][NY][NX];
@@ -151,7 +137,7 @@ double Fp_2[NM][NY][NX];
 	float Cn[NM][NY][NX];
 	float D[NM][NY][NX];
 	float divF[NM][NY][NX];
-	float err[NM][NY][NX];
+	float residual[NM][NY][NX];
 	
 	float tmp[NM][NY][NX];
 #endif

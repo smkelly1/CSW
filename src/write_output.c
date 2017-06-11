@@ -24,12 +24,8 @@ void write_output(int sW, double t, int rank)
 		// Write u velocity
 		for(i=0; i<NX; i++){
 			for(j=0; j<NY; j++){
-				for(n=0; n<NM; n++){
-					#ifdef WRITE_DOUBLE
-						tmp[n][j][i]=(U[n][j+1][i+1]+U[n][j+1][i+2])/(2*H[j+1][i+1]);
-					#else
-						tmp[n][j][i]=(float)((U[n][j+1][i+1]+U[n][j+1][i+2])/(2*H[j+1][i+1]));
-					#endif
+				for(n=0; n<NM; n++){					
+					tmp[n][j][i]=(float)((U[n][j+1][i+1]+U[n][j+1][i+2])/(2*H[j+1][i+1]));
 				}
 			}
 		}
@@ -48,12 +44,8 @@ void write_output(int sW, double t, int rank)
 		// Write v velocity
 		for(i=0; i<NX; i++){
 			for(j=0; j<NY; j++){
-				for(n=0; n<NM; n++){
-					#ifdef WRITE_DOUBLE
-						tmp[n][j][i]=(V[n][j+1][i+1]+V[n][j+2][i+1])/(2*H[j+1][i+1]);
-					#else
-						tmp[n][j][i]=(float)((V[n][j+1][i+1]+V[n][j+2][i+1])/(2*H[j+1][i+1]));
-					#endif
+				for(n=0; n<NM; n++){					
+					tmp[n][j][i]=(float)((V[n][j+1][i+1]+V[n][j+2][i+1])/(2*H[j+1][i+1]));
 				}
 			}
 		}

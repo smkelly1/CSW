@@ -26,7 +26,7 @@ int main(int argc, char *argv[])
 {
 	
 	int rank, nrank, s;
-	double t; // time
+	double t=0; // time
 	int sW=0; // Write index
 	
 	#ifdef DIAGNOSTICS
@@ -55,51 +55,45 @@ int main(int argc, char *argv[])
 	//////////////////////////////////////////////////////////////
 	// Begin forward integration
 	for(s=1; s<(NT+1); s++) {
-
-		// Update time
-		t=s*DT;
 		
-		// Print progress
-		if (rank == 0) {
-			printf ("Step %d \n",s);
-		}
-	
-		//////////////////////////////////////////////////////////////////
-		//// Momentum calls
+		////////////////////////////////////////////////////////////////
+		// Momentum calls
 		calc_forces(); 
 
-		//// Update momentum 
+		// Update momentum 
 		timestep_uv();
 
-		//// Trade u & v at boundaries (only needed to compute diffusion and Coriolis)
+		// Trade u & v at boundaries (only needed to compute diffusion and Coriolis)
 		pass_uv(rank);
 
 		
-		//////////////////////////////////////////////////////////////////
-		//// Divergence calls
+		////////////////////////////////////////////////////////////////
+		// Divergence calls
  		calc_divergence();
 
-		//// Add internal-tide generating force
+		// Add internal-tide generating force
 		#ifdef IT_FORCING
 			calc_ITGF(t);
 		#endif
 				
-		//// Update pressure 
+		// Update pressure 
 		timestep_p();
 
-		//// Trade p1 at boundaries (needed to compute pressure gradients and topographic coupling)
+		// Trade p1 at boundaries (needed to compute pressure gradients and topographic coupling)
 		pass_p(rank);
 
-		
+
 		////////////////////////////////////////////////////////////////
-		// Write output
+		// Update time and Write output
+		
+		t=s*DT; // U, V, and p1 now correspond to this time
+		
+		// Write ouput
 		if (t >= (sW*DT_W)) {			
 			write_output(sW,t,rank);
 			++sW;
 		}
-		
-		
-		////////////////////////////////////////////////////////////////
+				
 		// Write diagnostics
 		#ifdef DIAGNOSTICS
 			if (t >= (sD*DT_D)) {			
@@ -109,6 +103,11 @@ int main(int argc, char *argv[])
 			}
 			++Na;// Increase the averaging counter
 		#endif
+				
+		// Print progress
+		if (rank == 0) {
+			printf ("Step %d \n",s);
+		}
 		
 	} // End time-integration loop
 

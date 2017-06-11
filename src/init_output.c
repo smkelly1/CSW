@@ -31,99 +31,53 @@ void init_output(int rank)
     if ((status = nc_def_var(ncid, "yday", NC_DOUBLE, 1, &dimid[0], &varid)))
 		ERR(status);
     
-    #ifdef WRITE_DOUBLE
-    
-		#ifdef WRITE_VELOCITY
-			if ((status = nc_def_var(ncid, "u", NC_DOUBLE, 4, dimid, &varid)))
-				ERR(status);	
-	    
-			if ((status = nc_def_var(ncid, "v", NC_DOUBLE, 4, dimid, &varid)))
-				ERR(status);
-		#endif
-		
-		if ((status = nc_def_var(ncid, "p", NC_DOUBLE, 4, dimid, &varid)))
-			ERR(status);		
-	
-	#else
-
-		#ifdef WRITE_VELOCITY
-			if ((status = nc_def_var(ncid, "u", NC_FLOAT, 4, dimid, &varid)))
-				ERR(status);	
-	    
-			if ((status = nc_def_var(ncid, "v", NC_FLOAT, 4, dimid, &varid)))
-				ERR(status);
-		#endif
-		
-		if ((status = nc_def_var(ncid, "p", NC_FLOAT, 4, dimid, &varid)))
+    // Write pressure
+    if ((status = nc_def_var(ncid, "p", NC_FLOAT, 4, dimid, &varid)))
 			ERR(status);	
+			
+	// Write velocity		
+	#ifdef WRITE_VELOCITY
+	
+		if ((status = nc_def_var(ncid, "u", NC_FLOAT, 4, dimid, &varid)))
+		ERR(status);	
+	
+		if ((status = nc_def_var(ncid, "v", NC_FLOAT, 4, dimid, &varid)))
+		ERR(status);
 		
-	#endif	
-		
+	#endif
+			
 		
     // Define the diagnostics 
-	#ifdef DIAGNOSTICS
-	
-	    #ifdef WRITE_DOUBLE
+	#ifdef DIAGNOSTICS	
+	    	
+		if ((status = nc_def_var(ncid, "KE", NC_FLOAT, 4, dimid, &varid)))
+			ERR(status);
+    
+		if ((status = nc_def_var(ncid, "PE", NC_FLOAT, 4, dimid, &varid)))
+			ERR(status);
+	    
+	    if ((status = nc_def_var(ncid, "up", NC_FLOAT, 4, dimid, &varid)))
+			ERR(status);
+				
+	    if ((status = nc_def_var(ncid, "vp", NC_FLOAT, 4, dimid, &varid)))
+			ERR(status);
+    
+    	    
+	    if ((status = nc_def_var(ncid, "C0", NC_FLOAT, 4, dimid, &varid)))
+			ERR(status);
+	    
+		if ((status = nc_def_var(ncid, "Cn", NC_FLOAT, 4, dimid, &varid)))
+			ERR(status);	
+	    	    	    
+	    if ((status = nc_def_var(ncid, "D", NC_FLOAT, 4, dimid, &varid)))
+			ERR(status);
 
-			if ((status = nc_def_var(ncid, "KE", NC_DOUBLE, 4, dimid, &varid)))
-				ERR(status);
+	    if ((status = nc_def_var(ncid, "divF", NC_FLOAT, 4, dimid, &varid)))
+			ERR(status);
 	    
-			if ((status = nc_def_var(ncid, "PE", NC_DOUBLE, 4, dimid, &varid)))
-				ERR(status);
-		    
-		    if ((status = nc_def_var(ncid, "up", NC_DOUBLE, 4, dimid, &varid)))
-				ERR(status);
-		    
-		    if ((status = nc_def_var(ncid, "vp", NC_DOUBLE, 4, dimid, &varid)))
-				ERR(status);
-	    
-	    		    
-		    if ((status = nc_def_var(ncid, "C0", NC_DOUBLE, 4, dimid, &varid)))
-				ERR(status);
-		    
-			if ((status = nc_def_var(ncid, "Cn", NC_DOUBLE, 4, dimid, &varid)))
-				ERR(status);	
-		    	    	    
-		    if ((status = nc_def_var(ncid, "D", NC_DOUBLE, 4, dimid, &varid)))
-				ERR(status);
-	
-		    if ((status = nc_def_var(ncid, "divF", NC_DOUBLE, 4, dimid, &varid)))
-				ERR(status);
-		    
-		    if ((status = nc_def_var(ncid, "error", NC_DOUBLE, 4, dimid, &varid)))
-				ERR(status);
-		    		    		
-		#else
-		
-			if ((status = nc_def_var(ncid, "KE", NC_FLOAT, 4, dimid, &varid)))
-				ERR(status);
-	    
-			if ((status = nc_def_var(ncid, "PE", NC_FLOAT, 4, dimid, &varid)))
-				ERR(status);
-		    
-		    if ((status = nc_def_var(ncid, "up", NC_FLOAT, 4, dimid, &varid)))
-				ERR(status);
-					
-		    if ((status = nc_def_var(ncid, "vp", NC_FLOAT, 4, dimid, &varid)))
-				ERR(status);
-	    
-	    	    
-		    if ((status = nc_def_var(ncid, "C0", NC_FLOAT, 4, dimid, &varid)))
-				ERR(status);
-		    
-			if ((status = nc_def_var(ncid, "Cn", NC_FLOAT, 4, dimid, &varid)))
-				ERR(status);	
-		    	    	    
-		    if ((status = nc_def_var(ncid, "D", NC_FLOAT, 4, dimid, &varid)))
-				ERR(status);
-	
-		    if ((status = nc_def_var(ncid, "divF", NC_FLOAT, 4, dimid, &varid)))
-				ERR(status);
-		    
-		    if ((status = nc_def_var(ncid, "error", NC_FLOAT, 4, dimid, &varid)))
-				ERR(status);
+	    if ((status = nc_def_var(ncid, "error", NC_FLOAT, 4, dimid, &varid)))
+			ERR(status);
 		    	    		
-		#endif // WRITE_DOUBLE
 		
 		if ((status = nc_def_var(ncid, "period", NC_INT, 1, &dimid[0], &varid)))
 			ERR(status);
