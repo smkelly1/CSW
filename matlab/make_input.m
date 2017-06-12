@@ -5,12 +5,12 @@ clear
 % Set input parameters 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 MSI=1; 
-fid.grid='../../../17-6_global_grids/50th_deg_grid.nc';
-fid.in='../../50th_deg_in.nc';
+fid.grid='../../../17-6_global_grids/100th_deg_grid.nc';
+fid.in='../../100th_deg_in.nc';
 
 Nm=8;				% Number of modes to include in the input file
 Nc=1;               % Number of tidal constituents 
-dt=12.42*3600/400;	% Approximate time step for sponge layer
+dt=12.42*3600/800;	% Approximate time step for sponge layer
                     % 10th deg = 100 steps/period (dt=447 sec), 25th deg = 200 (224 sec), 50th deg = 400 (112 sec), 100th deg = 800 (56 sec)
 H_min=16;			% Set minimum depth
 a=6371e3;           % Radius of the earth
@@ -206,14 +206,18 @@ ITGF.omega=(2*pi)/(period*3600);
 ncwrite(fid.in,'ITGF_omega',ITGF.omega);
 
 % Convert transport to velocity
-U=U./repmat(H(2:end-1,2:end-1),[1 1 Nc]);
-V=V./repmat(H(2:end-1,2:end-1),[1 1 Nc]);
+for k=1:Nc
+	U(:,:,k)=U(:,:,k)./H(2:end-1,2:end-1);
+	V(:,:,k)=V(:,:,k)./H(2:end-1,2:end-1);
+end
 	
 % Remove bad slopes and surface tides
 U(isinf(U) | isnan(U) | H(2:end-1,2:end-1)==0)=0+ii*0;
 V(isinf(V) | isnan(V) | H(2:end-1,2:end-1)==0)=0+ii*0;
 dHdx(isnan(dHdx) | isinf(dHdx) | H(2:end-1,2:end-1)==0)=0;
 dHdy(isnan(dHdy) | isinf(dHdy) | H(2:end-1,2:end-1)==0)=0;
+
+clear H;
 
 % Limit surface tides to 1 m/s
 thresh=1; 
@@ -224,10 +228,14 @@ V(fast)=V(fast).*thresh./abs(V(fast));
 
 clear fast;
 	
-% Compute ITGF forcing
-ITGF.p=U.*repmat(dHdx,[1 1 Nc])+V.*repmat(dHdy,[1 1 Nc]); 
+% Compute ITGF forcing (there's a little bit of memory juggling here)
+for k=1:Nc
+	U(:,:,k)=U(:,:,k).*dHdx+V(:,:,k).*dHdy; 
+end
 
-clear U V dHdx dHdy;
+clear V dHdx dHdy;
+ITGF.p=U;
+clear U;
 
 % Multiply forcing by phi_bottom and write to file  
 for n=1:Nm
