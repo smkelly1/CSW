@@ -1,7 +1,7 @@
 #!/bin/bash 
 
 #-------Copy configuration files------------
-cp ../*_in.nc ./
+#cp ../*_in.nc ./
 cp ../csw1.0/matlab/make_input.m ./make_input.m
 cp ../csw1.0/src/csw.h ./csw.h
 

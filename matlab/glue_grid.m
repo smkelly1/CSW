@@ -1,7 +1,7 @@
 % Write the individual grid NetCDF files to one giant NetCDF file.
 clear
 
-MSI=1;
+MSI=0;
 
 % Add paths that are sometimes lost using qsub
 if MSI
@@ -15,19 +15,17 @@ else
 	folder='~/experiments/SWOT/proc/CSW/global_grids/';
 end
 
-fid='50th_deg';
+fid.bathy='./25th_deg_bathy.nc';
+fid.grid='./25th_deg_grid.nc';
+
 N_subgrids=160; % Number of individual grid files
 Nm=8;  % Number of modes
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Load bathy file to get Nx and Ny dimensions
-folder='./';
-fid_bathy=[fid,'_bathy.nc'];
-name=[folder,fid_bathy];
-
-H=ncread(name,'H');
-lon=ncread(name,'lon');
-lat=ncread(name,'lat');
+H=ncread(fid.bathy,'H');
+lon=ncread(fid.bathy,'lon');
+lat=ncread(fid.bathy,'lat');
 
 % Add buffer regions
 H=[H(end,:); H; H(1,:)];
@@ -45,14 +43,14 @@ lat=[lat(1)-dlat; lat; lat(end)+dlat];
 %% Start the grid file
 disp('Glueing grid');
 
-folder='./';
-fid_grid=[fid,'_grid.nc'];
-name=[folder,fid_grid];
+%folder='./';
+%fid_grid=[fid,'_grid.nc'];
+%name=[folder,fid_grid];
 
 %Create file
 mode = netcdf.getConstant('CLOBBER');
 mode = bitor(mode,netcdf.getConstant('NETCDF4'));
-ncid=netcdf.create(name,mode);
+ncid=netcdf.create(fid.grid,mode);
 
 % define dimensions
 netcdf.defDim(ncid,'x',Nx);
@@ -65,39 +63,39 @@ netcdf.close(ncid);
 
 % Create variables
 % Dimensions
-nccreate(name,'Nx');
-nccreate(name,'Ny');
-nccreate(name,'Nm');
+nccreate(fid.grid,'Nx');
+nccreate(fid.grid,'Ny');
+nccreate(fid.grid,'Nm');
 
 % Grid 
-nccreate(name,'dy');
-nccreate(name,'dx');
-nccreate(name,'dz');
+nccreate(fid.grid,'dy');
+nccreate(fid.grid,'dx');
+nccreate(fid.grid,'dz');
 
-nccreate(name,'lon','Dimensions',{'x',Nx});
-nccreate(name,'lat','Dimensions',{'y',Ny}); 
+nccreate(fid.grid,'lon','Dimensions',{'x',Nx});
+nccreate(fid.grid,'lat','Dimensions',{'y',Ny}); 
 
 % Data Variables
-nccreate(name,'H','Dimensions',{'x',Nx,'y',Ny});
-nccreate(name,'f','Dimensions',{'x',Nx,'y',Ny});
+nccreate(fid.grid,'H','Dimensions',{'x',Nx,'y',Ny});
+nccreate(fid.grid,'f','Dimensions',{'x',Nx,'y',Ny});
 
-nccreate(name,'c','Dimensions',{'x',Nx,'y',Ny,'mode',Nm});
-nccreate(name,'phi_surf','Dimensions',{'x',Nx,'y',Ny,'mode',Nm});
-nccreate(name,'phi_bott','Dimensions',{'x',Nx,'y',Ny,'mode',Nm});
+nccreate(fid.grid,'c','Dimensions',{'x',Nx,'y',Ny,'mode',Nm});
+nccreate(fid.grid,'phi_surf','Dimensions',{'x',Nx,'y',Ny,'mode',Nm});
+nccreate(fid.grid,'phi_bott','Dimensions',{'x',Nx,'y',Ny,'mode',Nm});
 
-nccreate(name,'T_x','Dimensions',{'x',Nx,'y',Ny,'mode',Nm,'mode',Nm});
-nccreate(name,'T_y','Dimensions',{'x',Nx,'y',Ny,'mode',Nm,'mode',Nm});
+nccreate(fid.grid,'T_x','Dimensions',{'x',Nx,'y',Ny,'mode',Nm,'mode',Nm});
+nccreate(fid.grid,'T_y','Dimensions',{'x',Nx,'y',Ny,'mode',Nm,'mode',Nm});
    
 % Write the variables we already know
-ncwrite(name,'Nx',Nx);
-ncwrite(name,'Ny',Ny);
-ncwrite(name,'Nm',Nm);
+ncwrite(fid.grid,'Nx',Nx);
+ncwrite(fid.grid,'Ny',Ny);
+ncwrite(fid.grid,'Nm',Nm);
 
-ncwrite(name,'lon',lon);
-ncwrite(name,'lat',lat);
+ncwrite(fid.grid,'lon',lon);
+ncwrite(fid.grid,'lat',lat);
 
-ncwrite(name,'H',H);
-ncwrite(name,'f',repmat(sw_f(lat)',[Nx 1]));
+ncwrite(fid.grid,'H',H);
+ncwrite(fid.grid,'f',repmat(sw_f(lat)',[Nx 1]));
 
 clear H
 
@@ -111,113 +109,111 @@ for id=1:N_subgrids
     ind_y=(id-1)*Ny0+2;
         
     % Define slab name
-    folder='./slabs/';
-    fid_slab=[fid,'_grid',num2str(id,'%03d'),'.nc'];
-    name_slab=[folder,fid_slab];
-
+   	fid.slab=[fid.grid(1:end-3),num2str(id,'%03d'),'.nc'];
+	
     if id==1  % Get grid spacings
-        dx=ncread(name_slab,'dx');
-        dy=ncread(name_slab,'dy');
-        dz=ncread(name_slab,'dz');
+        dx=ncread(fid.slab,'dx');
+        dy=ncread(fid.slab,'dy');
+        dz=ncread(fid.slab,'dz');
         
-        Nm2=ncread(name_slab,'Nm');
+        Nm2=ncread(fid.slab,'Nm');
         if Nm~=Nm2
            disp('Wrong number of modes') 
         end
 
-        ncwrite(name,'dx',dx);
-        ncwrite(name,'dy',dy);
-        ncwrite(name,'dz',dz);  
+        ncwrite(fid.grid,'dx',dx);
+        ncwrite(fid.grid,'dy',dy);
+        ncwrite(fid.grid,'dz',dz);  
     end
     
     % Read and write variables 
-    tmp=ncread(name_slab,'c');
+    tmp=ncread(fid.slab,'c');
     tmp=tmp(:,:,:);
-    ncwrite(name,'c',tmp,[2 ind_y(1) 1]);
+    ncwrite(fid.grid,'c',tmp,[2 ind_y(1) 1]);
         
-    tmp=ncread(name_slab,'phi_surf');
+    tmp=ncread(fid.slab,'phi_surf');
     tmp=tmp(:,:,:);
-    ncwrite(name,'phi_surf',tmp,[2 ind_y(1) 1]);
+    ncwrite(fid.grid,'phi_surf',tmp,[2 ind_y(1) 1]);
     
-    tmp=ncread(name_slab,'phi_bott');
+    tmp=ncread(fid.slab,'phi_bott');
     tmp=tmp(:,:,:);
-    ncwrite(name,'phi_bott',tmp,[2 ind_y(1) 1]);
+    ncwrite(fid.grid,'phi_bott',tmp,[2 ind_y(1) 1]);
     
-    tmp=ncread(name_slab,'T_x');
+    tmp=ncread(fid.slab,'T_x');
     tmp=tmp(:,:,:,:);
-    ncwrite(name,'T_x',tmp,[2 ind_y(1) 1 1]);
+    ncwrite(fid.grid,'T_x',tmp,[2 ind_y(1) 1 1]);
         
-    tmp=ncread(name_slab,'T_y');
+    tmp=ncread(fid.slab,'T_y');
     tmp=tmp(:,:,:,:);
-    ncwrite(name,'T_y',tmp,[2 ind_y(1) 1 1]);
+    ncwrite(fid.grid,'T_y',tmp,[2 ind_y(1) 1 1]);
     
     PROGRESS_BAR(id,1:N_subgrids)
 end
 
 % Now fill in the borders
-tmp=ncread(name,'c',[2 1 1],[1 Ny Nm]);
-ncwrite(name,'c',tmp,[Nx 1 1]);
+tmp=ncread(fid.grid,'c',[2 1 1],[1 Ny Nm]);
+ncwrite(fid.grid,'c',tmp,[Nx 1 1]);
 
-tmp=ncread(name,'c',[Nx-1 1 1],[1 Ny Nm]);
-ncwrite(name,'c',tmp,[1 1 1]);
+tmp=ncread(fid.grid,'c',[Nx-1 1 1],[1 Ny Nm]);
+ncwrite(fid.grid,'c',tmp,[1 1 1]);
 
-tmp=ncread(name,'c',[1 Ny-1 1],[Nx 1 Nm]);
-ncwrite(name,'c',tmp,[1 Ny 1]);
+tmp=ncread(fid.grid,'c',[1 Ny-1 1],[Nx 1 Nm]);
+ncwrite(fid.grid,'c',tmp,[1 Ny 1]);
 
-tmp=ncread(name,'c',[1 2 1],[Nx 1 Nm]);
-ncwrite(name,'c',tmp,[1 1 1]);
-
-
-tmp=ncread(name,'phi_bott',[2 1 1],[1 Ny Nm]);
-ncwrite(name,'phi_bott',tmp,[Nx 1 1]);
-
-tmp=ncread(name,'phi_bott',[Nx-1 1 1],[1 Ny Nm]);
-ncwrite(name,'phi_bott',tmp,[1 1 1]);
-
-tmp=ncread(name,'phi_bott',[1 Ny-1 1],[Nx 1 Nm]);
-ncwrite(name,'phi_bott',tmp,[1 Ny 1]);
-
-tmp=ncread(name,'phi_bott',[1 2 1],[Nx 1 Nm]);
-ncwrite(name,'phi_bott',tmp,[1 1 1]);
+tmp=ncread(fid.grid,'c',[1 2 1],[Nx 1 Nm]);
+ncwrite(fid.grid,'c',tmp,[1 1 1]);
 
 
-tmp=ncread(name,'phi_surf',[2 1 1],[1 Ny Nm]);
-ncwrite(name,'phi_surf',tmp,[Nx 1 1]);
+tmp=ncread(fid.grid,'phi_bott',[2 1 1],[1 Ny Nm]);
+ncwrite(fid.grid,'phi_bott',tmp,[Nx 1 1]);
 
-tmp=ncread(name,'phi_surf',[Nx-1 1 1],[1 Ny Nm]);
-ncwrite(name,'phi_surf',tmp,[1 1 1]);
+tmp=ncread(fid.grid,'phi_bott',[Nx-1 1 1],[1 Ny Nm]);
+ncwrite(fid.grid,'phi_bott',tmp,[1 1 1]);
 
-tmp=ncread(name,'phi_surf',[1 Ny-1 1],[Nx 1 Nm]);
-ncwrite(name,'phi_surf',tmp,[1 Ny 1]);
+tmp=ncread(fid.grid,'phi_bott',[1 Ny-1 1],[Nx 1 Nm]);
+ncwrite(fid.grid,'phi_bott',tmp,[1 Ny 1]);
 
-tmp=ncread(name,'phi_surf',[1 2 1],[Nx 1 Nm]);
-ncwrite(name,'phi_surf',tmp,[1 1 1]);
-
-
-tmp=ncread(name,'T_x',[2 1 1 1],[1 Ny Nm Nm]);
-ncwrite(name,'T_x',tmp,[Nx 1 1 1]);
-
-tmp=ncread(name,'T_x',[Nx-1 1 1 1],[1 Ny Nm Nm]);
-ncwrite(name,'T_x',tmp,[1 1 1 1]);
-
-tmp=ncread(name,'T_x',[1 Ny-1 1 1],[Nx 1 Nm Nm]);
-ncwrite(name,'T_x',tmp,[1 Ny 1 1]);
-
-tmp=ncread(name,'T_x',[1 2 1 1],[Nx 1 Nm Nm]);
-ncwrite(name,'T_x',tmp,[1 1 1 1]);
+tmp=ncread(fid.grid,'phi_bott',[1 2 1],[Nx 1 Nm]);
+ncwrite(fid.grid,'phi_bott',tmp,[1 1 1]);
 
 
-tmp=ncread(name,'T_y',[2 1 1 1],[1 Ny Nm Nm]);
-ncwrite(name,'T_x',tmp,[Nx 1 1 1]);
+tmp=ncread(fid.grid,'phi_surf',[2 1 1],[1 Ny Nm]);
+ncwrite(fid.grid,'phi_surf',tmp,[Nx 1 1]);
 
-tmp=ncread(name,'T_y',[Nx-1 1 1 1],[1 Ny Nm Nm]);
-ncwrite(name,'T_y',tmp,[1 1 1 1]);
+tmp=ncread(fid.grid,'phi_surf',[Nx-1 1 1],[1 Ny Nm]);
+ncwrite(fid.grid,'phi_surf',tmp,[1 1 1]);
 
-tmp=ncread(name,'T_y',[1 Ny-1 1 1],[Nx 1 Nm Nm]);
-ncwrite(name,'T_y',tmp,[1 Ny 1 1]);
+tmp=ncread(fid.grid,'phi_surf',[1 Ny-1 1],[Nx 1 Nm]);
+ncwrite(fid.grid,'phi_surf',tmp,[1 Ny 1]);
 
-tmp=ncread(name,'T_y',[1 2 1 1],[Nx 1 Nm Nm]);
-ncwrite(name,'T_y',tmp,[1 1 1 1]);
+tmp=ncread(fid.grid,'phi_surf',[1 2 1],[Nx 1 Nm]);
+ncwrite(fid.grid,'phi_surf',tmp,[1 1 1]);
+
+
+tmp=ncread(fid.grid,'T_x',[2 1 1 1],[1 Ny Nm Nm]);
+ncwrite(fid.grid,'T_x',tmp,[Nx 1 1 1]);
+
+tmp=ncread(fid.grid,'T_x',[Nx-1 1 1 1],[1 Ny Nm Nm]);
+ncwrite(fid.grid,'T_x',tmp,[1 1 1 1]);
+
+tmp=ncread(fid.grid,'T_x',[1 Ny-1 1 1],[Nx 1 Nm Nm]);
+ncwrite(fid.grid,'T_x',tmp,[1 Ny 1 1]);
+
+tmp=ncread(fid.grid,'T_x',[1 2 1 1],[Nx 1 Nm Nm]);
+ncwrite(fid.grid,'T_x',tmp,[1 1 1 1]);
+
+
+tmp=ncread(fid.grid,'T_y',[2 1 1 1],[1 Ny Nm Nm]);
+ncwrite(fid.grid,'T_x',tmp,[Nx 1 1 1]);
+
+tmp=ncread(fid.grid,'T_y',[Nx-1 1 1 1],[1 Ny Nm Nm]);
+ncwrite(fid.grid,'T_y',tmp,[1 1 1 1]);
+
+tmp=ncread(fid.grid,'T_y',[1 Ny-1 1 1],[Nx 1 Nm Nm]);
+ncwrite(fid.grid,'T_y',tmp,[1 Ny 1 1]);
+
+tmp=ncread(fid.grid,'T_y',[1 2 1 1],[Nx 1 Nm Nm]);
+ncwrite(fid.grid,'T_y',tmp,[1 1 1 1]);
 
 
 % Lastly set missing values to 0 and/or smooth Tx and Ty at grid scale
@@ -225,19 +221,19 @@ if 1
 
     for n=1:Nm
         for m=1:Nm
-			tmp=ncread(name,'T_x',[1 1 m n],[Nx Ny 1 1]);  
+			tmp=ncread(fid.grid,'T_x',[1 1 m n],[Nx Ny 1 1]);  
             tmp(tmp>100)=0;
             %tmp=[tmp(end,:); tmp; tmp(1,:)];
             %tmp=AVE2D_v2(tmp,3);
             %tmp=tmp(2:end-1,:); 
-			ncwrite(name,'T_x',tmp,[1 1 m n]);
+			ncwrite(fid.grid,'T_x',tmp,[1 1 m n]);
 			
-			tmp=ncread(name,'T_y',[1 1 m n],[Nx Ny 1 1]);  
+			tmp=ncread(fid.grid,'T_y',[1 1 m n],[Nx Ny 1 1]);  
             tmp(tmp>100)=0;
             %tmp=[tmp(end,:); tmp; tmp(1,:)];
             %tmp=AVE2D_v2(tmp,3);
             %tmp=tmp(2:end-1,:); 
-			ncwrite(name,'T_y',tmp,[1 1 m n]);
+			ncwrite(fid.grid,'T_y',tmp,[1 1 m n]);
         end
     end
      	

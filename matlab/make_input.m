@@ -7,11 +7,11 @@ clear
 disp('Setting paths and parameters');
 
 MSI=0; 
-fid.grid='../../../17-6_global_grids/10th_deg_grid.nc';
-fid.in='../../10th_deg_in.nc';
+fid.grid='../../../17-6_global_grids/25th_deg_grid.nc';
+fid.in='../../25th_deg_in.nc';
 
 Nm=4;				% Number of modes to include in the input file
-dt=12.42*3600/100;	% Approximate time step for sponge layer
+dt=12.42*3600/200;	% Approximate time step for sponge layer
 H_min=16;			% Turn off forcing and mask for shallow water
 
 
@@ -174,14 +174,14 @@ ITGF.p=U.*repmat(dHdx,[1 1 Nc])+V.*repmat(dHdy,[1 1 Nc]);
 ITGF.p=repmat(permute(ITGF.p,[1 2 4 3]),[1 1 Nm 1]).*repmat(phi_bott(2:end-1,2:end-1,:),[1 1 1 Nc]);
 
 % Smooth at grid scale and ignore forcing in less than 50 m depth
-%for j=1:Nc
-%    for i=1:Nm
-%		ITGF.p(:,:,i,j)=AVE2D(ITGF.p(:,:,i,j),3);
-%    end
-%end
+for j=1:Nc
+    for i=1:Nm
+		ITGF.p(:,:,i,j)=AVE2D(ITGF.p(:,:,i,j),3);
+    end
+end
 
 % Turn off tidal forcing in locations with insufficient wave resolution 
-%ITGF.p(repmat(mask.p,[1 1 1 Nc])~=1)=0+ii*0;	
+ITGF.p(repmat(mask.p,[1 1 1 Nc])~=1)=0+ii*0;	
 
 % One last check for bad forcing
 ITGF.p(isnan(ITGF.p) | isinf(ITGF.p))=0+ii*0;  
