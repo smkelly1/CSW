@@ -3,6 +3,12 @@ clear
 
 MSI=0;
 
+fid.bathy='./25th_deg_bathy.nc';
+fid.grid='./25th_deg_grid.nc';
+
+N_subgrids=160; % Number of individual grid files
+Nm=8;  % Number of modes
+
 % Add paths that are sometimes lost using qsub
 if MSI
 	addpath(genpath('/home/kellys/smkelly/software/matlab_libraries/sam_ware'))
@@ -14,12 +20,6 @@ if MSI
 else
 	folder='~/experiments/SWOT/proc/CSW/global_grids/';
 end
-
-fid.bathy='./25th_deg_bathy.nc';
-fid.grid='./25th_deg_grid.nc';
-
-N_subgrids=160; % Number of individual grid files
-Nm=8;  % Number of modes
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Load bathy file to get Nx and Ny dimensions

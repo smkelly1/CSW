@@ -2,11 +2,11 @@
 clear
 
 fid.out='25th_deg_out.';
-fid.in='25th_deg_in.nc';
+fid.in='../25th_deg_in.nc';
 fid.grid='../../17-6_global_grids/25th_deg_grid.nc';
 
 res=1/25;
-NM=2;
+NM=4;
 NPX=4;
 NPY=1;
 
@@ -28,7 +28,7 @@ dy=res/180*pi*a;
 
 %% 
 clear int;
-cycle=[4];
+cycle=[9];
 for j=1:length(cycle)
     
     ind.t=cycle(j);

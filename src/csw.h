@@ -39,6 +39,7 @@
 #define SPHERE                 // Use spherical coordinates (Cartesian is default)
 #define PERIODICBC             // Use periodic boundary conditions in longitude
 #define IT_FORCING             // Use an Internal-Tide Generating Function
+//#define NO_FORCING_MASK        // Turn off internal-tide generation in masked regions (i.e., high latitude shelves)
 #define DIAGNOSTICS            // Compute and write energy diagnostics
 
 // Constants 
