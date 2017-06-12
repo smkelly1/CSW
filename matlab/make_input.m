@@ -4,13 +4,13 @@ clear
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Set input parameters 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-MSI=0; 
-fid.grid='../../../17-6_global_grids/25th_deg_grid.nc';
-fid.in='../../25th_deg_in.nc';
+MSI=1; 
+fid.grid='../../../17-6_global_grids/50th_deg_grid.nc';
+fid.in='../../50th_deg_in.nc';
 
-Nm=4;				% Number of modes to include in the input file
+Nm=8;				% Number of modes to include in the input file
 Nc=1;               % Number of tidal constituents 
-dt=12.42*3600/200;	% Approximate time step for sponge layer
+dt=12.42*3600/400;	% Approximate time step for sponge layer
                     % 10th deg = 100 steps/period (dt=447 sec), 25th deg = 200 (224 sec), 50th deg = 400 (112 sec), 100th deg = 800 (56 sec)
 H_min=16;			% Set minimum depth
 a=6371e3;           % Radius of the earth
@@ -141,10 +141,12 @@ for n=1:Nm
     dx_f=repmat(a*cos(lat(2:end-1)'*pi/180)*dx*pi/180,[Nx 1]); % grid spacing in m at each latitude
     c_crit=abs(f(2:end-1,2:end-1)).*dx_f/2;
     
-    maskf=1-c(2:end-1,2:end-1)./(2*c_crit); % "High res" Adcroft 1999
+    maskf=1-c(2:end-1,2:end-1)./(2*c_crit); % "High res" Adcroft 1999   
     maskf(maskf<0)=0;
     maskf=1-maskf*dt/(1*3600); % Create a sponge with a 1 hour decay time scale
-    
+
+    clear dx_f c_crit;
+     
     % Use the Coriolis mask if it provides more damping
     mask.p=min(maskf,mask.p);
     
@@ -161,7 +163,7 @@ for n=1:Nm
     ncwrite(fid.in,'mask_v',mask.v,[1 1 n]);
     ncwrite(fid.in,'mask_p',mask.p,[1 1 n]);
 end
-clear mask;
+clear mask c f;
 
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -184,7 +186,7 @@ dHdx=(H(3:end,2:end-1)-H(1:end-2,2:end-1))./(2*dx_R*a*repmat(cos(lat_R)',[Nx 1])
 dHdy=(H(2:end-1,3:end)-H(2:end-1,1:end-2))./(2*dy_R*a.*H(2:end-1,2:end-1));
 	
 % Obtain TPXO surface tide velocities
-[U V junk ITGF.omega]=TPXO(lon(2:end-1),lat(2:end-1),[1],datenum(2015,1,1));
+[U,V,~,ITGF.omega]=TPXO(lon(2:end-1),lat(2:end-1),[1],datenum(2015,1,1));
 
 if length(ITGF.omega)~=Nc
     disp('Error, wrong number of constituents')
@@ -219,9 +221,13 @@ fast=thresh<abs(U);
 U(fast)=U(fast).*thresh./abs(U(fast));
 fast=thresh<abs(V);
 V(fast)=V(fast).*thresh./abs(V(fast));
+
+clear fast;
 	
 % Compute ITGF forcing
 ITGF.p=U.*repmat(dHdx,[1 1 Nc])+V.*repmat(dHdy,[1 1 Nc]); 
+
+clear U V dHdx dHdy;
 
 % Multiply forcing by phi_bottom and write to file  
 for n=1:Nm
