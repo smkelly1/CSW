@@ -4,25 +4,25 @@
 #include <complex.h>
 
 // Input/output files
-#define FILE_GRID  "../../17-6_global_grids/25th_deg_grid.nc"
-#define FILE_IN    "../25th_deg_in.nc"
-#define FILE_OUT   "25th_deg_out"
+#define FILE_GRID  "../../17-6_global_grids/50th_deg_grid.nc"
+#define FILE_IN    "../50th_deg_in.nc"
+#define FILE_OUT   "50th_deg_out"
 
 // Grid spacing
-#define DX ((1.0/25)*M_PI/180) // Grid spacing in m or radians
+#define DX ((1.0/50)*M_PI/180) // Grid spacing in m or radians
 
 // Grid size 
-#define NPX 4  				// Number of processors in X
-#define NPY 1				// Number of processors in X
+#define NPX 8  				// Number of processors in X
+#define NPY 8				// Number of processors in X
 
-#define NX (9000/NPX)       // Grid size, this must be an integer
-#define NY (3650/NPY)       // This must be an integer 
+#define NX (18000/NPX)       // Grid size, this must be an integer
+#define NY (7296/NPY)       // This must be an integer 
 							// Note: reducing the total y-grid size will eliminate arctic cells
-#define NM 4			    // Number of modes
+#define NM 2			    // Number of modes
 #define NC 1                // Number of tidal frequencies
 
 // Time steps
-#define DT   (12.42*3600/200)    // Forward model time step [sec]
+#define DT   (12.42*3600/400)    // Forward model time step [sec]
 #define DT_W (12.42*3600/2)      // Pressure write time step
 #define DT_D (12.42*3600/1)      // Diagnostics write time step
 #define NT   (100*12.42*3600/DT) // Simulation duration (time steps)

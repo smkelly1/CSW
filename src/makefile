@@ -7,16 +7,17 @@
 
 SHELL=/bin/bash
 
-CC=mpicc
-CFLAGS=-Wall -g -O3 -mcmodel=large
+#CC=mpicc
+#CFLAGS=-Wall -g -O3 -mcmodel=large
 
-#CC=mpiicc
-#CFLAGS=-Wall -O3 -xAVX -mkl -mcmodel=large
-
+CC=mpiicc
+CFLAGS=-Wall -O3 -mkl -mcmodel=large
+#-xAVX
 
 INCLUDES = -I./ 
-#LFLAGS=-g -pg 
 LIBS = -lm -lnetcdf -lmpi
+
+#LFLAGS=-g -pg # These flags are for profiling/debugging
 
 SRCS = main.c calc_divergence.c calc_forces.c calc_ITGF.c init_output.c pass_p.c pass_uv.c read_grid.c read_input.c timestep_p.c  timestep_uv.c write_diagnostics.c write_output.c
 
