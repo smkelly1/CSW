@@ -4,9 +4,10 @@ clear
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Set input parameters 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-MSI=0; 
-fid.grid='../../../17-6_global_grids/10th_deg_grid.nc';
-fid.tides='../../10th_deg_tides.nc';
+MSI=1; 
+
+fid.grid='../../../17-6_global_grids/50th_deg_grid.nc';
+fid.tides='../../50th_deg_tides.nc';
 
 Nc=1;               % Number of tidal constituents 
 H_min=16;			% Set minimum depth
@@ -76,9 +77,9 @@ nccreate(fid.tides,'Vr','Dimensions',{'x',Nx,'y',Ny,'con',Nc},'datatype','single
 nccreate(fid.tides,'Vi','Dimensions',{'x',Nx,'y',Ny,'con',Nc},'datatype','single');
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Land/boundary masks (Note: we don't use border data for H, f, or c here)
+% Shallow water mask
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-disp('Generating land and wave-resolution mask');
+disp('Masking tides in shallow regions');
   
 % Mask out shallow regions
 H(H<H_min)=0;

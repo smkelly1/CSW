@@ -1,5 +1,5 @@
 #!/bin/bash -l
-#PBS -l walltime=0:10:00,nodes=8:ppn=8
+#PBS -l walltime=0:30:00,nodes=8:ppn=8
 #PBS -q devel
 #PBS -j oe
 #PBS -o log
@@ -8,20 +8,24 @@
 #PBS -S /bin/bash
 
 #-------Load compilers----------------------
-#module unload ompi/gnu
-#module unload ompi/intel
-module load impi
-module load mkl
+#module unload ompi
+#module unload intel
+#module load intel
+#module load impi/intel
+#module load mkl
+
+#module unload impi
+#module load ompi/intel
 
 #-------Change to working directory---------
 cd $PBS_O_WORKDIR
 
 #-------Copy configuration files------------
 #cp ../*_in.nc ./
-cp ../csw1.0/matlab/make_input.m ./make_input.m
-cp ../csw1.0/src/csw.h ./csw.h
+cp ../csw/matlab/make_tides.m ./make_tides.m
+cp ../csw/src/csw.h ./csw.h
 
 #-------Start process-----------------------
-time mpirun -np 64 ../csw1.0/src/cswexec
+time mpirun -np 64 ../csw/src/cswexec
 
 # Run this job in the "run" directory with "qsub ../csw1.0/run_csw.pbs"
