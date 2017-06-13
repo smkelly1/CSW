@@ -4,32 +4,32 @@
 #include <complex.h>
 
 // Input/output files
-#define FILE_GRID  "../../17-6_global_grids/10th_deg_grid.nc"
-#define FILE_TIDES "../10th_deg_tides.nc"
-#define FILE_OUT   "10th_deg_out"
+#define FILE_GRID  "../../17-6_global_grids/100th_deg_grid.nc"
+#define FILE_TIDES "../100th_deg_tides.nc"
+#define FILE_OUT   "100th_deg_out"
 
 // Grid spacing
-#define DX ((1.0/10)*M_PI/180) // Grid spacing in m or radians
+#define DX ((1.0/100)*M_PI/180) // Grid spacing in m or radians
 
 // Grid size 
-#define NPX 4  				// Number of processors in X
-#define NPY 1				// Number of processors in X
+#define NPX 16  				// Number of processors in X
+#define NPY 8				// Number of processors in X
 
-#define NX (3600/NPX)       // Grid size, this must be an integer
-#define NY (1460/NPY)       // This must be an integer 
+#define NX (36000/NPX)       // Grid size, this must be an integer
+#define NY (14600/NPY)       // This must be an integer 
 							// Note: reducing the total y-grid size will eliminate arctic cells
-#define NM 4			    // Number of modes
+#define NM 2			    // Number of modes
 #define NC 1                // Number of tidal frequencies
 
 // Time steps
-#define DT   (12.42*3600/100)    // Forward model time step [sec]
+#define DT   (12.42*3600/800)    // Forward model time step [sec]
 								 // Approximate stable time steps:
 								 // 10th deg = 100 steps/period (dt=447 sec)
 								 // 25th deg = 200 (224 sec)
 								 // 50th deg = 400 (112 sec)
 								 // 100th deg = 800 (56 sec)
 
-#define DT_W (12.42*3600/2)      // Pressure write time step
+#define DT_W (12.42*3600/4)      // Pressure write time step
 #define DT_D (12.42*3600/1)      // Diagnostics write time step
 #define NT   (100*12.42*3600/DT) // Simulation duration (time steps)
 
