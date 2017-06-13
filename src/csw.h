@@ -4,6 +4,7 @@
 #include <complex.h>
 
 // Input/output files
+<<<<<<< HEAD
 #define FILE_GRID  "../../17-6_global_grids/100th_deg_grid.nc"
 #define FILE_TIDES "../100th_deg_tides.nc"
 #define FILE_OUT   "100th_deg_out"
@@ -17,12 +18,31 @@
 
 #define NX (36000/NPX)       // Grid size, this must be an integer
 #define NY (14600/NPY)       // This must be an integer 
+=======
+#define FILE_GRID  "../../17-6_global_grids/50th_deg_grid.nc"
+#define FILE_TIDES "../50th_deg_tides.nc"
+#define FILE_OUT   "50th_deg_out"
+
+// Grid spacing
+#define DX ((1.0/50)*M_PI/180) // Grid spacing in m or radians
+
+// Grid size 
+#define NPX 8  				// Number of processors in X
+#define NPY 8				// Number of processors in X
+
+#define NX (18000/NPX)       // Grid size, this must be an integer
+#define NY (7296/NPY)       // This must be an integer 
+>>>>>>> 631912c6cfface9ba5420a87fb62156003dfa12a
 							// Note: reducing the total y-grid size will eliminate arctic cells
 #define NM 2			    // Number of modes
 #define NC 1                // Number of tidal frequencies
 
 // Time steps
+<<<<<<< HEAD
 #define DT   (12.42*3600/800)    // Forward model time step [sec]
+=======
+#define DT   (12.42*3600/400)    // Forward model time step [sec]
+>>>>>>> 631912c6cfface9ba5420a87fb62156003dfa12a
 								 // Approximate stable time steps:
 								 // 10th deg = 100 steps/period (dt=447 sec)
 								 // 25th deg = 200 (224 sec)
