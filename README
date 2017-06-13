@@ -14,8 +14,11 @@ README file for SWOT global CSW simulations:
 
 (3) Compile CSW with the correct file names and dimensions
 
-(4) Run CSW from the command line 
+(4) Run CSW from the command line
 
 
 
-
+To do:
+(1) Read in surface tides and phi_bott and calculate forcing in the C-code (should simplify make_input.m)
+(2) Compute masks in the time-step routine(?) (should simplify make_input.m and reduce memory by 3 x 8 arrays)
+(3) Tag code with checkpoints 1.0 etc.
