@@ -23,8 +23,8 @@ void calc_divergence(void)
 		
 		for(n=0; n<NM; n++){
 			for(i=0; i<NX; i++){
-			
-				//if (mask.p[n][j][i]>1E-10) { // probably don't use mask.p, because mask.p~=0 over land)
+						
+				if (H[j+1][i+1]>0) {
 					
 					// Volume divergence
 					#ifdef SPHERE
@@ -49,13 +49,8 @@ void calc_divergence(void)
 						}							
 										
 					#endif
-					
-					// Check for bad forcing
-					if (isnan(Fp[n][j][i]) | isinf(Fp[n][j][i])){
-						Fp[n][j][i]=0;
-					}
 										
-				//} // end-if: mask.p~=0 			
+				} // end-if: land mask
 				
 			}
 		}

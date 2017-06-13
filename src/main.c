@@ -42,11 +42,13 @@ int main(int argc, char *argv[])
 	
 
 	////////////////////////////////////////////////////////////////////		
-	// Read input data
-	read_input(rank);
-	
 	// Read grid
 	read_grid(rank);
+
+	// Read forcing data
+	#ifdef IT_FORCING
+		read_tides(rank);
+	#endif
 
 	// Initiate output file
 	init_output(rank);

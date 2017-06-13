@@ -33,13 +33,8 @@ void write_output(int sW, double t, int rank)
 		if ((status = nc_inq_varid(ncid, "u", &varid)))
 			ERR(status);
 	
-		#ifdef WRITE_DOUBLE
-			if ((status = nc_put_vara_double(ncid, varid, start, count, &tmp[0][0][0])))
-				ERR(status);
-		#else
-			if ((status = nc_put_vara_float(ncid, varid, start, count, &tmp[0][0][0])))
-				ERR(status);
-		#endif
+		if ((status = nc_put_vara_float(ncid, varid, start, count, &tmp[0][0][0])))
+			ERR(status);
 			
 		// Write v velocity
 		for(i=0; i<NX; i++){
@@ -53,13 +48,8 @@ void write_output(int sW, double t, int rank)
 		if ((status = nc_inq_varid(ncid, "v", &varid)))
 			ERR(status);
 	
-		#ifdef WRITE_DOUBLE
-			if ((status = nc_put_vara_double(ncid, varid, start, count, &tmp[0][0][0])))
-				ERR(status);
-		#else
-			if ((status = nc_put_vara_float(ncid, varid, start, count, &tmp[0][0][0])))
-				ERR(status);
-		#endif
+		if ((status = nc_put_vara_float(ncid, varid, start, count, &tmp[0][0][0])))
+			ERR(status);
 	
 	#endif // WRITE_VELOCITY
 	
@@ -67,11 +57,7 @@ void write_output(int sW, double t, int rank)
 	for(i=0; i<NX; i++){
 		for(j=0; j<NY; j++){
 			for(n=0; n<NM; n++){
-				#ifdef WRITE_DOUBLE
-					tmp[n][j][i]=RHO*p1[n][j+1][i+1];
-				#else
-					tmp[n][j][i]=(float)(RHO*p1[n][j+1][i+1]);
-				#endif
+				tmp[n][j][i]=(float)(RHO*p1[n][j+1][i+1]);
 			}
 		}
 	}
@@ -79,13 +65,8 @@ void write_output(int sW, double t, int rank)
 	if ((status = nc_inq_varid(ncid, "p", &varid)))
 		ERR(status);
 
-	#ifdef WRITE_DOUBLE
-		if ((status = nc_put_vara_double(ncid, varid, start, count, &tmp[0][0][0])))
-			ERR(status);
-	#else
-		if ((status = nc_put_vara_float(ncid, varid, start, count, &tmp[0][0][0])))
-			ERR(status);
-	#endif
+	if ((status = nc_put_vara_float(ncid, varid, start, count, &tmp[0][0][0])))
+		ERR(status);
 	
     // Write time
     day=t/(24*3600);

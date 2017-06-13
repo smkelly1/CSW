@@ -5,19 +5,20 @@ void calc_forces(void)
 {
 	int i, j, n;
 	double Hu, Hv;
-	double cos0, cos01, cos1, cos12;
-	double invDX, invDX2;
+	double cos01, cos1, cos12;
 	
 	// Define variables that might be needed
 	#ifdef MODECOUPLE
 		int m;
 	#endif
 	
-	#ifdef AX
-		#ifdef SPHERE
+	#ifdef CORIOLIS
+		double f01;
+	#endif
+		
+	#if defined(AX) && defined(SPHERE)
 			double dUdy[2], dUdx2, dUdy2;
 			double dVdy[2], dVdx2, dVdy2;
-		#endif
 	#endif
 	
 	#ifdef CD
@@ -29,8 +30,17 @@ void calc_forces(void)
 		double gamma;
 	#endif 
 	
+	double invDX;
 	invDX=1/DX;
-	invDX2=1/(DX*DX);
+	
+	#ifdef AX
+		double invDX2;
+		invDX2=1/(DX*DX);
+		
+		#ifdef SPHERE
+			double cos0;
+		#endif 		
+	#endif
 	
 	////////////////////////////////////////////////////////////////////
 	// Forces in U-direction
@@ -45,8 +55,8 @@ void calc_forces(void)
 		for(n=0; n<NM; n++){			
 			for(i=0; i<NX+1; i++){
 				
-				if (mask.U[n][j][i]>1E-10) {
-					
+				if (H[j+1][i]>0 && H[j+1][i+1]>0) {
+				
 					// Velocity node depth
 					Hu=(H[j+1][i]+H[j+1][i+1])/2;
 					
@@ -59,7 +69,7 @@ void calc_forces(void)
 					
 					// Coriolis
 					#ifdef CORIOLIS						
-						Fu[n][j][i]=Fu[n][j][i]+(f[j+1][i]+f[j+1][i+1])*(V[n][j+1][i]+V[n][j+2][i]+V[n][j+1][i+1]+V[n][j+2][i+1])/8;					
+						Fu[n][j][i]=Fu[n][j][i]+f[j+1]*(V[n][j+1][i]+V[n][j+2][i]+V[n][j+1][i+1]+V[n][j+2][i+1])/4;					
 					#endif
 												
 					// Topographic coupling
@@ -106,7 +116,7 @@ void calc_forces(void)
 					// Add the frictional forces to the other forces					
 					Fu[n][j][i]=Fu[n][j][i]+Fu_eps[n][j][i];
 					
-				} // end-if: mask.U~=0				
+				} // end-if: land mask				
 				
 			}
 		}
@@ -119,15 +129,20 @@ void calc_forces(void)
 	
 	for(j=0; j<NY+1; j++){
 			      
-		cos0=cos(lat[j]);      
+		#if defined(AX) && defined(SPHERE)	      
+			cos0=cos(lat[j]);      
+		#endif
+		
 		cos01=cos((lat[j]+lat[j+1])/2);
 		cos1=cos(lat[j+1]);
 
+		f01=(f[j]+f[j+1])/2;
+		
 		for(n=0; n<NM; n++){							
 			for(i=0; i<NX; i++){
 				
-				if (mask.V[n][j][i]>1E-10) {
-					
+				if (H[j][i+1]>0 && H[j+1][i+1]>0) {
+	
 					// Velocity node depth
 					Hv=(H[j][i+1]+H[j+1][i+1])/2;
 					
@@ -140,7 +155,7 @@ void calc_forces(void)
 				
 					// Coriolis
 					#ifdef CORIOLIS
-						Fv[n][j][i]=Fv[n][j][i]-(f[j][i+1]+f[j+1][i+1])*(U[n][j][i+1]+U[n][j][i+2]+U[n][j+1][i+1]+U[n][j+1][i+2])/8;
+						Fv[n][j][i]=Fv[n][j][i]-f01*(U[n][j][i+1]+U[n][j][i+2]+U[n][j+1][i+1]+U[n][j+1][i+2])/4;
 					#endif
 															
 					// Topographic coupling
@@ -188,7 +203,7 @@ void calc_forces(void)
 					// Add the frictional forces to the other forces					
 					Fv[n][j][i]=Fv[n][j][i]+Fv_eps[n][j][i];
 					
-				} // end-if: mask.V~=0				
+				} // end-if: land mask			
 				
 			}
 		}
@@ -202,10 +217,9 @@ void calc_forces(void)
 		for(j=0; j<NY; j++){
 			
 			cos01=cos((lat[j]+lat[j+1])/2);
-			cos1=cos(lat[j+1]);
 			cos12=cos((lat[j+1]+lat[j+2])/2);
 		
-			gamma=invDX/(A*cos1);
+			gamma=invDX/(A*cos(lat[j+1]));
 		
 			for(n=0; n<NM; n++){	
 				for(i=0; i<NX; i++){					

@@ -48,18 +48,15 @@ void read_grid(int rank)
 
 	if ((status = nc_get_vara_double(ncid, varid, start_c, count_c, &c[0][0][0])))
 		ERR(status);
-
-	// Read the inertial frequency if necessary
-	#ifdef CORIOLIS	
 	
-		if ((status = nc_inq_varid(ncid, "f", &varid)))
+	#ifdef IT_FORCING
+		if ((status = nc_inq_varid(ncid, "phi_bott", &varid)))
 			ERR(status);
-	
-		if ((status = nc_get_vara_double(ncid, varid, start_H, count_H, &f[0][0])))
-			ERR(status);
-			
-	#endif	
 
+		if ((status = nc_get_vara_double(ncid, varid, start_c, count_c, &phi_bott[0][0][0])))
+			ERR(status);
+	#endif
+	
 	// Read the topographic coupling coefficients if necessary
 	#ifdef MODECOUPLE
 		
@@ -78,7 +75,7 @@ void read_grid(int rank)
 	#endif
 	
 	// Read latitude in degrees and convert to radians
-	#ifdef SPHERE
+	#if defined(SPHERE) || defined(CORIOLIS)
 	
 		if ((status = nc_inq_varid(ncid, "lat", &varid)))
 			ERR(status);
@@ -88,6 +85,7 @@ void read_grid(int rank)
 			
 		for(j=0; j<NY+2; j++){
 			lat[j]=lat[j]/180*M_PI;
+			f[j]=2*(2*M_PI)/(24*3600)*sin(lat[j]);
 		}	
 	
 	#endif
