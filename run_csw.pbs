@@ -1,6 +1,6 @@
 #!/bin/bash -l
-#PBS -l walltime=0:30:00,nodes=8:ppn=8
-#PBS -q devel
+#PBS -l walltime=12:00:00,nodes=32:ppn=8
+#PBS -q batch
 #PBS -j oe
 #PBS -o log
 # %PBS -m abe 
@@ -26,6 +26,6 @@ cp ../csw/matlab/make_tides.m ./make_tides.m
 cp ../csw/src/csw.h ./csw.h
 
 #-------Start process-----------------------
-time mpirun -np 64 ../csw/src/cswexec
+time mpirun -np 256 ../csw/src/cswexec
 
-# Run this job in the "run" directory with "qsub ../csw1.0/run_csw.pbs"
+# Run this job in the "run" directory with "qsub ../csw/run_csw.pbs"

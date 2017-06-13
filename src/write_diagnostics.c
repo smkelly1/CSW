@@ -28,7 +28,7 @@ void write_diagnostics(int sD, int Na, int rank)
 				D[n][j][i]=D[n][j][i]/Na;
 				divF[n][j][i]=divF[n][j][i]/Na;					
 
-				residual[n][j][i]=C0[n][j][i]+Cn[n][j][i]-divF[n][j][i]-D[n][j][i];
+				tmp[n][j][i]=C0[n][j][i]+Cn[n][j][i]-divF[n][j][i]-D[n][j][i]; // residual/error
 			}
 		}
 	}
@@ -96,7 +96,7 @@ void write_diagnostics(int sD, int Na, int rank)
     if ((status = nc_inq_varid(ncid, "error", &varid)))
 		ERR(status);
 
-	if ((status = nc_put_vara_float(ncid, varid, start, count, &residual[0][0][0])))
+	if ((status = nc_put_vara_float(ncid, varid, start, count, &tmp[0][0][0])))
 		ERR(status);
         
         
