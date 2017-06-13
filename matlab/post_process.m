@@ -1,22 +1,21 @@
 % Load and integrate output data
 clear
 
-fid.out='25th_deg_out.';
-fid.in='../25th_deg_in.nc';
-fid.grid='../../17-6_global_grids/25th_deg_grid.nc';
+fid.out='../../run2/10th_deg_out.';
+%fid.in='../10th_deg_in.nc';
+fid.grid='../../../17-6_global_grids/10th_deg_grid.nc';
 
-res=1/25;
-NM=4;
+res=1/10;
+NM=2;
 NPX=4;
 NPY=1;
 
 H=ncread(fid.grid,'H');H=H(2:end-1,2:end-1);
 lon=ncread(fid.grid,'lon');lon=lon(2:end-1);
 lat=ncread(fid.grid,'lat');lat=lat(2:end-1);
-mask.u=ncread(fid.in,'mask_u',[1 1 1],[Inf Inf NM]);mask.u=(mask.u(1:end-1,:,:)+mask.u(2:end,:,:))/2;
-mask.v=ncread(fid.in,'mask_v',[1 1 1],[Inf Inf NM]);mask.v=(mask.v(:,1:end-1,:)+mask.v(:,2:end,:))/2;
-mask.p=ncread(fid.in,'mask_p',[1 1 1],[Inf Inf NM]);
-mask.all=mask.u==1 & mask.v==1 & mask.p==1;
+
+mask=(H>0);
+C_thresh=Inf;%0.5;
 
 [NX0 NY0]=size(H);
 NX=NX0/NPX;
@@ -28,7 +27,7 @@ dy=res/180*pi*a;
 
 %% 
 clear int;
-cycle=[9];
+cycle=[1:10:60];
 for j=1:length(cycle)
     
     ind.t=cycle(j);
@@ -52,22 +51,21 @@ for j=1:length(cycle)
         error(start.x+[1:NX],start.y+[1:NY],:,:)=nanmean(ncread([fid.out,num2str(n,'%03d'),'.nc'],'error',[1 1 1 ind.t],[NX NY NM NT]),4);
     end
     
-    int.C(j)=nansum(nansum(nansum(C(:,:,:),3).*dx.*dy))*1e-9;
-    int.Cn(j)=nansum(nansum(nansum(Cn(:,:,1),3).*dx.*dy))*1e-9;
-    int.D(j)=nansum(nansum(nansum(D(:,:,:),3).*dx.*dy))*1e-9;
+    C(C>C_thresh)=C_thresh;    
+    int.C(j,:)=squeeze(nansum(nansum(C.*dx.*dy))*1e-9);
+    int.Cn(j,:)=squeeze(nansum(nansum(Cn.*dx.*dy))*1e-9);
+    int.D(j,:)=squeeze(nansum(nansum(D.*dx.*dy))*1e-9);
     
-    divF(mask.all(:,:,1:NM)~=1)=0;
-    int.divF(j)=nansum(nansum(nansum(divF(:,:,:),3).*dx.*dy))*1e-9;
-
-    error(mask.all(:,:,1:NM)~=1)=0;
-    int.error(j)=nansum(nansum(nansum(error(:,:,:),3).*dx.*dy))*1e-9;
+    % Use a mask to avoid shallow regions
+    int.divF(j,:)=squeeze(nansum(nansum(mask.*divF.*dx.*dy))*1e-9);
+    int.error(j,:)=squeeze(nansum(nansum(mask.*error.*dx.*dy))*1e-9);
 end
 
 %%
-plot(cycle,int.C,'k',cycle,int.D,'b',cycle,int.divF,'m',cycle,int.error,'r--')
+plot(cycle,int.C,'k',cycle,int.D,'r',cycle,int.divF,'b',cycle,int.error,'k--')
 
 %%
-tmp=C;
+tmp=error;
 %tmp(tmp<0)=0;
 Clims=[-.1 .1];
 

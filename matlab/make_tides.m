@@ -5,8 +5,8 @@ clear
 % Set input parameters 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 MSI=0; 
-fid.grid='../../../17-6_global_grids/25th_deg_grid.nc';
-fid.tides='../../25th_deg_tides.nc';
+fid.grid='../../../17-6_global_grids/10th_deg_grid.nc';
+fid.tides='../../10th_deg_tides.nc';
 
 Nc=1;               % Number of tidal constituents 
 H_min=16;			% Set minimum depth
@@ -69,11 +69,11 @@ nccreate(fid.tides,'lat','Dimensions',{'y',Ny});
 ncwrite(fid.tides,'lat',lat);  
 
 % Initiate tides in NetCDF file 
-nccreate(fid.tides,'ITGF_omega','Dimensions',{'con',Nc});
-nccreate(fid.tides,'ITGF_Ur','Dimensions',{'x',Nx,'y',Ny,'con',Nc},'datatype','single');
-nccreate(fid.tides,'ITGF_Ui','Dimensions',{'x',Nx,'y',Ny,'con',Nc},'datatype','single');
-nccreate(fid.tides,'ITGF_Vr','Dimensions',{'x',Nx,'y',Ny,'con',Nc},'datatype','single');
-nccreate(fid.tides,'ITGF_Vi','Dimensions',{'x',Nx,'y',Ny,'con',Nc},'datatype','single');
+nccreate(fid.tides,'omega','Dimensions',{'con',Nc});
+nccreate(fid.tides,'Ur','Dimensions',{'x',Nx,'y',Ny,'con',Nc},'datatype','single');
+nccreate(fid.tides,'Ui','Dimensions',{'x',Nx,'y',Ny,'con',Nc},'datatype','single');
+nccreate(fid.tides,'Vr','Dimensions',{'x',Nx,'y',Ny,'con',Nc},'datatype','single');
+nccreate(fid.tides,'Vi','Dimensions',{'x',Nx,'y',Ny,'con',Nc},'datatype','single');
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Land/boundary masks (Note: we don't use border data for H, f, or c here)
@@ -98,9 +98,9 @@ ii=complex(0,1);
 warning off;
 	
 % Obtain TPXO surface tide velocities
-[U,V,~,ITGF.omega]=TPXO(lon,lat,[1],datenum(2015,1,1));
+[U,V,~,omega]=TPXO(lon,lat,[1],datenum(2015,1,1));
 
-if length(ITGF.omega)~=Nc
+if length(omega)~=Nc
     disp('Error, wrong number of constituents')
 end
 
@@ -128,15 +128,15 @@ fast=thresh<abs(V);
 V(fast)=V(fast).*thresh./abs(V(fast));
 
 % Round the tidal frequency and write to file
-period=(2*pi/ITGF.omega)/3600; % in hours
+period=(2*pi/omega)/3600; % in hours
 period=round(period*100)/100; % Round to second decimal place (i.e., 12.42 for the M2 tide)
-ITGF.omega=(2*pi)/(period*3600);
+omega=(2*pi)/(period*3600);
 
 % Write to file
-ncwrite(fid.tides,'ITGF_omega',ITGF.omega);
-ncwrite(fid.tides,'ITGF_Ur',real(U));
-ncwrite(fid.tides,'ITGF_Ui',imag(U));
-ncwrite(fid.tides,'ITGF_Vr',real(V));
-ncwrite(fid.tides,'ITGF_Vi',imag(V));
+ncwrite(fid.tides,'omega',omega);
+ncwrite(fid.tides,'Ur',real(U));
+ncwrite(fid.tides,'Ui',imag(U));
+ncwrite(fid.tides,'Vr',real(V));
+ncwrite(fid.tides,'Vi',imag(V));
 
 
