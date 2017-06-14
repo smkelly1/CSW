@@ -48,21 +48,23 @@ void init_output(int rank)
 			
 		
     // Define the diagnostics 
-	#ifdef DIAGNOSTICS	
-	    	
+	#ifdef ENERGY		    	
 		if ((status = nc_def_var(ncid, "KE", NC_FLOAT, 4, dimid, &varid)))
 			ERR(status);
     
 		if ((status = nc_def_var(ncid, "PE", NC_FLOAT, 4, dimid, &varid)))
 			ERR(status);
-	    
+	#endif
+	
+	#ifdef FLUX    	    
 	    if ((status = nc_def_var(ncid, "up", NC_FLOAT, 4, dimid, &varid)))
 			ERR(status);
 				
 	    if ((status = nc_def_var(ncid, "vp", NC_FLOAT, 4, dimid, &varid)))
 			ERR(status);
-    
-    	    
+    #endif
+    	  
+	#ifdef WORK  
 	    if ((status = nc_def_var(ncid, "C0", NC_FLOAT, 4, dimid, &varid)))
 			ERR(status);
 	    
@@ -77,12 +79,13 @@ void init_output(int rank)
 	    
 	    if ((status = nc_def_var(ncid, "error", NC_FLOAT, 4, dimid, &varid)))
 			ERR(status);
-		    	    		
+	#endif	    	    		
 		
+	#if defined(ENERGY) || defined(FLUX) || defined(WORK)
 		if ((status = nc_def_var(ncid, "period", NC_INT, 1, &dimid[0], &varid)))
-			ERR(status);
-		
-	#endif // DIAGNOSTICS
+			ERR(status);	
+	#endif 
+    
     
 	// Close the file
 	if ((status = nc_close(ncid)))

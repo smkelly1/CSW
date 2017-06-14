@@ -25,7 +25,7 @@ void calc_forces(void)
 		double absU, absV;
 	#endif
 	
-	#ifdef DIAGNOSTICS
+	#ifdef WORK
 		double dFdx, dFdy;
 		double gamma;
 	#endif 
@@ -55,7 +55,7 @@ void calc_forces(void)
 		for(n=0; n<NM; n++){			
 			for(i=0; i<NX+1; i++){
 				
-				if (H[j+1][i]>0 && H[j+1][i+1]>0) {
+				if (H[j+1][i]>H_MIN && H[j+1][i+1]>H_MIN) {
 				
 					// Velocity node depth
 					Hu=(H[j+1][i]+H[j+1][i+1])/2;
@@ -141,7 +141,7 @@ void calc_forces(void)
 		for(n=0; n<NM; n++){							
 			for(i=0; i<NX; i++){
 				
-				if (H[j][i+1]>0 && H[j+1][i+1]>0) {
+				if (H[j][i+1]>H_MIN && H[j+1][i+1]>H_MIN) {
 	
 					// Velocity node depth
 					Hv=(H[j][i+1]+H[j+1][i+1])/2;
@@ -212,49 +212,56 @@ void calc_forces(void)
 	
 	////////////////////////////////////////////////////////////////////
 	// Compute Energy Diagnostics
-	#ifdef DIAGNOSTICS
+	#if defined(ENERGY) || defined(FLUX) || defined(WORK)
 		
 		for(j=0; j<NY; j++){
 			
 			cos01=cos((lat[j]+lat[j+1])/2);
 			cos12=cos((lat[j+1]+lat[j+2])/2);
-		
-			gamma=invDX/(A*cos(lat[j+1]));
+			
+			#ifdef WORK
+				gamma=invDX/(A*cos(lat[j+1]));
+			#endif
 		
 			for(n=0; n<NM; n++){	
 				for(i=0; i<NX; i++){					
 					
-					KE[n][j][i]=KE[n][j][i]+(float)(0.125*RHO*((U[n][j+1][i+1]+U[n][j+1][i+2])*(U[n][j+1][i+1]+U[n][j+1][i+2])
-						+(V[n][j+1][i+1]+V[n][j+2][i+1])*(V[n][j+1][i+1]+V[n][j+2][i+1]))/H[j+1][i+1]); // the extra factor of 1/4 comes from averaging U^2
-					PE[n][j][i]=PE[n][j][i]+(float)(0.5*RHO*H[j+1][i+1]*(p1[n][j+1][i+1]*p1[n][j+1][i+1]/(c[n][j+1][i+1]*c[n][j+1][i+1])));
+					#ifdef ENERGY
+						KE[n][j][i]=KE[n][j][i]+(float)(0.125*RHO*((U[n][j+1][i+1]+U[n][j+1][i+2])*(U[n][j+1][i+1]+U[n][j+1][i+2])
+							+(V[n][j+1][i+1]+V[n][j+2][i+1])*(V[n][j+1][i+1]+V[n][j+2][i+1]))/H[j+1][i+1]); // the extra factor of 1/4 comes from averaging U^2
+						PE[n][j][i]=PE[n][j][i]+(float)(0.5*RHO*H[j+1][i+1]*(p1[n][j+1][i+1]*p1[n][j+1][i+1]/(c[n][j+1][i+1]*c[n][j+1][i+1])));
+					#endif
+					
+					#ifdef FLUX										
+						up[n][j][i]=up[n][j][i]+(float)(0.5*RHO*(U[n][j+1][i+1]+U[n][j+1][i+2])*p1[n][j+1][i+1]);
+						vp[n][j][i]=vp[n][j][i]+(float)(0.5*RHO*(V[n][j+1][i+1]+V[n][j+2][i+1])*p1[n][j+1][i+1]);
+					#endif
+					
+					#ifdef WORK
+						// Energy-flux divergence
+						dFdx=(U[n][j+1][i+2]*(p1[n][j+1][i+1]+p1[n][j+1][i+2])-U[n][j+1][i+1]*(p1[n][j+1][i]+p1[n][j+1][i+1]));
+						dFdy=(cos12*V[n][j+2][i+1]*(p1[n][j+1][i+1]+p1[n][j+2][i+1])-cos01*V[n][j+1][i+1]*(p1[n][j][i+1]+p1[n][j+1][i+1]));
+						divF[n][j][i]=divF[n][j][i]+(float)(0.5*RHO*(dFdx+dFdy)*gamma); // the factor of 1/2 comes from averaging p
+						
+						// Compute dissipation								
+						D[n][j][i]=D[n][j][i]
+							-(float)(RHO*0.25*((Fu_eps[n][j][i]+Fu_eps[n][j][i+1])*(U[n][j+1][i+1]+U[n][j+1][i+2])
+								+(Fv_eps[n][j][i]+Fv_eps[n][j+1][i])*(V[n][j+1][i+1]+V[n][j+2][i+1]))/H[j+1][i+1]);	
 										
-					up[n][j][i]=up[n][j][i]+(float)(0.5*RHO*(U[n][j+1][i+1]+U[n][j+1][i+2])*p1[n][j+1][i+1]);
-					vp[n][j][i]=vp[n][j][i]+(float)(0.5*RHO*(V[n][j+1][i+1]+V[n][j+2][i+1])*p1[n][j+1][i+1]);
-					
-					// Energy-flux divergence
-					dFdx=(U[n][j+1][i+2]*(p1[n][j+1][i+1]+p1[n][j+1][i+2])-U[n][j+1][i+1]*(p1[n][j+1][i]+p1[n][j+1][i+1]));
-					dFdy=(cos12*V[n][j+2][i+1]*(p1[n][j+1][i+1]+p1[n][j+2][i+1])-cos01*V[n][j+1][i+1]*(p1[n][j][i+1]+p1[n][j+1][i+1]));
-					divF[n][j][i]=divF[n][j][i]+(float)(0.5*RHO*(dFdx+dFdy)*gamma); // the factor of 1/2 comes from averaging p
-					
-					// Compute dissipation								
-					D[n][j][i]=D[n][j][i]
-						-(float)(RHO*0.25*((Fu_eps[n][j][i]+Fu_eps[n][j][i+1])*(U[n][j+1][i+1]+U[n][j+1][i+2])
-							+(Fv_eps[n][j][i]+Fv_eps[n][j+1][i])*(V[n][j+1][i+1]+V[n][j+2][i+1]))/H[j+1][i+1]);	
-									
-					// Only compute scattering if there is mode coupling.			
-					#ifdef MODECOUPLE	
-						
-						for(m=0; m<NM; m++){				
+						// Only compute scattering if there is mode coupling.			
+						#ifdef MODECOUPLE	
 							
-							Cn[n][j][i]=Cn[n][j][i]
-								+(float)(0.5*RHO*(
-								 (T.x[m][n][j+1][i+1]*(U[m][j+1][i+1]+U[m][j+1][i+2])+T.y[m][n][j+1][i+1]*(V[m][j+1][i+1]+V[m][j+2][i+1]))*p1[n][j+1][i+1]
-								-(T.x[n][m][j+1][i+1]*(U[n][j+1][i+1]+U[n][j+1][i+2])+T.y[n][m][j+1][i+1]*(V[n][j+1][i+1]+V[n][j+2][i+1]))*p1[m][j+1][i+1])/H[j+1][i+1]);
-								 // the factor of 1/2 comes from averaging U and V
-						}
-						
-					#endif // end modecouple if				
-					
+							for(m=0; m<NM; m++){				
+								
+								Cn[n][j][i]=Cn[n][j][i]
+									+(float)(0.5*RHO*(
+									 (T.x[m][n][j+1][i+1]*(U[m][j+1][i+1]+U[m][j+1][i+2])+T.y[m][n][j+1][i+1]*(V[m][j+1][i+1]+V[m][j+2][i+1]))*p1[n][j+1][i+1]
+									-(T.x[n][m][j+1][i+1]*(U[n][j+1][i+1]+U[n][j+1][i+2])+T.y[n][m][j+1][i+1]*(V[n][j+1][i+1]+V[n][j+2][i+1]))*p1[m][j+1][i+1])/H[j+1][i+1]);
+									 // the factor of 1/2 comes from averaging U and V
+							}
+							
+						#endif // end modecouple if				
+					#endif
 				}
 			}
 		}		

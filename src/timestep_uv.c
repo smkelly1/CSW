@@ -23,7 +23,7 @@ void timestep_uv(void)
 					c_crit=fabs(f[j+1])*A*cos(lat[j+1])*DX;  
 				#endif
 				
-				if (H[j+1][i]>0 && H[j+1][i+1]>0) {
+				if (H[j+1][i]>H_MIN && H[j+1][i+1]>H_MIN) {
 	
 					// Create a sponge with an R_MASK decay time scale where there is insufficient wave resolution
 					#ifdef R_MASK
@@ -62,7 +62,7 @@ void timestep_uv(void)
 					c_crit=fabs((f[j]+f[j+1])/2)*A*cos(lat[j+1])*DX;  
 				#endif
 				
-				if (H[j][i+1]>0 && H[j+1][i+1]>0) {
+				if (H[j][i+1]>H_MIN && H[j+1][i+1]>H_MIN) {
 
 					// Create a sponge with an R_MASK decay time scale where there is insufficient wave resolution
 					#ifdef R_MASK

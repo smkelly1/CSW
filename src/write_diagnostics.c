@@ -17,18 +17,24 @@ void write_diagnostics(int sD, int Na, int rank)
 		for(j=0; j<NY; j++){
 			for(i=0; i<NX; i++){
 				
-				KE[n][j][i]=KE[n][j][i]/Na;
-				PE[n][j][i]=PE[n][j][i]/Na;
+				#ifdef ENERGY
+					KE[n][j][i]=KE[n][j][i]/Na;
+					PE[n][j][i]=PE[n][j][i]/Na;
+				#endif
 							
-				up[n][j][i]=up[n][j][i]/Na;						
-				vp[n][j][i]=vp[n][j][i]/Na;
+				#ifdef FLUX
+					up[n][j][i]=up[n][j][i]/Na;						
+					vp[n][j][i]=vp[n][j][i]/Na;
+				#endif
 							
-				C0[n][j][i]=C0[n][j][i]/Na;					
-				Cn[n][j][i]=Cn[n][j][i]/Na;
-				D[n][j][i]=D[n][j][i]/Na;
-				divF[n][j][i]=divF[n][j][i]/Na;					
-
-				tmp[n][j][i]=C0[n][j][i]+Cn[n][j][i]-divF[n][j][i]-D[n][j][i]; // residual/error
+				#ifdef WORK
+					C0[n][j][i]=C0[n][j][i]/Na;					
+					Cn[n][j][i]=Cn[n][j][i]/Na;
+					D[n][j][i]=D[n][j][i]/Na;
+					divF[n][j][i]=divF[n][j][i]/Na;					
+	
+					tmp[n][j][i]=C0[n][j][i]+Cn[n][j][i]-divF[n][j][i]-D[n][j][i]; // residual/error
+				#endif
 			}
 		}
 	}
@@ -43,62 +49,65 @@ void write_diagnostics(int sD, int Na, int rank)
 		ERR(status);
 
 	// Write fields	
-	if ((status = nc_inq_varid(ncid, "KE", &varid)))
-		ERR(status);
-
-	if ((status = nc_put_vara_float(ncid, varid, start, count, &KE[0][0][0])))
-		ERR(status);
-    
-   	if ((status = nc_inq_varid(ncid, "PE", &varid)))
-		ERR(status);
-
-	if ((status = nc_put_vara_float(ncid, varid, start, count, &PE[0][0][0])))
-		ERR(status);
-
-
-   	if ((status = nc_inq_varid(ncid, "up", &varid)))
-		ERR(status);
-
-	if ((status = nc_put_vara_float(ncid, varid, start, count, &up[0][0][0])))
-		ERR(status);
-		
-	if ((status = nc_inq_varid(ncid, "vp", &varid)))
-		ERR(status);
-
-	if ((status = nc_put_vara_float(ncid, varid, start, count, &vp[0][0][0])))
-		ERR(status);
+	#ifdef ENERGY
+		if ((status = nc_inq_varid(ncid, "KE", &varid)))
+			ERR(status);
 	
-		
-	if ((status = nc_inq_varid(ncid, "C0", &varid)))
-		ERR(status);
-
-	if ((status = nc_put_vara_float(ncid, varid, start, count, &C0[0][0][0])))
-		ERR(status);
-		
-   	if ((status = nc_inq_varid(ncid, "Cn", &varid)))
-		ERR(status);
-
-	if ((status = nc_put_vara_float(ncid, varid, start, count, &Cn[0][0][0])))
-		ERR(status);
-		
-	if ((status = nc_inq_varid(ncid, "D", &varid)))
-		ERR(status);
-
-	if ((status = nc_put_vara_float(ncid, varid, start, count, &D[0][0][0])))
-		ERR(status);
-
-	if ((status = nc_inq_varid(ncid, "divF", &varid)))
-		ERR(status);
-
-	if ((status = nc_put_vara_float(ncid, varid, start, count, &divF[0][0][0])))
-		ERR(status);
-    
-    if ((status = nc_inq_varid(ncid, "error", &varid)))
-		ERR(status);
-
-	if ((status = nc_put_vara_float(ncid, varid, start, count, &tmp[0][0][0])))
-		ERR(status);
-        
+		if ((status = nc_put_vara_float(ncid, varid, start, count, &KE[0][0][0])))
+			ERR(status);
+	    
+	   	if ((status = nc_inq_varid(ncid, "PE", &varid)))
+			ERR(status);
+	
+		if ((status = nc_put_vara_float(ncid, varid, start, count, &PE[0][0][0])))
+			ERR(status);
+	#endif
+	
+	#ifdef FLUX
+	   	if ((status = nc_inq_varid(ncid, "up", &varid)))
+			ERR(status);
+	
+		if ((status = nc_put_vara_float(ncid, varid, start, count, &up[0][0][0])))
+			ERR(status);
+			
+		if ((status = nc_inq_varid(ncid, "vp", &varid)))
+			ERR(status);
+	
+		if ((status = nc_put_vara_float(ncid, varid, start, count, &vp[0][0][0])))
+			ERR(status);
+	#endif
+	
+	#ifdef WORK
+		if ((status = nc_inq_varid(ncid, "C0", &varid)))
+			ERR(status);
+	
+		if ((status = nc_put_vara_float(ncid, varid, start, count, &C0[0][0][0])))
+			ERR(status);
+			
+	   	if ((status = nc_inq_varid(ncid, "Cn", &varid)))
+			ERR(status);
+	
+		if ((status = nc_put_vara_float(ncid, varid, start, count, &Cn[0][0][0])))
+			ERR(status);
+			
+		if ((status = nc_inq_varid(ncid, "D", &varid)))
+			ERR(status);
+	
+		if ((status = nc_put_vara_float(ncid, varid, start, count, &D[0][0][0])))
+			ERR(status);
+	
+		if ((status = nc_inq_varid(ncid, "divF", &varid)))
+			ERR(status);
+	
+		if ((status = nc_put_vara_float(ncid, varid, start, count, &divF[0][0][0])))
+			ERR(status);
+	    
+	    if ((status = nc_inq_varid(ncid, "error", &varid)))
+			ERR(status);
+	
+		if ((status = nc_put_vara_float(ncid, varid, start, count, &tmp[0][0][0])))
+			ERR(status);
+    #endif    
         
     // Write time  
     if ((status = nc_inq_varid(ncid, "period", &varid)))
@@ -118,14 +127,24 @@ void write_diagnostics(int sD, int Na, int rank)
 	for(n=0; n<NM; n++){
 		for(j=0; j<NY; j++){
 			for(i=0; i<NX; i++){
-				KE[n][j][i]=0;
-				PE[n][j][i]=0;
-				up[n][j][i]=0;
-				vp[n][j][i]=0;
-				C0[n][j][i]=0;
-				Cn[n][j][i]=0;
-				divF[n][j][i]=0;
-				D[n][j][i]=0;
+				
+				#ifdef ENERGY
+					KE[n][j][i]=0;
+					PE[n][j][i]=0;
+				#endif
+				
+				#ifdef FLUX
+					up[n][j][i]=0;
+					vp[n][j][i]=0;
+				#endif
+				
+				#ifdef WORK
+					C0[n][j][i]=0;
+					Cn[n][j][i]=0;
+					divF[n][j][i]=0;
+					D[n][j][i]=0;
+				#endif
+				
 			}
 		}
 	}

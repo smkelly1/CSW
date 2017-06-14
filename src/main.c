@@ -29,7 +29,7 @@ int main(int argc, char *argv[])
 	double t=0; // time
 	int sW=0; // Write index
 	
-	#ifdef DIAGNOSTICS
+	#if defined(ENERGY) || defined(FLUX) || defined(WORK)
 		int sD=1; // Diagnostic index (start after one cycle)
 		int Na=1; // Number of points for diagnostic average
 	#endif
@@ -97,7 +97,7 @@ int main(int argc, char *argv[])
 		}
 				
 		// Write diagnostics
-		#ifdef DIAGNOSTICS
+		#if defined(ENERGY) || defined(FLUX) || defined(WORK)
 			if (t >= (sD*DT_D)) {			
 				write_diagnostics(sD,Na,rank);
 				++sD;

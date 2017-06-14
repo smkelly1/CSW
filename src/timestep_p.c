@@ -22,7 +22,7 @@ void timestep_p(void)
 			
 			for(i=0; i<NX; i++){				
     
-   				if (H[j+1][i+1]>0) {
+   				if (H[j+1][i+1]>H_MIN) {
 
 					// Create a sponge with an R_MASK decay time scale where there is insufficient wave resolution
 					#ifdef R_MASK

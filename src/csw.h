@@ -4,25 +4,25 @@
 #include <complex.h>
 
 // Input/output files
-#define FILE_GRID  "../../17-6_global_grids/100th_deg_grid.nc"
-#define FILE_TIDES "../100th_deg_tides.nc"
-#define FILE_OUT   "100th_deg_out"
+#define FILE_GRID  "../../17-6_global_grids/25th_deg_grid.nc"
+#define FILE_TIDES "../25th_deg_tides.nc"
+#define FILE_OUT   "25th_deg_out"
 
 // Grid spacing
-#define DX ((1.0/100)*M_PI/180) // Grid spacing in m or radians
+#define DX ((1.0/25)*M_PI/180) // Grid spacing in m or radians
 
 // Grid size 
-#define NPX 32  		// Number of processors in X
-#define NPY 8			// Number of processors in X
+#define NPX 4  		// Number of processors in X
+#define NPY 1			// Number of processors in X
 
-#define NX (36000/NPX)	// Grid size, this must be an integer
-#define NY (14600/NPY)  // This must be an integer 
+#define NX (9000/NPX)	// Grid size, this must be an integer
+#define NY (3650/NPY)  // This must be an integer 
 						// Note: reducing the total y-grid size will eliminate arctic cells
 #define NM 4			// Number of modes
 #define NC 1            // Number of tidal frequencies
 
 // Time steps
-#define DT   (12.42*3600/800)    // Forward model time step [sec]
+#define DT   (12.42*3600/200)    // Forward model time step [sec]
 								 // Approximate stable time steps:
 								 // 10th deg = 100 steps/period (dt=447 sec)
 								 // 25th deg = 200 (224 sec)
@@ -39,7 +39,8 @@
 //#define AX	10.0            // Horizontal Laplacian viscosity Bryan (1975) uses Ax=u*DX/2 
 						 	    // Quick reference for U=1 cm/s: 1/10 deg = 50, 1/25 deg = 20, 1/50 deg = 10, 1/100 deg = 5
 #define R_MASK (1.0/3600) 		// Damping scale in low-wave resolution regions
-#define H_MIN  0.0				// Minimum depth to force internal tides (set to 0.0 to turn off)
+#define H_MIN  50.0				// Minimum depth to solve internal tides (set to 0.0 to turn off)
+#define H_MIN_FORCE  50.0		// Minimum depth to force internal tides (set to 0.0 to turn off)
 
 // Flags (These could be written to the input file, but it's quicker to compile than run MATLAB)
 #define CORIOLIS               // Include the Coriolis force
@@ -47,7 +48,9 @@
 #define SPHERE                 // Use spherical coordinates (Cartesian is default)
 #define PERIODICBC             // Use periodic boundary conditions in longitude
 #define IT_FORCING             // Use an Internal-Tide Generating Function
-#define DIAGNOSTICS            // Compute and write energy diagnostics
+#define ENERGY                 // Compute and write energy diagnostics
+//#define FLUX                   // Compute and write energy diagnostics
+#define WORK             // Compute and write energy diagnostics
 
 // Constants 
 #define A   6371000.0          // radius of Earth
@@ -136,12 +139,17 @@ double Fp_2[NM][NY][NX];
 float tmp[NM][NY][NX];
 
 // Energy diagnostics and temporary storage for writing output
-#ifdef DIAGNOSTICS
+#ifdef ENERGY
 	float KE[NM][NY][NX];
 	float PE[NM][NY][NX];
+#endif
+	
+#ifdef ENERGY
 	float up[NM][NY][NX];
 	float vp[NM][NY][NX];
-	
+#endif
+
+#ifdef WORK	
 	float C0[NM][NY][NX];
 	float Cn[NM][NY][NX];
 	float D[NM][NY][NX];

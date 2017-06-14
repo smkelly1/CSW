@@ -6,11 +6,13 @@ clear
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 MSI=1; 
 
-fid.grid='../../../17-6_global_grids/50th_deg_grid.nc';
-fid.tides='../../50th_deg_tides.nc';
+fid.grid='../../../17-6_global_grids/25th_deg_grid.nc';
+fid.tides='../../25th_deg_tides.nc';
 
-Nc=1;               % Number of tidal constituents 
-H_min=16;			% Set minimum depth
+Nc=1;       % Number of tidal constituents 
+Ns=3;       % Number of grid points to smooth tidal velocities
+H_min=50;	% Set minimum depth for tides
+thresh=0.5; % Maximum tidal velocity 
 
 % Add paths on MSI that are sometimes lost using qsub
 if MSI
@@ -122,11 +124,20 @@ U(isinf(U) | isnan(U))=0+ii*0;
 V(isinf(V) | isnan(V))=0+ii*0;
 
 % Limit surface tides to 1 m/s
-thresh=1; 
 fast=thresh<abs(U);
 U(fast)=U(fast).*thresh./abs(U(fast));
 fast=thresh<abs(V);
 V(fast)=V(fast).*thresh./abs(V(fast));
+
+for k=1:Nc
+    tmp=AVE2D(U(:,:,k),Ns);
+    tmp(H<H_min)=0;
+    U(:,:,k)=tmp;
+    
+    tmp=AVE2D(V(:,:,k),Ns);
+    tmp(H<H_min)=0;
+    V(:,:,k)=tmp;
+end
 
 % Round the tidal frequency and write to file
 period=(2*pi/omega)/3600; % in hours

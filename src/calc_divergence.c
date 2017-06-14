@@ -24,7 +24,7 @@ void calc_divergence(void)
 		for(n=0; n<NM; n++){
 			for(i=0; i<NX; i++){
 						
-				if (H[j+1][i+1]>0) {
+				if (H[j+1][i+1]>H_MIN) {
 					
 					// Volume divergence
 					#ifdef SPHERE
