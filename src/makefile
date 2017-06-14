@@ -7,12 +7,12 @@
 
 SHELL=/bin/bash
 
-CC=mpicc
-CFLAGS=-Wall -O3 -mcmodel=large -fpic
+#CC=mpicc
+#CFLAGS=-Wall -O3 -mcmodel=large -fpic
 # -g
 
-#CC=mpiicc
-#CFLAGS=-cc=icc -Wall -O3  -mcmodel=large -mkl -ipo -fpic -axAVX
+CC=mpiicc
+CFLAGS=-cc=icc -Wall -O3  -mcmodel=large -mkl -ipo -fpic -axAVX
 #-mkl  -ipo -axAVX -fpic
 
 INCLUDES = -I./ 
