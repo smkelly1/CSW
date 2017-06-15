@@ -27,7 +27,7 @@ int main(int argc, char *argv[])
 	
 	int rank, nrank, s;
 	double t=0; // time
-	int sW=0; // Write index
+	int sW=0;   // Write index
 	
 	#if defined(ENERGY) || defined(FLUX) || defined(WORK)
 		int sD=1; // Diagnostic index (start after one cycle)

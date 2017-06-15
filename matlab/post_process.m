@@ -1,20 +1,20 @@
 % Load and integrate output data
 clear
 
-fid.out='../../run2/10th_deg_out.';
+fid.out='../../run_R10/10th_deg_out.';
 %fid.in='../10th_deg_in.nc';
 fid.grid='../../../17-6_global_grids/10th_deg_grid.nc';
 
 res=1/10;
 NM=2;
-NPX=4;
-NPY=1;
+NPX=2;
+NPY=2;
 
 H=ncread(fid.grid,'H');H=H(2:end-1,2:end-1);
 lon=ncread(fid.grid,'lon');lon=lon(2:end-1);
 lat=ncread(fid.grid,'lat');lat=lat(2:end-1);
 
-mask=(H>0);
+mask=(H>100);
 C_thresh=Inf;%0.5;
 
 [NX0 NY0]=size(H);
@@ -27,7 +27,7 @@ dy=res/180*pi*a;
 
 %% 
 clear int;
-cycle=[1:10:60];
+cycle=[1:25];
 for j=1:length(cycle)
     
     ind.t=cycle(j);
@@ -52,9 +52,9 @@ for j=1:length(cycle)
     end
     
     C(C>C_thresh)=C_thresh;    
-    int.C(j,:)=squeeze(nansum(nansum(C.*dx.*dy))*1e-9);
-    int.Cn(j,:)=squeeze(nansum(nansum(Cn.*dx.*dy))*1e-9);
-    int.D(j,:)=squeeze(nansum(nansum(D.*dx.*dy))*1e-9);
+    int.C(j,:)=squeeze(nansum(nansum(mask.*C.*dx.*dy))*1e-9);
+    int.Cn(j,:)=squeeze(nansum(nansum(mask.*Cn.*dx.*dy))*1e-9);
+    int.D(j,:)=squeeze(nansum(nansum(mask.*D.*dx.*dy))*1e-9);
     
     % Use a mask to avoid shallow regions
     int.divF(j,:)=squeeze(nansum(nansum(mask.*divF.*dx.*dy))*1e-9);
@@ -62,7 +62,9 @@ for j=1:length(cycle)
 end
 
 %%
-plot(cycle,int.C,'k',cycle,int.D,'r',cycle,int.divF,'b',cycle,int.error,'k--')
+%plot(cycle,int.C,'k',cycle,int.D,'r',cycle,int.divF,'b',cycle,int.error,'k--')
+
+plot(cycle,sum(int.C,2),'k',cycle,sum(int.D,2),'r',cycle,sum(int.divF,2),'b',cycle,sum(int.error,2),'k--')
 
 %%
 tmp=error;
@@ -72,11 +74,11 @@ Clims=[-.1 .1];
 figure(1);clf;colormap(REDBLUE5);
 
 subplot(2,1,1)
-pcolor(lon,lat,AVE2D(divF(:,:,1),1)');shading flat;caxis(Clims);colorbar;hold on;
+imagesc(lon,lat,AVE2D(divF(:,:,1),5)');shading flat;caxis(Clims);colorbar;hold on;set(gca,'ydir','normal')
 contour(lon,lat,H',[1 1],'k');
 
 subplot(2,1,2)
-pcolor(lon,lat,AVE2D(tmp(:,:,1),1)');shading flat;caxis(Clims);colorbar;hold on;
+imagesc(lon,lat,AVE2D(tmp(:,:,1),5)');shading flat;caxis(Clims);colorbar;hold on;set(gca,'ydir','normal')
 contour(lon,lat,H',[1 1],'k');
 
 linkaxes;
@@ -87,4 +89,29 @@ plims=[-100 100];
 figure(1);clf;colormap(REDBLUE5);
 pcolor(lon,lat,p(:,:,1)');shading flat;caxis(plims);colorbar;hold on;
 contour(lon,lat,H',[1 1],'k');
+
+%%
+for i=32;%1:22
+ind.t=i;
+NT=1;
+
+p=zeros([NX*NPX NY*NPY]);
+u=zeros([NX*NPX NY*NPY]);
+v=zeros([NX*NPX NY*NPY]);
+C0=zeros([NX*NPX NY*NPY]);
+
+for n=0:NPX*NPY-1
+    start.x=floor(n-floor(n/NPX)*NPX)*NX;
+    start.y=floor(n/NPX)*NY;
+    p(start.x+[1:NX],start.y+[1:NY])=ncread([fid.out,num2str(n,'%03d'),'.nc'],'p',[1 1 1 ind.t],[NX NY 1 1]);
+    u(start.x+[1:NX],start.y+[1:NY])=ncread([fid.out,num2str(n,'%03d'),'.nc'],'u',[1 1 1 ind.t],[NX NY 1 1]);
+    v(start.x+[1:NX],start.y+[1:NY])=ncread([fid.out,num2str(n,'%03d'),'.nc'],'v',[1 1 1 ind.t],[NX NY 1 1]);
+    C0(start.x+[1:NX],start.y+[1:NY])=ncread([fid.out,num2str(n,'%03d'),'.nc'],'C0',[1 1 1 ind.t],[NX NY 1 1]);
+end
+
+imagesc(p');set(gca,'ydir','normal');caxis([-1 1]*100);colormap(REDBLUE5)
+%imagesc(u');set(gca,'ydir','normal');caxis([-1 1]*0.01);colormap(REDBLUE5)
+%imagesc(C0');set(gca,'ydir','normal');caxis([-1 1]*0.01);colormap(REDBLUE5)
+pause(1);
+end
 

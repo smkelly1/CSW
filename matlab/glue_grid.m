@@ -16,9 +16,6 @@ if MSI
 	addpath(genpath('/home/kellys/smkelly/software/data_products/SS_topo'))
 	addpath(genpath('/home/kellys/smkelly/software/data_products/OTPS'))
 	addpath(genpath('/home/kellys/smkelly/software/data_products/WOA13'))
-	folder='~/simulations/SWOT/global_grids/';
-else
-	folder='~/experiments/SWOT/proc/CSW/global_grids/';
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -235,6 +232,7 @@ if 1
             %tmp=tmp(2:end-1,:); 
 			ncwrite(fid.grid,'T_y',tmp,[1 1 m n]);
         end
+        disp(n)
     end
      	
 end

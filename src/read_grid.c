@@ -24,7 +24,7 @@ void read_grid(int rank)
 		size_t count_T[]={NM, NM, NY+2, NX+2};
 	#endif
 		
-	#ifdef SPHERE
+	#if defined(SPHERE) || defined(CORIOLIS)
 		int j;
 		size_t start_lat[]={y0};
 		size_t count_lat[]={NY+2};
@@ -84,8 +84,8 @@ void read_grid(int rank)
 			ERR(status);
 			
 		for(j=0; j<NY+2; j++){
-			lat[j]=lat[j]/180*M_PI;
-			f[j]=2*(2*M_PI)/(24*3600)*sin(lat[j]);
+			lat[j]=lat[j]*M_PI/180;
+			f[j]=2*(2*M_PI)/(24*3600)*sin(lat[j]);	
 		}	
 	
 	#endif

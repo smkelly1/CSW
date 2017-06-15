@@ -7,6 +7,9 @@ void calc_forces(void)
 	double Hu, Hv;
 	double cos01, cos1, cos12;
 	
+	double invDX;
+	invDX=1/DX;
+	
 	// Define variables that might be needed
 	#ifdef MODECOUPLE
 		int m;
@@ -17,8 +20,8 @@ void calc_forces(void)
 	#endif
 		
 	#if defined(AX) && defined(SPHERE)
-			double dUdy[2], dUdx2, dUdy2;
-			double dVdy[2], dVdx2, dVdy2;
+		double dUdy[2], dUdx2, dUdy2;
+		double dVdy[2], dVdx2, dVdy2;
 	#endif
 	
 	#ifdef CD
@@ -29,9 +32,6 @@ void calc_forces(void)
 		double dFdx, dFdy;
 		double gamma;
 	#endif 
-	
-	double invDX;
-	invDX=1/DX;
 	
 	#ifdef AX
 		double invDX2;
@@ -136,7 +136,9 @@ void calc_forces(void)
 		cos01=cos((lat[j]+lat[j+1])/2);
 		cos1=cos(lat[j+1]);
 
-		f01=(f[j]+f[j+1])/2;
+		#ifdef CORIOLIS
+			f01=(f[j]+f[j+1])/2;
+		#endif
 		
 		for(n=0; n<NM; n++){							
 			for(i=0; i<NX; i++){
