@@ -6,8 +6,8 @@ clear
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 MSI=1; 
 
-fid.grid='../../../17-6_global_grids/25th_deg_grid.nc';
-fid.tides='../../25th_deg_tides.nc';
+fid.grid='../../../17-6_global_grids/10th_deg_grid.nc';
+fid.tides='../../10th_deg_tides.nc';
 
 Nc=1;       % Number of tidal constituents 
 Ns=3;       % Number of grid points to smooth tidal velocities

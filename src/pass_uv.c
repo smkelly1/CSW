@@ -158,9 +158,12 @@ void pass_uv(int rank)
 		// Receive last point from east
 		if (rank_e > -1) {
 			for (m=0; m<NM; m++) {
-				for (j=0; j<NY; j++) {
-					U[m][j+1][NX+2]=u_Rew[m*NY+j]; 
-				}
+				#ifdef AX
+					for (j=0; j<NY; j++) {
+						U[m][j+1][NX+2]=u_Rew[m*NY+j]; 
+					}
+				#endif
+
 				for (j=0; j<NY+1; j++) {
 					V[m][j+1][NX+1]=v_Rew[m*(NY+1)+j];				
 				}			
