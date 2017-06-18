@@ -61,30 +61,31 @@ int main(int argc, char *argv[])
 		////////////////////////////////////////////////////////////////
 		// Momentum calls
 		calc_forces(); 
-
+						
 		// Update momentum 
 		timestep_uv();
-
+		
 		// Trade u & v at boundaries (only needed to compute diffusion and Coriolis)
-		pass_uv(rank);
-
+		#if defined(CORIOLIS) || defined(AX)
+			pass_uv(rank);
+		#endif
 		
 		////////////////////////////////////////////////////////////////
 		// Divergence calls
  		calc_divergence();
-
+		
 		// Add internal-tide generating force
 		#ifdef IT_FORCING
 			calc_ITGF(t);
 		#endif
-				
+					
 		// Update pressure 
 		timestep_p();
-
+			
 		// Trade p1 at boundaries (needed to compute pressure gradients and topographic coupling)
 		pass_p(rank);
-
-
+		
+		
 		////////////////////////////////////////////////////////////////
 		// Update time and Write output
 		

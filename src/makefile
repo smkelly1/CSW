@@ -8,8 +8,8 @@
 SHELL=/bin/bash
 
 CC=mpicc
-CFLAGS=-Wall -O3 -mcmodel=large -fpic
-# -g
+CFLAGS=-Wall -O3 -mcmodel=large 
+# -g -fpic
 
 #CC=mpiicc
 #CFLAGS=-cc=icc -Wall -O3  -mcmodel=large -mkl -ipo -fpic -axAVX

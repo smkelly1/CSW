@@ -11,8 +11,8 @@ fid.tides='../../25th_deg_tides.nc';
 
 Nc=1;       % Number of tidal constituents 
 Ns=3;       % Number of grid points to smooth tidal velocities
-H_min=50;	% Set minimum depth for tides
-thresh=0.5; % Maximum tidal velocity 
+H_min=16;	% Set minimum depth for tides
+thresh=1; % Maximum tidal velocity 
 
 % Add paths on MSI that are sometimes lost using qsub
 if MSI
