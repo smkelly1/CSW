@@ -15,6 +15,6 @@ module load matlab/R2016b
 cd $PBS_O_WORKDIR
 
 #-------Start processes---------------------
-matlab -nodisplay -r "maxNumCompThreads(8); $(echo make_grid_v2"("$PBS_ARRAYID-1,160,8,1")"); quit;"
+matlab -nodisplay -r "maxNumCompThreads(8); $(echo make_grid"("$PBS_ARRAYID-1,160,8,1")"); quit;"
 
 # Run this job with "qsub -t 1-20 make_grid.pbs"

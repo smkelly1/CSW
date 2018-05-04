@@ -6,15 +6,10 @@
 // Written in C using openmpi
 // Originally compiled with gcc on Ubuntu Linux 12.04
 //
-// Release notes, 5-MAY-17:
-// Minor changes, removed some diagnostic lines
-// Adjusted the passing functions so that E/W periodic boundaries can be turned off
-// Need to add online calculations of F, div(F), and C to write-output
-// 
 // Copyright (c) 2016, Samuel M Kelly (smkelly@d.umn.edu)
 //
 // Publications and presentations that use this code should cite:
-// S. M. Kelly, P. F. J. Lermusiaux, T. Duda, and P. J. Haley, Jr. (2015) A Coupled-mode Shallow Water model for tidal analysis: Internal-tide reflection and refraction by the Gulf Stream, J. Phys. Oceanogr., submitted. 
+// S. M. Kelly, P. F. J. Lermusiaux, T. Duda, and P. J. Haley, Jr. (2016) A Coupled-mode Shallow Water model for tidal analysis: Internal-tide reflection and refraction by the Gulf Stream, J. Phys. Oceanogr., 3661-3679. 
 //
 
 #include <mpi.h>

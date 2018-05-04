@@ -1,9 +1,7 @@
-function make_grid_v2(id_node,N_subgrids,N_processors,N_threads)
-% Matlab file to compute c_n and T_mn
+function make_grid(id_node,N_subgrids,N_processors,N_threads)
+% Matlab function to compute c_n and T_mn
 %
-% v2 release notes:
-%
-% The script now smooths WOA N^2 over 5 degrees and fill gaps with "fillmissing.m"
+% The script presently smooths WOA N^2 over 5 degrees and fill gaps with "fillmissing.m"
 %
 % Explanation of input parameters:
 %
@@ -327,7 +325,7 @@ parfor id_subindex=1:N_processors
                         
                         % Compute the modes
                         ind_z=round(H(i,j)/dz);
-                        [PHI,c(1,j,1:Nm_H)]=MODES_fast_nogpu(dz,N2(1:ind_z),Nm_H,Nm0_H);
+                        [PHI,c(1,j,1:Nm_H)]=MODES_fast(dz,N2(1:ind_z),Nm_H,Nm0_H);
                         
                         % Write to array
                         phi_surf(1,j,1:Nm_H)=PHI(1,:)';

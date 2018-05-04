@@ -1,24 +1,209 @@
-README file for SWOT global CSW simulations:
+README file for Coupled-mode Shallow Water model (CSW). Copyright (c) 2016, Samuel M Kelly (smkelly@d.umn.edu)
 
-(i) The grids are built using MATLAB in ...experiments/proc/CSW/global_grids
+This model simulates internal wave generation and propagation using vertical-mode rather than depth coordinates. Publications and presentations that use this code should cite:
 
-(ii) The input files are built using MATLAB in directories like .../experiments/proc/CSW/17-5_0.1deg, but the actual files are written to /simulations/CSW/SWOT/17-5_0.1deg. NOTE: This is because "/experiments" is backed-up but "/simulations" is not. I.e., the configuration files will be preserved even if the massive data files are lost.
-
-(iii) The utilized CSW source code (in c) is located in /experiments/proc/CSW/17-5_0.1deg/src, but the output files are, once again, written to "/simulations". A base value of the source code is also stored in "/software"
-
-(iv) The steps to running CSW are:
-
-(1) Generate a grid using MATLAB 
-
-(2) Generate an input file using MATLAB
-
-(3) Compile CSW with the correct file names and dimensions
-
-(4) Run CSW from the command line
+S. M. Kelly, P. F. J. Lermusiaux, T. Duda, and P. J. Haley, Jr. (2016) A Coupled-mode Shallow Water model for tidal analysis: Internal-tide reflection and refraction by the Gulf Stream, J. Phys. Oceanogr., 3661-3679. 
 
 
+========================================================================
+Creating the model inputs:
 
-To do:
-(1) Read in surface tides and phi_bott and calculate forcing in the C-code (should simplify make_input.m)
-(2) Compute masks in the time-step routine(?) (should simplify make_input.m and reduce memory by 3 x 8 arrays)
-(3) Tag code with checkpoints 1.0 etc.
+Create a grid
+------------------------------------------------------------------------
+You should only have to create a grid when you (i) change the bathymetry data set or (ii) change the resolution
+
+SPECIAL NOTE: the 1/100 degree grid is made by interpolating the 1/50 degree grid, since the bathymetry and stratification are coarser than 1/50 degree anyway 
+
+Run "make_grid.PBS" (typically with a command like "qsub -t 1-20 make_grid.pbs")
+
+This calls ./matlab/make_grid.m
+
+The present inputs are:
+(1) Smith and Sandwell bathymetry (satbath will look for 'topo_8.2.img', but see http://topex.ucsd.edu/marine_topo/ for newer data)
+(2) WOA13 stratification (make_strat.m creates strat.mat from the data here https://www.nodc.noaa.gov/OC5/woa13/)
+(2) You will need the seawater matlab toolbox
+
+In make_grid.m, the user can set:
+
+dx=1/50 (Degrees)
+Nm=8; (number of vertical modes, can be less during simulations)
+Nm0=128; (Number of structure functions to use when solving the eigenvalue problem)
+dz=1; (vertical resolution in eigenvalue problem)
+H_min=16; (Minimum depth to compute modes)
+H_max=6000; (Maximum depth to compute modes)
+latlims=[-80 66]; (Domain limits)
+
+Lastly, you have to assemble the grid slabs:
+
+Open Matlab and run "glue_grid.m"
+
+
+Create the forcing
+------------------------------------------------------------------------
+You have to create a forcing file when you (i) change the tidal data set, (ii) add tidal constituents, or (ii) change the tidal filters (smoothness, max values, etc.)
+
+Open Matlab and run ./matlab/make_tides.m
+
+The present inputs are:
+(1) the netCDF grid file created above
+(2) TPXO8 tides (http://volkov.oce.orst.edu/tides/tpxo8_atlas.html) 
+
+The user can set:
+
+fid.grid='../../../17-6_global_grids/10th_deg_grid.nc'; (the grid file)
+Nc=1;       (Number of tidal constituents) 
+Ns=3;       (Number of grid points to smooth tidal velocities)
+H_min=16;	(Set minimum depth for tides)
+thresh=1;   (Maximum tidal velocity m/s) 
+
+
+========================================================================
+Compiling and running the CSW model:
+
+Edit the compile-time parameters
+------------------------------------------------------------------------
+All of the CSW's parameters are set in the header file: ./src/CSW.h 
+
+Therefore, everytime something is altered, it CSW must be recompiled. This is accomplished by viewing/altering ./src/makefile and following the instructions there. The typical commands (launched in the ./src/ directory) are
+
+make depend 
+make 
+
+The executable is ./src/cswexec
+
+Running the CSW model:
+------------------------------------------------------------------------
+Create a "run" directory and enter it
+
+Submit the job to a scheduler using the command
+
+qsub ../csw/run_csw.pbs
+
+Make sure the pbs file processor request matches the processors assumed in CSW.h
+
+
+========================================================================
+Minnesota Supercomputing Institute 
+
+Connect to MSI via:
+ssh -Y user@login.msi.umn.edu
+
+Some useful stuff for a .bashrc:
+
+alias matlab='matlab -nosplash -nodesktop'
+alias lab='ssh -X lab.msi.umn.edu'
+alias mesabi='ssh -X mesabi.msi.umn.edu'
+alias itasca='ssh -X itasca.msi.umn.edu'
+alias ijob='qsub -I -X -l walltime=4:00:00,nodes=1:ppn=4,mem=64gb'
+alias ijob_itasca='qsub -I -q devel -l walltime=2:00:00,nodes=1:ppn=8'
+alias isub='isub -n nodes=1:ppn=1 -m 16GB -w 2:00:00'
+alias isub8='isub -n nodes=1:ppn=8 -m 64GB -w 2:00:00'
+alias isub16='isub -n nodes=1:ppn=16 -m 64GB -w 2:00:00'
+
+Load the following modules:
+
+module load ncview
+module load matlab/R2016b
+module load impi/intel
+module unload intel
+module load intel
+
+Then there's some useful pbs commands:
+
+showq -w user=
+qstat -f
+checkjob -v
+acctinfo
+groupquota
+qdel 
+qsub
+pdsh -j <id>
+
+
+========================================================================
+Editing the source code:
+
+The source code is contained in a git repository, which can be used in the following ways
+
+
+(i) Getting a fresh copy of the source code
+------------------------------------------------------------------------
+This is known as "cloning":
+
+git clone https://smkelly@bitbucket.org/smkelly/csw
+
+
+(ii) Saving changes
+------------------------------------------------------------------------
+First, see if there are any new or changed files:
+
+git status  and/or  git diff
+
+Saving changes is a 3-step process. First you add the files with changes to the "index":
+
+git add <filename>  or  git add * (git reset HEAD <filename> removes the file from the index)
+
+Then you commit the changes in the "index" to the "head":
+
+git commit -m "Commit message"
+
+Lastly, you send the head to the remote repository:
+
+git push origin master
+
+
+(iv) Code branches
+------------------------------------------------------------------------
+Start a branch:
+
+git checkout -b project_x
+
+Check available branches:
+
+git branch
+
+Switch branches:
+
+git checkout project_z
+
+delete a branch:
+
+git branch -d project_x
+
+Add/commit to a branch: same as usual 
+
+Lastly, send the branch head to the remote repository:
+
+git push origin <branch>
+
+
+(v) Reset a file you messed up
+------------------------------------------------------------------------
+git checkout -- <file>
+
+
+(v) Update your local index to most recent commit
+------------------------------------------------------------------------
+Say you fixed some bugs somewhere else and committed the update. Now you're working on another area of the code using an older working copy. In order to commit your changes to the newest version of the code, you have to update the index
+
+git reset
+
+Now when you check for differences, you can 
+
+
+(vi) Merging a branch
+------------------------------------------------------------------------
+When the branch code is ready to be implemented in the master, you could merge, but it is better to rebase (provided nobody is working on the master). 
+
+git rebase -i master
+
+
+
+
+
+
+
+
+
+
+
