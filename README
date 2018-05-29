@@ -1,8 +1,8 @@
-README file for Coupled-mode Shallow Water model (CSW). Copyright (c) 2016, Samuel M Kelly (smkelly@d.umn.edu)
+README for the **Coupled-mode Shallow Water model (CSW)**. Copyright (c) 2016, Samuel M Kelly (smkelly@d.umn.edu)
 
 This model simulates internal wave generation and propagation using vertical-mode rather than depth coordinates. Publications and presentations that use this code should cite:
 
-S. M. Kelly, P. F. J. Lermusiaux, T. Duda, and P. J. Haley, Jr. (2016) A Coupled-mode Shallow Water model for tidal analysis: Internal-tide reflection and refraction by the Gulf Stream, J. Phys. Oceanogr., 3661-3679. 
+**S. M. Kelly, P. F. J. Lermusiaux, T. Duda, and P. J. Haley, Jr. (2016) A Coupled-mode Shallow Water model for tidal analysis: Internal-tide reflection and refraction by the Gulf Stream, J. Phys. Oceanogr., 3661-3679.** 
 
 
 1 Creating the model inputs
@@ -25,17 +25,17 @@ The present inputs are:
 
 In make_grid.m, the user can set:
 
-dx=1/50 (Degrees)  
-Nm=8; (number of vertical modes, can be less during simulations)  
-Nm0=128; (Number of structure functions to use when solving the eigenvalue problem)  
-dz=1; (vertical resolution in eigenvalue problem)  
-H_min=16; (Minimum depth to compute modes)  
-H_max=6000; (Maximum depth to compute modes)  
-latlims=[-80 66]; (Domain limits)
+>dx=1/50 (Degrees)  
+>Nm=8; (number of vertical modes, can be less during simulations)  
+>Nm0=128; (Number of structure functions to use when solving the eigenvalue problem)  
+>dz=1; (vertical resolution in eigenvalue problem)  
+>H_min=16; (Minimum depth to compute modes)  
+>H_max=6000; (Maximum depth to compute modes)  
+>latlims=[-80 66]; (Domain limits)
 
 Lastly, you have to assemble the grid slabs:
 
-Open Matlab and run "glue_grid.m"
+>matlab "run glue_grid.m"
 
 
 1.2 Create the forcing
@@ -50,11 +50,11 @@ The present inputs are:
 
 The user can set:
 
-fid.grid='../../../17-6_global_grids/10th_deg_grid.nc'; (the grid file)  
-Nc=1;       (Number of tidal constituents)   
-Ns=3;       (Number of grid points to smooth tidal velocities)  
-H_min=16;	(Set minimum depth for tides)  
-thresh=1;   (Maximum tidal velocity m/s) 
+>fid.grid='../../../17-6_global_grids/10th_deg_grid.nc'; (the grid file)  
+>Nc=1;       (Number of tidal constituents)   
+>Ns=3;       (Number of grid points to smooth tidal velocities)  
+>H_min=16;	(Set minimum depth for tides)  
+>thresh=1;   (Maximum tidal velocity m/s) 
 
 
 2 Compiling and running the CSW model:
@@ -66,8 +66,8 @@ All of the CSW's parameters are set in the header file: ./src/CSW.h
 
 Therefore, everytime something is altered, it CSW must be recompiled. This is accomplished by viewing/altering ./src/makefile and following the instructions there. The typical commands (launched in the ./src/ directory) are
 
-make depend  
-make 
+>make depend  
+>make 
 
 The executable is ./src/cswexec
 
@@ -77,7 +77,7 @@ Create a "run" directory and enter it
 
 Submit the job to a scheduler using the command
 
-qsub ../csw/run_csw.pbs
+>qsub ../csw/run_csw.pbs
 
 Make sure the pbs file processor request matches the processors assumed in CSW.h
 
@@ -90,34 +90,34 @@ ssh -Y user@login.msi.umn.edu
 
 Some useful stuff for a .bashrc:
 
-alias matlab='matlab -nosplash -nodesktop'  
-alias lab='ssh -X lab.msi.umn.edu'  
-alias mesabi='ssh -X mesabi.msi.umn.edu'  
-alias itasca='ssh -X itasca.msi.umn.edu'  
-alias ijob='qsub -I -X -l walltime=4:00:00,nodes=1:ppn=4,mem=64gb'  
-alias ijob_itasca='qsub -I -q devel -l walltime=2:00:00,nodes=1:ppn=8'  
-alias isub='isub -n nodes=1:ppn=1 -m 16GB -w 2:00:00'  
-alias isub8='isub -n nodes=1:ppn=8 -m 64GB -w 2:00:00'  
-alias isub16='isub -n nodes=1:ppn=16 -m 64GB -w 2:00:00'
+>alias matlab='matlab -nosplash -nodesktop'  
+>alias lab='ssh -X lab.msi.umn.edu'  
+>alias mesabi='ssh -X mesabi.msi.umn.edu'  
+>alias itasca='ssh -X itasca.msi.umn.edu'  
+>alias ijob='qsub -I -X -l walltime=4:00:00,nodes=1:ppn=4,mem=64gb'  
+>alias ijob_itasca='qsub -I -q devel -l walltime=2:00:00,nodes=1:ppn=8'  
+>alias isub='isub -n nodes=1:ppn=1 -m 16GB -w 2:00:00'  
+>alias isub8='isub -n nodes=1:ppn=8 -m 64GB -w 2:00:00'  
+>alias isub16='isub -n nodes=1:ppn=16 -m 64GB -w 2:00:00'
 
 Load the following modules:
 
-module load ncview  
-module load matlab/R2016b  
-module load impi/intel  
-module unload intel  
-module load intel
+>module load ncview  
+>module load matlab/R2016b  
+>module load impi/intel  
+>module unload intel  
+>module load intel
 
 Then there's some useful pbs commands:
 
-showq -w user=  
-qstat -f  
-checkjob -v  
-acctinfo  
-groupquota  
-qdel  
-qsub  
-pdsh -j <id>
+>showq -w user=  
+>qstat -f  
+>checkjob -v  
+>acctinfo  
+>groupquota  
+>qdel  
+>qsub  
+>pdsh -j <id>
 
 
 4 Editing the source code using GIT
@@ -129,60 +129,59 @@ The source code is contained in a git repository, which can be used in the follo
 ------------------------------------------------------------------------
 This is known as "cloning":
 
-git clone https://smkelly@bitbucket.org/smkelly/csw
+>git clone https://smkelly@bitbucket.org/smkelly/csw
 
 
 4.2 Saving changes
 ------------------------------------------------------------------------
-First, see if there are any new or changed files:
+First, see if there are any new or changed files:  
+>git status  and/or  git diff
 
-git status  and/or  git diff
+Saving changes is a 3-step process. First you add the files with changes to the "index":  
+>git add <filename>  
+>git add * (git reset HEAD <filename> removes the file from the index)
 
-Saving changes is a 3-step process. First you add the files with changes to the "index":
+Then you commit the changes in the "index" to the "head":  
+>git commit -m "Commit message"
 
-git add <filename>  or  git add * (git reset HEAD <filename> removes the file from the index)
-
-Then you commit the changes in the "index" to the "head":
-
-git commit -m "Commit message"
-
-Lastly, you send the head to the remote repository:
-
-git push origin master
+Lastly, you send the head to the remote repository:  
+>git push origin master
 
 
 4.3 Code branches
 ------------------------------------------------------------------------
 Start a branch: git checkout -b project_x
 
-Check available branches: git branch
+Check available branches:  
+>git branch
 
-Switch branches: git checkout project_z
+Switch branches:  
+>git checkout project_z
 
-delete a branch: git branch -d project_x
+delete a branch:  
+>git branch -d project_x
 
 Add/commit to a branch: same as usual 
 
-Lastly, send the branch head to the remote repository: git push origin <branch>
+Send the branch head to the remote repository:   
+>git push origin <branch>
 
 
 4.4 Reset a file you messed up
 ------------------------------------------------------------------------
-git checkout -- <file>
+>git checkout -- <file>
 
 
 4.5 Update your local index to most recent commit
 ------------------------------------------------------------------------
-Say you fixed some bugs somewhere else and committed the update. Now you're working on another area of the code using an older working copy. In order to commit your changes to the newest version of the code, you have to update the index
-
-git reset
+Say you fixed some bugs somewhere else and committed the update. Now you're working on another area of the code using an older working copy. In order to commit your changes to the newest version of the code, you have to update the index  
+>git reset
 
 
 4.6 Merging a branch
 ------------------------------------------------------------------------
-When the branch code is ready to be implemented in the master, you could merge, but it is better to rebase (provided nobody is working on the master). 
-
-git rebase -i master
+When the branch code is ready to be implemented in the master, you could merge, but it is better to rebase (provided nobody is working on the master).   
+>git rebase -i master
 
 
 
