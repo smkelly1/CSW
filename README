@@ -6,9 +6,11 @@ S. M. Kelly, P. F. J. Lermusiaux, T. Duda, and P. J. Haley, Jr. (2016) A Coupled
 
 
 ========================================================================
-Creating the model inputs:
 
-Create a grid
+Creating the model inputs:
+------------------------------------------------------------------------
+
+Create a grid:
 ------------------------------------------------------------------------
 You should only have to create a grid when you (i) change the bathymetry data set or (ii) change the resolution
 
@@ -59,8 +61,9 @@ thresh=1;   (Maximum tidal velocity m/s)
 
 ========================================================================
 Compiling and running the CSW model:
+------------------------------------------------------------------------
 
-Edit the compile-time parameters
+Edit the compile-time parameters:
 ------------------------------------------------------------------------
 All of the CSW's parameters are set in the header file: ./src/CSW.h 
 
@@ -83,7 +86,8 @@ Make sure the pbs file processor request matches the processors assumed in CSW.h
 
 
 ========================================================================
-Minnesota Supercomputing Institute 
+Minnesota Supercomputing Institute: 
+------------------------------------------------------------------------
 
 Connect to MSI via:
 ssh -Y user@login.msi.umn.edu
@@ -91,6 +95,7 @@ ssh -Y user@login.msi.umn.edu
 Some useful stuff for a .bashrc:
 
 alias matlab='matlab -nosplash -nodesktop'
+
 alias lab='ssh -X lab.msi.umn.edu'
 alias mesabi='ssh -X mesabi.msi.umn.edu'
 alias itasca='ssh -X itasca.msi.umn.edu'
