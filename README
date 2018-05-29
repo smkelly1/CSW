@@ -7,10 +7,10 @@ S. M. Kelly, P. F. J. Lermusiaux, T. Duda, and P. J. Haley, Jr. (2016) A Coupled
 
 ========================================================================
 
-Creating the model inputs:
+1 Creating the model inputs:
 ------------------------------------------------------------------------
 
-Create a grid:
+1.1 Create a grid:
 ------------------------------------------------------------------------
 You should only have to create a grid when you (i) change the bathymetry data set or (ii) change the resolution
 
@@ -40,7 +40,7 @@ Lastly, you have to assemble the grid slabs:
 Open Matlab and run "glue_grid.m"
 
 
-Create the forcing:
+1.2 Create the forcing:
 ------------------------------------------------------------------------
 You have to create a forcing file when you (i) change the tidal data set, (ii) add tidal constituents, or (ii) change the tidal filters (smoothness, max values, etc.)
 
@@ -60,10 +60,11 @@ thresh=1;   (Maximum tidal velocity m/s)
 
 
 ========================================================================
-Compiling and running the CSW model:
+
+2 Compiling and running the CSW model:
 ------------------------------------------------------------------------
 
-Edit the compile-time parameters:
+2.1 Edit the compile-time parameters:
 ------------------------------------------------------------------------
 All of the CSW's parameters are set in the header file: ./src/CSW.h 
 
@@ -74,7 +75,7 @@ make
 
 The executable is ./src/cswexec
 
-Running the CSW model:
+2.2 Running the CSW model:
 ------------------------------------------------------------------------
 Create a "run" directory and enter it
 
@@ -86,7 +87,8 @@ Make sure the pbs file processor request matches the processors assumed in CSW.h
 
 
 ========================================================================
-Minnesota Supercomputing Institute: 
+
+3 Minnesota Supercomputing Institute: 
 ------------------------------------------------------------------------
 
 Connect to MSI via:
@@ -95,7 +97,6 @@ ssh -Y user@login.msi.umn.edu
 Some useful stuff for a .bashrc:
 
 alias matlab='matlab -nosplash -nodesktop'
-
 alias lab='ssh -X lab.msi.umn.edu'
 alias mesabi='ssh -X mesabi.msi.umn.edu'
 alias itasca='ssh -X itasca.msi.umn.edu'
@@ -126,19 +127,21 @@ pdsh -j <id>
 
 
 ========================================================================
-Editing the source code:
+
+4 Editing the source code:
+------------------------------------------------------------------------
 
 The source code is contained in a git repository, which can be used in the following ways
 
 
-(i) Getting a fresh copy of the source code
+4.1 Getting a fresh copy of the source code
 ------------------------------------------------------------------------
 This is known as "cloning":
 
 git clone https://smkelly@bitbucket.org/smkelly/csw
 
 
-(ii) Saving changes
+4.2 Saving changes
 ------------------------------------------------------------------------
 First, see if there are any new or changed files:
 
@@ -157,7 +160,7 @@ Lastly, you send the head to the remote repository:
 git push origin master
 
 
-(iv) Code branches
+4.3 Code branches
 ------------------------------------------------------------------------
 Start a branch:
 
@@ -182,12 +185,12 @@ Lastly, send the branch head to the remote repository:
 git push origin <branch>
 
 
-(v) Reset a file you messed up
+4.4 Reset a file you messed up
 ------------------------------------------------------------------------
 git checkout -- <file>
 
 
-(v) Update your local index to most recent commit
+4.5 Update your local index to most recent commit
 ------------------------------------------------------------------------
 Say you fixed some bugs somewhere else and committed the update. Now you're working on another area of the code using an older working copy. In order to commit your changes to the newest version of the code, you have to update the index
 
@@ -196,7 +199,7 @@ git reset
 Now when you check for differences, you can 
 
 
-(vi) Merging a branch
+4.6 Merging a branch
 ------------------------------------------------------------------------
 When the branch code is ready to be implemented in the master, you could merge, but it is better to rebase (provided nobody is working on the master). 
 
