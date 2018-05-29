@@ -38,7 +38,7 @@ Lastly, you have to assemble the grid slabs:
 Open Matlab and run "glue_grid.m"
 
 
-Create the forcing
+Create the forcing:
 ------------------------------------------------------------------------
 You have to create a forcing file when you (i) change the tidal data set, (ii) add tidal constituents, or (ii) change the tidal filters (smoothness, max values, etc.)
 
