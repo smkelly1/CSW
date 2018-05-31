@@ -11,11 +11,11 @@ Nm=8;  % Number of modes
 
 % Add paths that are sometimes lost using qsub
 if MSI
-	addpath(genpath('/home/kellys/smkelly/software/matlab_libraries/sam_ware'))
+	%addpath(genpath('/home/kellys/smkelly/software/matlab_libraries/sam_ware'))
 	addpath(genpath('/home/kellys/smkelly/software/matlab_libraries/seawater'))
-	addpath(genpath('/home/kellys/smkelly/software/data_products/SS_topo'))
-	addpath(genpath('/home/kellys/smkelly/software/data_products/OTPS'))
-	addpath(genpath('/home/kellys/smkelly/software/data_products/WOA13'))
+	%addpath(genpath('/home/kellys/smkelly/software/data_products/SS_topo'))
+	%addpath(genpath('/home/kellys/smkelly/software/data_products/OTPS'))
+	%addpath(genpath('/home/kellys/smkelly/software/data_products/WOA13'))
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

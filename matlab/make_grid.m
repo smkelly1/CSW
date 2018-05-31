@@ -17,12 +17,12 @@ id_start=1+N_processors*id_node;
 MSI=1;
 
 if MSI
-	addpath(genpath('/home/kellys/smkelly/software/matlab_libraries/sam_ware'))
+	%addpath(genpath('/home/kellys/smkelly/software/matlab_libraries/sam_ware'))
 	addpath(genpath('/home/kellys/smkelly/software/matlab_libraries/seawater'))
 	addpath(genpath('/home/kellys/smkelly/software/data_products/SS_topo'))
-	addpath(genpath('/home/kellys/smkelly/software/data_products/OTPS'))
-	addpath(genpath('/home/kellys/smkelly/software/data_products/WOA13'))
-	folder='~/simulations/SWOT/global_grids/';
+	%addpath(genpath('/home/kellys/smkelly/software/data_products/OTPS'))
+	%addpath(genpath('/home/kellys/smkelly/software/data_products/WOA13'))
+	folder='~/simulations/SWOT/18-5_global_grids/';
 else
   	folder='~/simulations/SWOT/18-5_global_grids/';
 end
@@ -269,7 +269,7 @@ parfor id_subindex=1:N_processors
         %strat=strat.strat;
         
         fid_strat=['./strat_HYCOM.nc'];
-        fid_strat=['./strat_WOA.nc'];
+        %fid_strat=['./strat_WOA.nc'];
 
         strat.N2=ncread(fid_strat,'N2');
         strat.z=ncread(fid_strat,'depth');
@@ -278,7 +278,7 @@ parfor id_subindex=1:N_processors
 
         
         % Smooth the stratification over three degrees
-        %z0=strat.z;
+        z0=strat.z;
         N20=NaN([Nx+2 Ny+2 length(z0)]);
         lon_tmp=[strat.lon(end-1)-360 strat.lon(end)-360 strat.lon strat.lon(1)+360 strat.lon(2)+360];
         for i=1:length(z0)
