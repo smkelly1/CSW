@@ -24,15 +24,16 @@ if MSI
 	addpath(genpath('/home/kellys/smkelly/software/data_products/WOA13'))
 	folder='~/simulations/SWOT/global_grids/';
 else
-	folder='~/simulations/SWOT/global_grids/';
+  	folder='~/simulations/SWOT/18-5_global_grids/';
 end
 
 % Variables that define the grid
-dx=1/50; % Degrees, want 1/100 at some point
-fid='50th_deg';
+dx=1/10; % Degrees, want 1/100 at some point
+fid='10th_deg';
 make_bathy=0;
 
-% Calculation parameters 
+% Calculation parameters
+fid_strat=['./strat_HYCOM.nc'];
 Nm=8; % Want Nm=8 eventually
 Nm0=128; % Number of structure functions to solve (want Nm0=128)
 dz=1; % Want dz=1 eventually
@@ -264,19 +265,32 @@ parfor id_subindex=1:N_processors
     if ind_x_start<Nx
         disp(['Starting from index ',num2str(ind_x_start),' of ',num2str(Nx)]);
 
-        strat=load('strat'); % Load WOA13 stratification
-        strat=strat.strat;
+        %strat=load('strat'); % Load WOA13 stratification
+        %strat=strat.strat;
+        
+        fid_strat=['./strat_HYCOM.nc'];
+        fid_strat=['./strat_WOA.nc'];
+
+        strat.N2=ncread(fid_strat,'N2');
+        strat.z=ncread(fid_strat,'depth');
+        strat.lon=ncread(fid_strat,'lon')';
+        strat.lat=ncread(fid_strat,'lat')';
+
         
         % Smooth the stratification over three degrees
-        z0=strat.z;
+        %z0=strat.z;
         N20=NaN([Nx+2 Ny+2 length(z0)]);
         lon_tmp=[strat.lon(end-1)-360 strat.lon(end)-360 strat.lon strat.lon(1)+360 strat.lon(2)+360];
         for i=1:length(z0)
-         
-            % Smooth WOA
+
+            % Extend N2 slightly
             N2_tmp=[strat.N2(end-1,:,i); strat.N2(end,:,i); strat.N2(:,:,i); strat.N2(1,:,i); strat.N2(2,:,i)];
             N2_tmp(N2_tmp<0 | N2_tmp>1e-2)=NaN;
-            N2_tmp=AVE2D_v2(N2_tmp,5);
+                
+            % Smooth WOA
+            if strcmp(fid_strat,'./strat_WOA.nc')
+                N2_tmp=AVE2D_v2(N2_tmp,5);
+            end
             
             % Take nearest neighbor (at same latitude) for missing data
             bad=(N2_tmp<0 | isnan(N2_tmp) | N2_tmp>1e-2);
@@ -284,7 +298,11 @@ parfor id_subindex=1:N_processors
             N2_tmp=fillmissing(N2_tmp,'nearest');
 
             % Interpolate onto grid
-            N20(:,:,i)=interp2(lon_tmp',strat.lat,N2_tmp.',lon',lat).';       
+            N20(:,:,i)=interp2(lon_tmp',strat.lat,N2_tmp.',lon',lat).';
+            
+            % Take nearest neighbor (at same logintude) for missing data
+            % (typically near Antarctica because HYCOM doesn't go that far south)
+            N20(:,:,i)=fillmissing(N20(:,:,i)','nearest')';
         end
         strat=[];% This is really a clear command
         
@@ -325,7 +343,7 @@ parfor id_subindex=1:N_processors
                         
                         % Compute the modes
                         ind_z=round(H(i,j)/dz);
-                        [PHI,c(1,j,1:Nm_H)]=MODES_fast(dz,N2(1:ind_z),Nm_H,Nm0_H);
+                        [PHI,c(1,j,1:Nm_H)]=MODES_FAST(dz,N2(1:ind_z),Nm_H,Nm0_H);
                         
                         % Write to array
                         phi_surf(1,j,1:Nm_H)=PHI(1,:)';
