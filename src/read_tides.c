@@ -1,6 +1,6 @@
 #include <math.h>
 #include <netcdf.h>
-#include <csw.h>
+#include "csw.h"
 
 void read_tides(int rank)
 {

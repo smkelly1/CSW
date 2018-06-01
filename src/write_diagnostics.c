@@ -1,6 +1,6 @@
 #include <netcdf.h>
 #include <math.h>
-#include <csw.h>
+#include "csw.h"
 
 void write_diagnostics(int sD, int Na, int rank)
 {

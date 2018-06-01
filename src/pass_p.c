@@ -1,6 +1,6 @@
 #include <math.h>
 #include <mpi.h>
-#include <csw.h>
+#include "csw.h"
 
 void pass_p(int rank)
 {

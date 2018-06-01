@@ -13,19 +13,11 @@ function make_grid(id_node,N_subgrids,N_processors,N_threads)
 % First slab to work on
 id_start=1+N_processors*id_node;
 
-% If this is run on MSI, add paths that are sometimes lost using qsub
-MSI=1;
+% Add path to raw bathymetry data
+addpath(genpath('/home/kellys/smkelly/software/data_products/SS_topo'))
 
-if MSI
-	%addpath(genpath('/home/kellys/smkelly/software/matlab_libraries/sam_ware'))
-	addpath(genpath('/home/kellys/smkelly/software/matlab_libraries/seawater'))
-	addpath(genpath('/home/kellys/smkelly/software/data_products/SS_topo'))
-	%addpath(genpath('/home/kellys/smkelly/software/data_products/OTPS'))
-	%addpath(genpath('/home/kellys/smkelly/software/data_products/WOA13'))
-	folder='~/simulations/SWOT/18-5_global_grids/';
-else
-  	folder='~/simulations/SWOT/18-5_global_grids/';
-end
+% Define where the grid goes
+folder='~/simulations/SWOT/18-5_global_grids/';
 
 % Variables that define the grid
 dx=1/10; % Degrees, want 1/100 at some point
@@ -249,8 +241,9 @@ parfor id_subindex=1:N_processors
         ncwrite(name,'lat',lat(2:end-1));
         
         ncwrite(name,'H',H(2:end-1,2:end-1));
-        ncwrite(name,'f',repmat(sw_f(lat(2:end-1)),[Nx 1]));
-        
+        %ncwrite(name,'f',repmat(sw_f(lat(2:end-1)),[Nx 1]));
+        ncwrite(fid.grid,'f',repmat(2*(7.292e-5)*sin(lat(2:end-1)/180*pi),[Nx 1]));
+             
     else
         % Figure out where to start
         tmp=ncread(name,'c');

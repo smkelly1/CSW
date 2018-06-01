@@ -1,22 +1,11 @@
 % Write the individual grid NetCDF files to one giant NetCDF file.
 clear
 
-MSI=0;
-
 fid.bathy='./25th_deg_bathy.nc';
 fid.grid='./25th_deg_grid.nc';
 
-N_subgrids=160; % Number of individual grid files
+N_subgrids=80; % Number of individual grid files
 Nm=8;  % Number of modes
-
-% Add paths that are sometimes lost using qsub
-if MSI
-	%addpath(genpath('/home/kellys/smkelly/software/matlab_libraries/sam_ware'))
-	addpath(genpath('/home/kellys/smkelly/software/matlab_libraries/seawater'))
-	%addpath(genpath('/home/kellys/smkelly/software/data_products/SS_topo'))
-	%addpath(genpath('/home/kellys/smkelly/software/data_products/OTPS'))
-	%addpath(genpath('/home/kellys/smkelly/software/data_products/WOA13'))
-end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Load bathy file to get Nx and Ny dimensions
@@ -92,7 +81,9 @@ ncwrite(fid.grid,'lon',lon);
 ncwrite(fid.grid,'lat',lat);
 
 ncwrite(fid.grid,'H',H);
-ncwrite(fid.grid,'f',repmat(sw_f(lat)',[Nx 1]));
+
+%ncwrite(fid.grid,'f',repmat(sw_f(lat)',[Nx 1]));
+ncwrite(fid.grid,'f',repmat(2*(7.292e-5)*sin(lat'/180*pi),[Nx 1]));
 
 clear H
 
@@ -143,8 +134,6 @@ for id=1:N_subgrids
     tmp=ncread(fid.slab,'T_y');
     tmp=tmp(:,:,:,:);
     ncwrite(fid.grid,'T_y',tmp,[2 ind_y(1) 1 1]);
-    
-    PROGRESS_BAR(id,1:N_subgrids)
 end
 
 % Now fill in the borders

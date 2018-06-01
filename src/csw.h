@@ -4,7 +4,7 @@
 #include <complex.h>
 
 // Input/output files
-#define FILE_GRID  "../../17-6_global_grids/10th_deg_grid.nc"
+#define FILE_GRID  "../../18-5_global_grids/10th_deg_grid.nc"
 #define FILE_TIDES "../10th_deg_tides.nc"
 #define FILE_OUT   "10th_deg_out"
 
@@ -144,7 +144,7 @@ float tmp[NM][NY][NX];
 	float PE[NM][NY][NX];
 #endif
 	
-#ifdef ENERGY
+#ifdef FLUX
 	float up[NM][NY][NX];
 	float vp[NM][NY][NX];
 #endif

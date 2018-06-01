@@ -1,5 +1,5 @@
 #include <mpi.h>
-#include <csw.h>
+#include "csw.h"
 
 void pass_uv(int rank)
 {

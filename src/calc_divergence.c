@@ -1,5 +1,5 @@
 #include <math.h>
-#include <csw.h>
+#include "csw.h"
 
 void calc_divergence(void)
 {

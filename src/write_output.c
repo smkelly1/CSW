@@ -1,5 +1,5 @@
 #include <netcdf.h>
-#include <csw.h>
+#include "csw.h"
 
 
 void write_output(int sW, double t, int rank)

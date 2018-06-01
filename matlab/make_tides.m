@@ -4,9 +4,7 @@ clear
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Set input parameters 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-MSI=1; 
-
-fid.grid='../../../17-6_global_grids/10th_deg_grid.nc';
+fid.grid='~/simulations/SWOT/18-5_global_grids/10th_deg_grid.nc';
 fid.tides='../../10th_deg_tides.nc';
 
 Nc=1;       % Number of tidal constituents 
@@ -15,13 +13,10 @@ H_min=16;	% Set minimum depth for tides
 thresh=1;   % Maximum tidal velocity 
 
 % Add paths on MSI that are sometimes lost using qsub
-if MSI
-	addpath(genpath('/home/kellys/smkelly/software/matlab_libraries/sam_ware'))
-	addpath(genpath('/home/kellys/smkelly/software/matlab_libraries/seawater'))
-	addpath(genpath('/home/kellys/smkelly/software/data_products/OTPS'))
-end
+addpath(genpath('/home/kellys/smkelly/software/matlab_libraries/sam_ware'))
+addpath(genpath('/home/kellys/smkelly/software/data_products/OTPS'))
 
-%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 %                    Technical code below here
@@ -38,7 +33,7 @@ lon=ncread(fid.grid,'lon'); lon=lon(2:end-1);
 lat=ncread(fid.grid,'lat'); lat=lat(2:end-1); 
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 disp('Creating NetCDF input file');
 
 % start netcdf file
@@ -78,7 +73,7 @@ nccreate(fid.tides,'Ui','Dimensions',{'x',Nx,'y',Ny,'con',Nc},'datatype','single
 nccreate(fid.tides,'Vr','Dimensions',{'x',Nx,'y',Ny,'con',Nc},'datatype','single');
 nccreate(fid.tides,'Vi','Dimensions',{'x',Nx,'y',Ny,'con',Nc},'datatype','single');
 
-%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Shallow water mask
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 disp('Masking tides in shallow regions');
@@ -91,7 +86,7 @@ bad.lon=45<lon & lon<60;
 bad.lat=35<lat & lat<50;
 H(bad.lon,bad.lat)=0;
 
-%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Surface-tide forcing
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

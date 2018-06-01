@@ -64,9 +64,8 @@ The user can set:
 ------------------------------------------------------------------------
 All of the CSW's parameters are set in the header file: ./src/CSW.h 
 
-Therefore, everytime something is altered, it CSW must be recompiled. This is accomplished by viewing/altering ./src/makefile and following the instructions there. The typical commands (launched in the ./src/ directory) are
+Therefore, everytime something is altered, it CSW must be recompiled. This is accomplished by viewing/altering ./src/makefile and following the instructions there. The typical command (launched in the ./src/ directory) is simply
 
->make depend  
 >make 
 
 The executable is ./src/cswexec
@@ -104,9 +103,7 @@ Load the following modules:
 
 >module load ncview  
 >module load matlab/R2016b  
->module load impi/intel  
->module unload intel  
->module load intel
+>module load impi
 
 Then there's some useful pbs commands:
 
