@@ -257,13 +257,7 @@ parfor id_subindex=1:N_processors
     % Now compute c and Tx
     if ind_x_start<Nx
         disp(['Starting from index ',num2str(ind_x_start),' of ',num2str(Nx)]);
-
-        %strat=load('strat'); % Load WOA13 stratification
-        %strat=strat.strat;
-        
-        fid_strat=['./strat_HYCOM.nc'];
-        %fid_strat=['./strat_WOA.nc'];
-
+           
         strat.N2=ncread(fid_strat,'N2');
         strat.z=ncread(fid_strat,'depth');
         strat.lon=ncread(fid_strat,'lon')';

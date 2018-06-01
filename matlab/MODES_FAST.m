@@ -17,13 +17,16 @@ function [PHI C]=MODES_FAST(dz,N2,Nm,Nm0)
 %
 % Sam Kelly, May 2018 (smkelly@d.umn.edu)
 
+if ~isrow(N2)
+    N2=N2.';
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Figure out how N2 couples the modes (using analytical solutions to integrals)
 N=length(N2); % Number of vertical grid points
 
 % Find cosine series coefficients 
-N2s=[N2(N:-1:1); N2(1:end-1)];
+N2s=[N2(N:-1:1) N2(1:end-1)];
 xN=real(fft(N2s))/N;
 xN=xN(2:2*Nm0+1).*(-1).^(1:2*Nm0);
 x0=mean(N2);
