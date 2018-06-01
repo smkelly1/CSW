@@ -242,7 +242,7 @@ parfor id_subindex=1:N_processors
         
         ncwrite(name,'H',H(2:end-1,2:end-1));
         %ncwrite(name,'f',repmat(sw_f(lat(2:end-1)),[Nx 1]));
-        ncwrite(fid.grid,'f',repmat(2*(7.292e-5)*sin(lat(2:end-1)/180*pi),[Nx 1]));
+        ncwrite(name,'f',repmat(2*(7.292e-5)*sin(lat(2:end-1)/180*pi),[Nx 1]));
              
     else
         % Figure out where to start
@@ -312,14 +312,14 @@ parfor id_subindex=1:N_processors
                 if H(i,j)>H_min
                     
                     % Identify the proper number of modes to find
-                    Nm0_H=min([Nm0 floor(H(i,j)/(2*dz))]);
+                    Nm0_H=min([Nm0 floor(H(i,j)/(2*dz))+1]);
                     Nm_H=min([Nm floor(H(i,j)/(16*dz))]); % This is the old condition
                     %Nm_H=min([Nm floor(H(i,j)/(8*dz))]);
                     
                     N2=squeeze(N20(i,j,:));
                     good=isfinite(N2);
                     
-                    if sum(good)>=4 % Note: strat.z(4)=17.5                        
+                    if sum(good)>=2 % Note: strat.z(4)=17.5 for WOA or strat.z(2)=10 m for HYCOM                   
                         % Interpolate coarse WOA N2 onto fine depth grid
                         N2=interp1(z0(good),N2(good),z).';
                         N2(N2<1e-8)=1e-8;
