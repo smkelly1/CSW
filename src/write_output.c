@@ -10,7 +10,7 @@ void write_output(int sW, double t, int rank)
 	double day;
 
 	size_t start[]={sW, 0, 0, 0};
-	size_t count[]={1, NM, NY, NX};
+	size_t count[]={1, NMW, NY, NX};
 	
 	// Get file name
   	sprintf(name,FILE_OUT ".%03d.nc",rank);    
@@ -24,7 +24,7 @@ void write_output(int sW, double t, int rank)
 		// Write u velocity
 		for(i=0; i<NX; i++){
 			for(j=0; j<NY; j++){
-				for(n=0; n<NM; n++){					
+				for(n=0; n<NMW; n++){					
 					tmp[n][j][i]=(float)((U[n][j+1][i+1]+U[n][j+1][i+2])/(2*H[j+1][i+1]));
 				}
 			}
@@ -39,7 +39,7 @@ void write_output(int sW, double t, int rank)
 		// Write v velocity
 		for(i=0; i<NX; i++){
 			for(j=0; j<NY; j++){
-				for(n=0; n<NM; n++){					
+				for(n=0; n<NMW; n++){					
 					tmp[n][j][i]=(float)((V[n][j+1][i+1]+V[n][j+2][i+1])/(2*H[j+1][i+1]));
 				}
 			}
@@ -56,7 +56,7 @@ void write_output(int sW, double t, int rank)
 	// Write pressure
 	for(i=0; i<NX; i++){
 		for(j=0; j<NY; j++){
-			for(n=0; n<NM; n++){
+			for(n=0; n<NMW; n++){
 				tmp[n][j][i]=(float)(RHO*p1[n][j+1][i+1]);
 			}
 		}

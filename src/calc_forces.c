@@ -225,7 +225,7 @@ void calc_forces(void)
 				gamma=invDX/(A*cos(lat[j+1]));
 			#endif
 		
-			for(n=0; n<NM; n++){	
+			for(n=0; n<NMW; n++){	
 				for(i=0; i<NX; i++){					
 					
 					#ifdef ENERGY

@@ -1,20 +1,27 @@
-%% Coupled Shallow Water model (CSW)
+% Coupled Shallow Water model (CSW)
 clear
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ii=complex(0,1);
+warning off;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Set input parameters 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-fid.grid='~/simulations/SWOT/18-5_global_grids/10th_deg_grid.nc';
-fid.tides='../../10th_deg_tides.nc';
+%fid.grid='~/simulations/SWOT/18-5_global_grids/10th_deg_grid.nc';
+%fid.tides='../../10th_deg_tides.nc';
+tide.name='HAMTIDE'; % can be TPXO, GOT, HAMTIDE, or FES
+tide.folder='~/software/data_products/m2_currents/';
+fid.bathy='./10th_deg_bathy.nc';
+fid.tides=['./10th_deg_',tide.name,'.nc'];
 
 Nc=1;       % Number of tidal constituents 
-Ns=3;       % Number of grid points to smooth tidal velocities
+Ns=1;       % Number of grid points to smooth tidal velocities
 H_min=16;	% Set minimum depth for tides
 thresh=1;   % Maximum tidal velocity 
 
 % Add paths on MSI that are sometimes lost using qsub
-addpath(genpath('/home/kellys/smkelly/software/matlab_libraries/sam_ware'))
-addpath(genpath('/home/kellys/smkelly/software/data_products/OTPS'))
+%addpath(genpath('/home/kellys/smkelly/software/matlab_libraries/sam_ware'))
+%addpath(genpath('/home/kellys/smkelly/software/data_products/OTPS'))
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -25,12 +32,12 @@ addpath(genpath('/home/kellys/smkelly/software/data_products/OTPS'))
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 disp('Loading grid');
 
-Nx=ncread(fid.grid,'Nx')-2;
-Ny=ncread(fid.grid,'Ny')-2;
+Nx=ncread(fid.bathy,'Nx')-2;
+Ny=ncread(fid.bathy,'Ny')-2;
 
-H=ncread(fid.grid,'H'); H=H(2:end-1,2:end-1);
-lon=ncread(fid.grid,'lon'); lon=lon(2:end-1);
-lat=ncread(fid.grid,'lat'); lat=lat(2:end-1); 
+H=ncread(fid.bathy,'H'); H=H(2:end-1,2:end-1);
+lon=ncread(fid.bathy,'lon'); lon=lon(2:end-1);
+lat=ncread(fid.bathy,'lat'); lat=lat(2:end-1); 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -73,7 +80,7 @@ nccreate(fid.tides,'Ui','Dimensions',{'x',Nx,'y',Ny,'con',Nc},'datatype','single
 nccreate(fid.tides,'Vr','Dimensions',{'x',Nx,'y',Ny,'con',Nc},'datatype','single');
 nccreate(fid.tides,'Vi','Dimensions',{'x',Nx,'y',Ny,'con',Nc},'datatype','single');
 
-%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Shallow water mask
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 disp('Masking tides in shallow regions');
@@ -89,25 +96,32 @@ H(bad.lon,bad.lat)=0;
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Surface-tide forcing
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+disp('Loading tides');
 
-disp('Loading TPXO surface tides');
+tide.lon=ncread([tide.folder,'m2UV_',tide.name,'.nc'],'lon');
+tide.lat=ncread([tide.folder,'m2UV_',tide.name,'.nc'],'lat');
 
-ii=complex(0,1);
-warning off;
-	
-% Obtain TPXO surface tide velocities
-[U,V,~,omega]=TPXO(lon,lat,[1],datenum(2015,1,1));
-
-if length(omega)~=Nc
-    disp('Error, wrong number of constituents')
+UAMP=ncread([tide.folder,'m2UV_',tide.name,'.nc'],'UAMP');
+VAMP=ncread([tide.folder,'m2UV_',tide.name,'.nc'],'VAMP');
+if strcmp(tide.name,'FES') | strcmp(tide.name,'HAMTIDE')
+    H0=interp2([lon(end)-360; lon; lon(1)+360],lat',[H(end,:); H; H(1,:)]',tide.lon,tide.lat')';
+    UAMP=H0.*UAMP;
+    VAMP=H0.*VAMP;
 end
+UPHA=ncread([tide.folder,'m2UV_',tide.name,'.nc'],'UPHA');
+VPHA=ncread([tide.folder,'m2UV_',tide.name,'.nc'],'VPHA');
 
-% Wrap the tidal fields at the Grand Meridian
-if isnan(U(1,1,1))
-	U(1,:,:)=(U(end,:,:)+U(2,:,:))/2;
-	V(1,:,:)=(V(end,:,:)+V(2,:,:))/2;
-end
+U=UAMP.*exp(ii*UPHA/180*pi);
+U(isnan(U))=0;
 
+clear UAMP UPHA
+U=interp2([tide.lon(end)-360; tide.lon; tide.lon(1)+360],tide.lat',[U(end,:); U; U(1,:)].',lon,lat').';
+
+V=VAMP.*exp(ii*VPHA/180*pi);
+V(isnan(V))=0;
+clear VAMP VPHA
+V=interp2([tide.lon(end)-360; tide.lon; tide.lon(1)+360],tide.lat',[V(end,:); V; V(1,:)].',lon,lat').';
+ 
 % Convert transport to velocity 
 for k=1:Nc
 	U(:,:,k)=U(:,:,k)./H;
@@ -125,17 +139,24 @@ fast=thresh<abs(V);
 V(fast)=V(fast).*thresh./abs(V(fast));
 
 for k=1:Nc
-    tmp=AVE2D(U(:,:,k),Ns);
+    tmp=U(:,:,k);
+    if Ns>1
+        tmp=AVE2D(tmp,Ns);
+    end
     tmp(H<H_min)=0;
     U(:,:,k)=tmp;
     
-    tmp=AVE2D(V(:,:,k),Ns);
+    tmp=V(:,:,k);
+    if Ns>1
+       tmp=AVE2D(tmp,Ns);
+    end
     tmp(H<H_min)=0;
     V(:,:,k)=tmp;
 end
 
 % Round the tidal frequency and write to file
-period=(2*pi/omega)/3600; % in hours
+omega0=1.405189e-04;
+period=(2*pi/omega0)/3600; % in hours
 period=round(period*100)/100; % Round to second decimal place (i.e., 12.42 for the M2 tide)
 omega=(2*pi)/(period*3600);
 

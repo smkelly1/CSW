@@ -9,11 +9,11 @@ void write_diagnostics(int sD, int Na, int rank)
 	char name[100];
 
 	size_t start[]={sD-1, 0, 0, 0};
-	size_t count[]={1, NM, NY, NX};
+	size_t count[]={1, NMW, NY, NX};
 
 	////////////////////////////////////////////////////////////////////
 	// Average diagnostic fields  
-	for(n=0; n<NM; n++){
+	for(n=0; n<NMW; n++){
 		for(j=0; j<NY; j++){
 			for(i=0; i<NX; i++){
 				
@@ -124,7 +124,7 @@ void write_diagnostics(int sD, int Na, int rank)
 		
 	////////////////////////////////////////////////////////////////////	
 	// Clear diagnostic fields
-	for(n=0; n<NM; n++){
+	for(n=0; n<NMW; n++){
 		for(j=0; j<NY; j++){
 			for(i=0; i<NX; i++){
 				

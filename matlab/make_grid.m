@@ -20,8 +20,8 @@ addpath(genpath('/home/kellys/smkelly/software/data_products/SS_topo'))
 folder='~/simulations/SWOT/18-5_global_grids/';
 
 % Variables that define the grid
-dx=1/10; % Degrees, want 1/100 at some point
-fid='10th_deg';
+dx=1/25; % Degrees, want 1/100 at some point
+fid='25th_deg';
 make_bathy=0;
 
 % Calculation parameters

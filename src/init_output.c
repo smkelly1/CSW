@@ -21,7 +21,7 @@ void init_output(int rank)
 	if ((status = nc_def_dim(ncid, "y", NY, &dimid[2])))
 		ERR(status);
 
-	if ((status = nc_def_dim(ncid, "mode", NM, &dimid[1])))
+	if ((status = nc_def_dim(ncid, "mode", NMW, &dimid[1])))
 		ERR(status);
 
 	if ((status = nc_def_dim(ncid, "time", NC_UNLIMITED, &dimid[0])))
