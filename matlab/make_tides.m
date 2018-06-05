@@ -7,21 +7,15 @@ warning off;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Set input parameters 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%fid.grid='~/simulations/SWOT/18-5_global_grids/10th_deg_grid.nc';
-%fid.tides='../../10th_deg_tides.nc';
-tide.name='HAMTIDE'; % can be TPXO, GOT, HAMTIDE, or FES
-tide.folder='~/software/data_products/m2_currents/';
-fid.bathy='./10th_deg_bathy.nc';
-fid.tides=['./10th_deg_',tide.name,'.nc'];
+tide.name='GOT'; % can be TPXO, GOT, HAMTIDE, or FES
+tide.folder='../../../tides/';
+fid.bathy='../../../18-5_global_grids/25th_deg_bathy.nc';
+fid.tides=['../../25th_deg_',tide.name,'.nc'];
 
 Nc=1;       % Number of tidal constituents 
-Ns=1;       % Number of grid points to smooth tidal velocities
 H_min=16;	% Set minimum depth for tides
 thresh=1;   % Maximum tidal velocity 
 
-% Add paths on MSI that are sometimes lost using qsub
-%addpath(genpath('/home/kellys/smkelly/software/matlab_libraries/sam_ware'))
-%addpath(genpath('/home/kellys/smkelly/software/data_products/OTPS'))
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -140,16 +134,10 @@ V(fast)=V(fast).*thresh./abs(V(fast));
 
 for k=1:Nc
     tmp=U(:,:,k);
-    if Ns>1
-        tmp=AVE2D(tmp,Ns);
-    end
     tmp(H<H_min)=0;
     U(:,:,k)=tmp;
     
     tmp=V(:,:,k);
-    if Ns>1
-       tmp=AVE2D(tmp,Ns);
-    end
     tmp(H<H_min)=0;
     V(:,:,k)=tmp;
 end

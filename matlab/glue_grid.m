@@ -29,10 +29,6 @@ lat=[lat(1)-dlat; lat; lat(end)+dlat];
 %% Start the grid file
 disp('Glueing grid');
 
-%folder='./';
-%fid_grid=[fid,'_grid.nc'];
-%name=[folder,fid_grid];
-
 %Create file
 mode = netcdf.getConstant('CLOBBER');
 mode = bitor(mode,netcdf.getConstant('NETCDF4'));
@@ -202,24 +198,18 @@ tmp=ncread(fid.grid,'T_y',[1 2 1 1],[Nx 1 Nm Nm]);
 ncwrite(fid.grid,'T_y',tmp,[1 1 1 1]);
 
 
-% Lastly set missing values to 0 and/or smooth Tx and Ty at grid scale
+% Lastly set missing values to 0 
 if 1
 
     for n=1:Nm
         for m=1:Nm
 			tmp=ncread(fid.grid,'T_x',[1 1 m n],[Nx Ny 1 1]);  
             tmp(tmp>100)=0;
-            %tmp=[tmp(end,:); tmp; tmp(1,:)];
-            %tmp=AVE2D_v2(tmp,3);
-            %tmp=tmp(2:end-1,:); 
-			ncwrite(fid.grid,'T_x',tmp,[1 1 m n]);
+            ncwrite(fid.grid,'T_x',tmp,[1 1 m n]);
 			
 			tmp=ncread(fid.grid,'T_y',[1 1 m n],[Nx Ny 1 1]);  
             tmp(tmp>100)=0;
-            %tmp=[tmp(end,:); tmp; tmp(1,:)];
-            %tmp=AVE2D_v2(tmp,3);
-            %tmp=tmp(2:end-1,:); 
-			ncwrite(fid.grid,'T_y',tmp,[1 1 m n]);
+            ncwrite(fid.grid,'T_y',tmp,[1 1 m n]);
         end
         disp(n)
     end
