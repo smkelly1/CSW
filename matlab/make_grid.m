@@ -13,21 +13,22 @@ function make_grid(id_node,N_subgrids,N_processors,N_threads)
 % First slab to work on
 id_start=1+N_processors*id_node;
 
-% Add path to raw bathymetry data
-addpath(genpath('/home/kellys/smkelly/software/data_products/SS_topo'))
-
-% Define where the grid goes
-folder='~/simulations/SWOT/18-5_global_grids/';
-
 % Variables that define the grid
-dx=1/25; % Degrees, want 1/100 at some point
-fid='25th_deg';
-make_bathy=0;
+res=25; % Degrees, want 1/100 at some point
+folder='~/simulations/SWOT/18-6_grids/'; % Where the grid goes
+
+% Choose bathymetry
+bathy_source='SS';
+%bathy_source='GEBCO';
+
+% Choose stratification
+%strat_source='HYCOM';
+strat_source='WOA';
 
 % Calculation parameters
-fid_strat=['./strat_HYCOM.nc'];
 Nm=8; % Want Nm=8 eventually
 Nm0=128; % Number of structure functions to solve (want Nm0=128)
+dx=1/res;
 dz=1; % Want dz=1 eventually
 
 % Grid parameters (probably leave these alone)
@@ -42,73 +43,11 @@ lon0=dx/2:dx:360;
 lat0=latlims(1)+dy/2:dy:latlims(2);
 z=(dz/2):dz:H_max;
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Create bathymetry if necessary 
-fid_bathy=[fid,'_bathy.nc'];
-name_bathy=[folder,fid_bathy];
+% Assemble file names
+fid=[num2str(res),'th_deg_',strat_source,'_',bathy_source];
+fid_bathy=[folder,num2str(res),'th_deg_',bathy_source,'_bathy.nc'];
+fid_strat=['./strat_',strat_source,'.nc'];
 
-if make_bathy
-    
-    % Obtain bathymetry at full (1/60 degree, i.e., 1 minute in longitude) resolution
-    [bathy.lat,bathy.lon,bathy.H]=satbath(1,[-81 81],[0 360]);
-    bathy.lon=[bathy.lon(:,end-1)-360 bathy.lon];
-    bathy.lat=[bathy.lat(:,end) bathy.lat];
-    bathy.H=[bathy.H(:,end-1) bathy.H];
-    
-    % Interpolate onto desired grid
-    H=interp2(bathy.lon,bathy.lat,-bathy.H,lon0',lat0)'; 
-    clear bathy
-
-    % Remove mountains
-    H(H<0)=0;
-    
-    % Smooth at the grid scale
-    H2=[H(end,:); H; H(1,:)];
-    H2=AVE2D(H2,3);
-    H=H2(2:end-1,:);
-    
-    % Compute gradients
-    [Nx2 Ny2]=size(H);
-    H2=[H(end,:); H; H(1,:)];
-    dHdx=repmat(1./(a0*cos(lat0/180*pi)),[Nx2 1]).*(H2(3:end,:)-H2(1:end-2,:))/(2*dx/180*pi);
-
-    dHdy=zeros([Nx2 Ny2]);
-    dHdy(:,2:end-1)=1/a0*(H(:,3:end)-H(:,1:end-2))/(2*dy/180*pi);
-    
-    % Write to NetCDF file
-    currentFolder=pwd;
-    cd(folder);
-    
-    mode = netcdf.getConstant('CLOBBER');
-    mode = bitor(mode,netcdf.getConstant('NETCDF4'));
-    temp=netcdf.create(fid_bathy,mode);
-    
-    % define dimensions
-    netcdf.defDim(temp,'x',size(H,1));
-    netcdf.defDim(temp,'y',size(H,2));
-    netcdf.endDef(temp)
-
-	% Close file and return to data directory
-    netcdf.close(temp);
-    cd(currentFolder);
-       
-   	% Create and write fields
-    nccreate(name_bathy,'Nx');
-    nccreate(name_bathy,'Ny');
-    nccreate(name_bathy,'lon','Dimensions',{'x',size(H,1)});
-    nccreate(name_bathy,'lat','Dimensions',{'y',size(H,2)});
-    nccreate(name_bathy,'H','Dimensions',{'x',size(H,1),'y',size(H,2)});
-    nccreate(name_bathy,'dHdx','Dimensions',{'x',size(H,1),'y',size(H,2)});
-    nccreate(name_bathy,'dHdy','Dimensions',{'x',size(H,1),'y',size(H,2)});
-
-    ncwrite(name_bathy,'Nx',size(H,1));
-    ncwrite(name_bathy,'Ny',size(H,2));
-    ncwrite(name_bathy,'lon',lon0);
-    ncwrite(name_bathy,'lat',lat0);
-    ncwrite(name_bathy,'H',H);
-    ncwrite(name_bathy,'dHdx',dHdx);
-    ncwrite(name_bathy,'dHdy',dHdy);
-end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Determine size of the subgrids
@@ -149,18 +88,18 @@ parfor id_subindex=1:N_processors
     Ny=length(ind_y);
     
     % Load bathymetry
-    H=ncread(name_bathy,'H',[1 ind_y(1)],[Nx Ny]);
+    H=ncread(fid_bathy,'H',[1 ind_y(1)],[Nx Ny]);
     
     % Now add boundary points
     if ind_y(1)==1
-            H_N=ncread(name_bathy,'H',[1 ind_y(1)],[Nx 1]);
-            H_S=ncread(name_bathy,'H',[1 ind_y(end)+1],[Nx 1]);
+            H_N=ncread(fid_bathy,'H',[1 ind_y(1)],[Nx 1]);
+            H_S=ncread(fid_bathy,'H',[1 ind_y(end)+1],[Nx 1]);
     elseif ind_y(end)==length(lat0)
-            H_N=ncread(name_bathy,'H',[1 ind_y(1)-1],[Nx 1]);
-            H_S=ncread(name_bathy,'H',[1 ind_y(end)],[Nx 1]);
+            H_N=ncread(fid_bathy,'H',[1 ind_y(1)-1],[Nx 1]);
+            H_S=ncread(fid_bathy,'H',[1 ind_y(end)],[Nx 1]);
     else
-            H_N=ncread(name_bathy,'H',[1 ind_y(1)-1],[Nx 1]);
-            H_S=ncread(name_bathy,'H',[1 ind_y(end)+1],[Nx 1]);
+            H_N=ncread(fid_bathy,'H',[1 ind_y(1)-1],[Nx 1]);
+            H_S=ncread(fid_bathy,'H',[1 ind_y(end)+1],[Nx 1]);
     end
     H=[H_N H H_S];
     H=[H(end,:); H; H(1,:)];
@@ -241,7 +180,6 @@ parfor id_subindex=1:N_processors
         ncwrite(name,'lat',lat(2:end-1));
         
         ncwrite(name,'H',H(2:end-1,2:end-1));
-        %ncwrite(name,'f',repmat(sw_f(lat(2:end-1)),[Nx 1]));
         ncwrite(name,'f',repmat(2*(7.292e-5)*sin(lat(2:end-1)/180*pi),[Nx 1]));
              
     else
@@ -277,6 +215,9 @@ parfor id_subindex=1:N_processors
             % Smooth WOA
             if strcmp(fid_strat,'./strat_WOA.nc')
                 N2_tmp=AVE2D_v2(N2_tmp,5);
+                Ng=4; % only compute modes if there are 4 good data points. Note: strat.z(4)=17.5 for WOA       
+            else
+                Ng=2; % Note: strat.z(2)=10 m for HYCOM
             end
             
             % Take nearest neighbor (at same latitude) for missing data
@@ -319,7 +260,7 @@ parfor id_subindex=1:N_processors
                     N2=squeeze(N20(i,j,:));
                     good=isfinite(N2);
                     
-                    if sum(good)>=2 % Note: strat.z(4)=17.5 for WOA or strat.z(2)=10 m for HYCOM                   
+                    if sum(good)>=Ng               
                         % Interpolate coarse WOA N2 onto fine depth grid
                         N2=interp1(z0(good),N2(good),z).';
                         N2(N2<1e-8)=1e-8;

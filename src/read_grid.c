@@ -19,6 +19,11 @@ void read_grid(int rank)
 	size_t count_c[]={NM, NY+2, NX+2};
 	
 	// Define variables that might be needed
+	#ifdef SSH
+		size_t start_phi0[]={0, y0, x0};
+		size_t count_phi0[]={NMW, NY+2, NX+2};
+	#endif
+
 	#ifdef MODECOUPLE
 		size_t start_T[]={0, 0, y0, x0};
 		size_t count_T[]={NM, NM, NY+2, NX+2};
@@ -54,6 +59,14 @@ void read_grid(int rank)
 			ERR(status);
 
 		if ((status = nc_get_vara_double(ncid, varid, start_c, count_c, &phi_bott[0][0][0])))
+			ERR(status);
+	#endif
+	
+	#ifdef SSH
+		if ((status = nc_inq_varid(ncid, "phi_surf", &varid)))
+			ERR(status);
+
+		if ((status = nc_get_vara_double(ncid, varid, start_phi0, count_phi0, &phi_surf[0][0][0])))
 			ERR(status);
 	#endif
 	

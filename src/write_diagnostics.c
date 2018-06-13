@@ -35,6 +35,11 @@ void write_diagnostics(int sD, int Na, int rank)
 	
 					tmp[n][j][i]=C0[n][j][i]+Cn[n][j][i]-divF[n][j][i]-D[n][j][i]; // residual/error
 				#endif
+				
+				#ifdef SSH
+					SSH_amp[n][j][i]=SSH_amp[n][j][i]*phi_surf[n][j+1][i+1]/9.81; // Convert from pressure to SSH
+					SSH_phase[n][j][i]=SSH_phase[n][j][i]/Na*360; // This is time of high tide
+				#endif
 			}
 		}
 	}
@@ -108,6 +113,20 @@ void write_diagnostics(int sD, int Na, int rank)
 		if ((status = nc_put_vara_float(ncid, varid, start, count, &tmp[0][0][0])))
 			ERR(status);
     #endif    
+    
+    #ifdef SSH
+		if ((status = nc_inq_varid(ncid, "amp", &varid)))
+			ERR(status);
+	
+		if ((status = nc_put_vara_float(ncid, varid, start, count, &SSH_amp[0][0][0])))
+			ERR(status);
+	    
+	   	if ((status = nc_inq_varid(ncid, "phase", &varid)))
+			ERR(status);
+	
+		if ((status = nc_put_vara_float(ncid, varid, start, count, &SSH_phase[0][0][0])))
+			ERR(status);
+	#endif
         
     // Write time  
     if ((status = nc_inq_varid(ncid, "period", &varid)))
@@ -143,6 +162,11 @@ void write_diagnostics(int sD, int Na, int rank)
 					Cn[n][j][i]=0;
 					divF[n][j][i]=0;
 					D[n][j][i]=0;
+				#endif
+				
+				#ifdef SSH
+					SSH_amp[n][j][i]=0;
+					SSH_phase[n][j][i]=0;					
 				#endif
 				
 			}

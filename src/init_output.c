@@ -32,22 +32,29 @@ void init_output(int rank)
 		ERR(status);
     
     // Write pressure
-    if ((status = nc_def_var(ncid, "p", NC_FLOAT, 4, dimid, &varid)))
+   	#ifdef WRITE_PRESSURE
+		if ((status = nc_def_var(ncid, "p", NC_FLOAT, 4, dimid, &varid)))
 			ERR(status);	
+	#endif
 			
 	// Write velocity		
-	#ifdef WRITE_VELOCITY
-	
+	#ifdef WRITE_VELOCITY	
 		if ((status = nc_def_var(ncid, "u", NC_FLOAT, 4, dimid, &varid)))
 		ERR(status);	
 	
 		if ((status = nc_def_var(ncid, "v", NC_FLOAT, 4, dimid, &varid)))
-		ERR(status);
-		
+		ERR(status);		
 	#endif
-			
 		
     // Define the diagnostics 
+	#ifdef SSH	
+		if ((status = nc_def_var(ncid, "amp", NC_FLOAT, 4, dimid, &varid)))
+		ERR(status);	
+	
+		if ((status = nc_def_var(ncid, "phase", NC_FLOAT, 4, dimid, &varid)))
+		ERR(status);		
+	#endif
+	
 	#ifdef ENERGY		    	
 		if ((status = nc_def_var(ncid, "KE", NC_FLOAT, 4, dimid, &varid)))
 			ERR(status);
@@ -81,7 +88,7 @@ void init_output(int rank)
 			ERR(status);
 	#endif	    	    		
 		
-	#if defined(ENERGY) || defined(FLUX) || defined(WORK)
+	#if defined(ENERGY) || defined(FLUX) || defined(WORK) || defined(SSH)
 		if ((status = nc_def_var(ncid, "period", NC_INT, 1, &dimid[0], &varid)))
 			ERR(status);	
 	#endif 

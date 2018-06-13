@@ -22,12 +22,15 @@ int main(int argc, char *argv[])
 	
 	int rank, nrank, s;
 	double t=0; // time
-	int sW=0;   // Write index
 	
-	#if defined(ENERGY) || defined(FLUX) || defined(WORK)
-		int sD=1; // Diagnostic index (start after one cycle)
-		int Na=1; // Number of points for diagnostic average
+	#if defined(WRITE_PRESSURE) || defined(WRITE_VELOCITY)
+		int sW=0;   // Write index
 	#endif
+	
+	#if defined(ENERGY) || defined(FLUX) || defined(WORK) || defined(SSH)
+		int sD=1; // Diagnostic index (start writing after one period)
+	#endif
+	int Na=1; // Number of points for diagnostic average (must define)
 	
 	////////////////////////////////////////////////////////////////
 	// Start the MPI enviornment 
@@ -55,7 +58,7 @@ int main(int argc, char *argv[])
 		
 		////////////////////////////////////////////////////////////////
 		// Momentum calls
-		calc_forces(); 
+		calc_forces(Na); 
 						
 		// Update momentum 
 		timestep_uv();
@@ -87,13 +90,15 @@ int main(int argc, char *argv[])
 		t=s*DT; // U, V, and p1 now correspond to this time
 		
 		// Write ouput
-		if (t >= (sW*DT_W)) {			
-			write_output(sW,t,rank);
-			++sW;
-		}
-				
+		#if defined(WRITE_PRESSURE) || defined(WRITE_PRESSURE)
+			if (t >= (sW*DT_W)) {			
+				write_output(sW,t,rank);
+				++sW;
+			}
+		#endif
+		
 		// Write diagnostics
-		#if defined(ENERGY) || defined(FLUX) || defined(WORK)
+		#if defined(ENERGY) || defined(FLUX) || defined(WORK) || defined(SSH)
 			if (t >= (sD*DT_D)) {			
 				write_diagnostics(sD,Na,rank);
 				++sD;

@@ -1,7 +1,7 @@
 #include <math.h>
 #include "csw.h"
 
-void calc_forces(void)
+void calc_forces(int Na)
 {
 	int i, j, n;
 	double Hu, Hv;
@@ -214,7 +214,7 @@ void calc_forces(void)
 	
 	////////////////////////////////////////////////////////////////////
 	// Compute Energy Diagnostics
-	#if defined(ENERGY) || defined(FLUX) || defined(WORK)
+	#if defined(ENERGY) || defined(FLUX) || defined(WORK) 
 		
 		for(j=0; j<NY; j++){
 			
@@ -269,4 +269,20 @@ void calc_forces(void)
 		}		
 		
 	#endif // end diagnostics if
+	
+	////////////////////////////////////////////////////////////////////
+	// Estimate SSH amplitude and phase
+	#ifdef SSH
+		for(n=0; n<NMW; n++){	
+			for(j=0; j<NY; j++){
+				for(i=0; i<NX; i++){			
+					if (p1[n][j+1][i+1]>SSH_amp[n][j][i]) {
+						SSH_amp[n][j][i]=p1[n][j+1][i+1];
+						SSH_phase[n][j][i]=Na;					
+					}
+				}
+			}
+		}
+	#endif
+	
 }

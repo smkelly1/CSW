@@ -53,20 +53,26 @@ void write_output(int sW, double t, int rank)
 	
 	#endif // WRITE_VELOCITY
 	
-	// Write pressure
-	for(i=0; i<NX; i++){
-		for(j=0; j<NY; j++){
-			for(n=0; n<NMW; n++){
-				tmp[n][j][i]=(float)(RHO*p1[n][j+1][i+1]);
+	
+	#ifdef WRITE_PRESSURE
+
+		// Write pressure
+		for(i=0; i<NX; i++){
+			for(j=0; j<NY; j++){
+				for(n=0; n<NMW; n++){
+					tmp[n][j][i]=(float)(RHO*p1[n][j+1][i+1]);
+				}
 			}
 		}
-	}
+		
+		if ((status = nc_inq_varid(ncid, "p", &varid)))
+			ERR(status);
 	
-	if ((status = nc_inq_varid(ncid, "p", &varid)))
-		ERR(status);
-
-	if ((status = nc_put_vara_float(ncid, varid, start, count, &tmp[0][0][0])))
-		ERR(status);
+		if ((status = nc_put_vara_float(ncid, varid, start, count, &tmp[0][0][0])))
+			ERR(status);
+			
+	#endif // WRITE_PRESSURE
+	
 	
     // Write time
     day=t/(24*3600);
