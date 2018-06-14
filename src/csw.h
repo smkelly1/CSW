@@ -4,9 +4,9 @@
 #include <complex.h>
 
 // Input/output files
-#define FILE_GRID  "../../18-5_global_grids/25th_deg_grid.nc"
-#define FILE_TIDES "../25th_deg_TPXO.nc"
-#define FILE_OUT   "25th_deg_out"
+#define FILE_GRID  "../../18-6_grids/25th_deg_HYCOM_SS_grid.nc"
+#define FILE_TIDES "../TPXO_SS.nc"
+#define FILE_OUT   "out"
 
 // Grid spacing
 #define DX ((1.0/25)*M_PI/180)    // Grid spacing in m or radians
@@ -32,10 +32,10 @@
 
 #define DT_W (12.42*3600*1)       // Pressure write time step
 #define DT_D (12.42*3600*1)       // Diagnostics write time step
-#define NT   (100*12.42*3600/DT)  // Simulation duration (time steps)
+#define NT   (400*12.42*3600/DT)  // Simulation duration (time steps)
 
 // Dissipation (commenting these parameters removes the relevant code)
-#define R	(1.0/(3*24*3600))    // Linear "Rayleigh" damping
+#define R	(1.0/(8*24*3600))     // Linear "Rayleigh" damping
 //#define CD	0.0025 	          // Quadratic bottom drag (CD=0.0025 is standard)
 //#define AX	1000.0            // Horizontal Laplacian viscosity Bryan (1975) uses Ax=u*DX/2 
 						 	      // Quick reference for U=1 cm/s: 1/10 deg = 50, 1/25 deg = 20, 1/50 deg = 10, 1/100 deg = 5
