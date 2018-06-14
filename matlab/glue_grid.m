@@ -9,7 +9,7 @@ strat_source='WOA';
 folder='~/simulations/SWOT/18-6_grids/';
 
 % complete file names
-fid.grid=[folder,num2str(res),'th_deg_',strat_source,'_',bathy_source,'_grid.nc';
+fid.grid=[num2str(res),'th_deg_',strat_source,'_',bathy_source,'_grid.nc'];
 fid.bathy=[folder,num2str(res),'th_deg_',bathy_source,'_bathy.nc'];
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -35,8 +35,11 @@ lat=[lat(1)-dlat; lat; lat(end)+dlat];
 disp('Glueing grid');
 
 %Create file
-mode = netcdf.getConstant('CLOBBER');
-mode = bitor(mode,netcdf.getConstant('NETCDF4'));
+currentFolder=pwd;
+cd(folder);
+
+mode=netcdf.getConstant('CLOBBER');
+mode=bitor(mode,netcdf.getConstant('NETCDF4'));
 ncid=netcdf.create(fid.grid,mode);
 
 % define dimensions
@@ -47,6 +50,10 @@ netcdf.endDef(ncid)
 
 % Close file and return to data directory
 netcdf.close(ncid);
+cd(currentFolder);
+
+% Add full path to grid name
+fid.grid=[folder,fid.grid];
 
 % Create variables
 % Dimensions

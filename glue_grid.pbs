@@ -1,6 +1,6 @@
 #!/bin/bash -l
-#PBS -l walltime=00:30:00,nodes=1:ppn=8,mem=32gb 
-#PBS -q lab
+#PBS -l walltime=2:00:00,nodes=1:ppn=8,mem=22gb 
+#PBS -q devel
 #PBS -j oe
 #PBS -o ../../logs/job
 #PBS -S /bin/bash
@@ -14,5 +14,5 @@ cd $PBS_O_WORKDIR
 #-------Start processes---------------------
 matlab -nodisplay -r "maxNumCompThreads(8); glue_grid; quit;"
 
-# Run this job from the csw/matlab directory with "qsub ../make_bathy.pbs"
+# Run this job from the csw/matlab directory with "qsub ../glue_grid.pbs"
 # make sure the ../../logs directory exists before submitting the job.
