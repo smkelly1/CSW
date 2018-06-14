@@ -137,10 +137,12 @@ for id=1:N_subgrids
     
     tmp=ncread(fid.slab,'T_x');
     tmp=tmp(:,:,:,:);
+    tmp(tmp>100)=0;
     ncwrite(fid.grid,'T_x',tmp,[2 ind_y(1) 1 1]);
         
     tmp=ncread(fid.slab,'T_y');
     tmp=tmp(:,:,:,:);
+    tmp(tmp>100)=0;
     ncwrite(fid.grid,'T_y',tmp,[2 ind_y(1) 1 1]);
 end
 
@@ -209,21 +211,3 @@ ncwrite(fid.grid,'T_y',tmp,[1 Ny 1 1]);
 tmp=ncread(fid.grid,'T_y',[1 2 1 1],[Nx 1 Nm Nm]);
 ncwrite(fid.grid,'T_y',tmp,[1 1 1 1]);
 
-
-%% Lastly set missing values to 0 
-%if 1
-
-    %for n=1:Nm
-        %for m=1:Nm
-			%tmp=ncread(fid.grid,'T_x',[1 1 m n],[Nx Ny 1 1]);  
-            %tmp(tmp>100)=0;
-            %ncwrite(fid.grid,'T_x',tmp,[1 1 m n]);
-			
-			%tmp=ncread(fid.grid,'T_y',[1 1 m n],[Nx Ny 1 1]);  
-            %tmp(tmp>100)=0;
-            %ncwrite(fid.grid,'T_y',tmp,[1 1 m n]);
-        %end
-        %disp(n)
-    %end
-     	
-%end
