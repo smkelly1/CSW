@@ -14,5 +14,5 @@ cd $PBS_O_WORKDIR
 #-------Start processes---------------------
 matlab -nodisplay -r "maxNumCompThreads(8); make_tides; quit;"
 
-# Run this job from the csw/matlab directory with "qsub ../make_bathy.pbs"
+# Run this job from the csw/matlab directory with "qsub ../make_tides.pbs"
 # make sure the ../../logs directory exists before submitting the job.
