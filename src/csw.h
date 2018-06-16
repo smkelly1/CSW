@@ -4,26 +4,26 @@
 #include <complex.h>
 
 // Input/output files
-#define FILE_GRID  "../../18-6_grids/10th_deg_HYCOM_SS_grid.nc"
+#define FILE_GRID  "../../18-6_grids/25th_deg_HYCOM_SS_grid.nc"
 #define FILE_TIDES "../TPXO_SS.nc"
 #define FILE_OUT   "out"
 
 // Grid spacing
-#define DX ((1.0/10)*M_PI/180)    // Grid spacing in m or radians
+#define DX ((1.0/25)*M_PI/180)    // Grid spacing in m or radians
 
 // Grid size
-#define NPX 4                     // Number of processors in X
-#define NPY 2                     // Number of processors in X
+#define NPX 8                     // Number of processors in X
+#define NPY 4                     // Number of processors in X
 
-#define NX (3600/NPX)             // Grid size, this must be an integer
-#define NY (1460/NPY)             // This must be an integer
+#define NX (9000/NPX)             // Grid size, this must be an integer
+#define NY (3648/NPY)             // This must be an integer
                                   // Note: reducing the total y-grid size will eliminate arctic cells
-#define NM  2                     // Number of modes
+#define NM  8                     // Number of modes
 #define NMW 1                     // Number of modes to write
 #define NC  1                     // Number of tidal frequencies
 
 // Time steps
-#define DT (12.42*3600/100)       // Forward model time step [sec]
+#define DT (12.42*3600/200)       // Forward model time step [sec]
                                   // Approximate stable time steps:
                                   // 10th deg = 100 steps/period (dt=447 sec)
                                   // 25th deg = 200 (224 sec)
@@ -32,10 +32,10 @@
 
 #define DT_W (12.42*3600*1)       // Pressure write time step
 #define DT_D (12.42*3600*1)       // Diagnostics write time step
-#define NT   (400*12.42*3600/DT)  // Simulation duration (time steps)
+#define NT   (30*12.42*3600/DT)  // Simulation duration (time steps)
 
 // Dissipation (commenting these parameters removes the relevant code)
-#define R    (1.0/(32*24*3600))   // Linear "Rayleigh" damping
+#define R    (1.0/(3*24*3600))   // Linear "Rayleigh" damping
 #define CD   0.0025               // Quadratic bottom drag (CD=0.0025 is standard)
 //#define AX   100.0                // Horizontal Laplacian viscosity Bryan (1975) uses Ax=u*DX/2 
                                   // Quick reference for U=1 cm/s: 1/10 deg = 50, 1/25 deg = 20, 1/50 deg = 10, 1/100 deg = 5
@@ -53,9 +53,9 @@
 #define NO_ANTARCTIC              // No forcing south of 60 S
 //#define WRITE_VELOCITY          // Controls whether snapshots of velocity will be written
 //#define WRITE_PRESSURE          // Controls whether snapshots of pressure will be written
-//#define ENERGY                  // Compute and write energy diagnostics
+#define ENERGY                  // Compute and write energy diagnostics
 //#define FLUX                    // Compute and write energy diagnostics
-//#define WORK                    // Compute and write energy diagnostics
+#define WORK                    // Compute and write energy diagnostics
 #define SSH                       // Compute and write the amplitude and phase of SSH
 
 // Constants 
