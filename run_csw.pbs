@@ -1,5 +1,5 @@
 #!/bin/bash -l
-#PBS -l walltime=2:00:00,nodes=2:ppn=8
+#PBS -l walltime=2:00:00,nodes=1:ppn=8
 #PBS -q devel
 #PBS -j oe
 #PBS -o log
@@ -27,6 +27,6 @@ cp ../csw/src/csw.h ./csw.h
 cp ../csw/src/cswexec ./cswexec
 
 #-------Start process-----------------------
-time mpirun -np 16 ./cswexec
+time mpirun -np 8 ./cswexec
 
 # Run this job in the "run" directory with "qsub ../csw/run_csw.pbs"

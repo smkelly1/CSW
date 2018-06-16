@@ -1,7 +1,7 @@
 % Make a netCDF grid file
 
 % Variables that define the grid
-res=25; % Degrees, want 1/100 at some point
+res=10; % Degrees, want 1/100 at some point
 folder='~/simulations/SWOT/18-6_grids/';
 
 % Automatically run for both SS and GEBCO bathymetry

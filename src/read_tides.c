@@ -58,18 +58,34 @@ void read_tides(int rank)
 	// Compute forcing
 	for(k=0; k<NC; k++){
 		for(j=0; j<NY; j++){
-			for(i=0; i<NX; i++){			
+			#ifdef TURNING_LAT
+				if (ITGF.omega[k]>abs(f[j+1])) {
+			#endif
+			
+				#ifdef NO_ANTARCTIC
+					if (lat[j+1]>-60*M_PI/180) { // Recall: lat is in radians
+				#endif
 	
-				if (H[j+1][i+1]>H_MIN) {	
-									
-					dHdx=(H[j+1][i+2]-H[j+1][i])/(2*A*cos(lat[j+1])*DX);
-					dHdy=(H[j+2][i+1]-H[j][i+1])/(2*A*DX);
-					
-					ITGF.F[k][j][i]=(((double)(ITGF.Ur[k][j][i])+I*(double)(ITGF.Ui[k][j][i]))*dHdx+((double)(ITGF.Vr[k][j][i])+I*(double)(ITGF.Vi[k][j][i]))*dHdy)/H[j+1][i+1];
-					
-				}
+						for(i=0; i<NX; i++){			
 				
-			}
+							if (H[j+1][i+1]>H_MIN) {	
+												
+								dHdx=(H[j+1][i+2]-H[j+1][i])/(2*A*cos(lat[j+1])*DX);
+								dHdy=(H[j+2][i+1]-H[j][i+1])/(2*A*DX);
+								
+								ITGF.F[k][j][i]=(((double)(ITGF.Ur[k][j][i])+I*(double)(ITGF.Ui[k][j][i]))*dHdx+((double)(ITGF.Vr[k][j][i])+I*(double)(ITGF.Vi[k][j][i]))*dHdy)/H[j+1][i+1];
+								
+							}
+							
+						}
+				
+				#ifdef NO_ANTARCTIC
+					}
+				#endif
+			
+			#ifdef TURNING_LAT
+				}	
+			#endif
 		}
 	}
 		
