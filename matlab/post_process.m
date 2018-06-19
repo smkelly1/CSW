@@ -9,7 +9,7 @@ cycle=30;
 % Info about grid
 res=1/25;
 NM=1;
-NPX=4;
+NPX=8;
 NPY=4;
 NX0=9000; % Get from csw.h
 NY0=3648;
@@ -39,7 +39,8 @@ end
 % Mask points where amplitude changes by more than 1 cm and 10%
 tmp1=(out.A-Ai)./Ai;
 tmp2=(out.A-Ai);
-out.mask=(H>1000 & ~(abs(tmp1)>0.1 & abs(tmp2)>0.005) & error<0.1);
+%out.mask=(H>1000 & ~(abs(tmp1)>0.1 & abs(tmp2)>0.005) & error<0.1);
+out.mask=(H>1000 & ~(abs(tmp1)>0.5 & abs(tmp2)*100>2) & error<0.1);
 out.mask100=(H>100 & ~(abs(tmp1)>0.1 & abs(tmp2)>0.01) & error<0.1);
 
 % Extract
@@ -49,6 +50,7 @@ int.pct_bad=(sum(sum(H>1000))-sum(sum(out.mask)))/sum(sum(H>1000))*100;
 int100.pct_bad=(sum(sum(H>100))-sum(sum(out.mask100)))/sum(sum(H>100))*100;
 
 out.E=zeros([NX*NPX NY*NPY]);
+out.KE=zeros([NX*NPX NY*NPY]);
 out.C=zeros([NX*NPX NY*NPY]);
 out.Cn=zeros([NX*NPX NY*NPY]);
 out.D=zeros([NX*NPX NY*NPY]);
@@ -62,6 +64,7 @@ for j=1:length(time)
         start.y=floor(n/NPX)*NY;
         
         out.E(start.x+[1:NX],start.y+[1:NY])=ncread([fid.out,'.',num2str(n,'%03d'),'.nc'],'KE',[1 1 1 time(j)],[NX NY NM 1])+ncread([fid.out,'.',num2str(n,'%03d'),'.nc'],'PE',[1 1 1 time(j)],[NX NY NM 1]);
+        out.KE(start.x+[1:NX],start.y+[1:NY])=ncread([fid.out,'.',num2str(n,'%03d'),'.nc'],'KE',[1 1 1 time(j)],[NX NY NM 1]);
         out.C(start.x+[1:NX],start.y+[1:NY])=ncread([fid.out,'.',num2str(n,'%03d'),'.nc'],'C0',[1 1 1 time(j)],[NX NY NM 1]);
         out.Cn(start.x+[1:NX],start.y+[1:NY])=ncread([fid.out,'.',num2str(n,'%03d'),'.nc'],'Cn',[1 1 1 time(j)],[NX NY NM 1]);
         out.D(start.x+[1:NX],start.y+[1:NY])=ncread([fid.out,'.',num2str(n,'%03d'),'.nc'],'D',[1 1 1 time(j)],[NX NY NM 1]);
@@ -70,6 +73,7 @@ for j=1:length(time)
     end
     
     int.E(j)=squeeze(nansum(nansum(out.mask.*out.E.*dx.*dy))*1e-9);
+    int.KE(j)=squeeze(nansum(nansum(out.mask.*out.KE.*dx.*dy))*1e-9);
     int.C(j)=squeeze(nansum(nansum(out.mask.*out.C.*dx.*dy))*1e-9);
     int.Cn(j)=squeeze(nansum(nansum(out.mask.*out.Cn.*dx.*dy))*1e-9);
     int.divF(j)=squeeze(nansum(nansum(out.mask.*out.divF.*dx.*dy))*1e-9);
@@ -77,6 +81,7 @@ for j=1:length(time)
     int.error(j)=squeeze(nansum(nansum(out.mask.*out.error.*dx.*dy))*1e-9); 
 
     int100.E(j)=squeeze(nansum(nansum(out.mask100.*out.E.*dx.*dy))*1e-9);
+    int100.KE(j)=squeeze(nansum(nansum(out.mask100.*out.E.*dx.*dy))*1e-9);
     int100.C(j)=squeeze(nansum(nansum(out.mask100.*out.C.*dx.*dy))*1e-9);
     int100.Cn(j)=squeeze(nansum(nansum(out.mask100.*out.Cn.*dx.*dy))*1e-9);
     int100.divF(j)=squeeze(nansum(nansum(out.mask100.*out.divF.*dx.*dy))*1e-9);

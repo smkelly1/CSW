@@ -19,10 +19,10 @@ void timestep_p(void)
 			#ifdef R_MASK
 				c_crit=fabs(f[j+1])*A*cos(lat[j+1])*DX;  
 			#endif
-			
-			for(i=0; i<NX; i++){				
-    
-   				if (H[j+1][i+1]>H_MIN) {
+
+			for(i=0; i<NX; i++){
+
+				if (H[j+1][i+1]>H_MIN) {
 
 					// Create a sponge with an R_MASK decay time scale where there is insufficient wave resolution
 					#ifdef R_MASK
@@ -35,19 +35,19 @@ void timestep_p(void)
 					// Integrate to find the new data
 					#ifdef R_MASK
 						p[n][j+1][i+1]=(p1[n][j+1][i+1]+gamma*(23*Fp[n][j][i]-16*Fp_1[n][j][i]+5*Fp_2[n][j][i]))*mask;
-					#else	
-						p[n][j+1][i+1]=p1[n][j+1][i+1]+gamma*(23*Fp[n][j][i]-16*Fp_1[n][j][i]+5*Fp_2[n][j][i]);				
+					#else
+						p[n][j+1][i+1]=p1[n][j+1][i+1]+gamma*(23*Fp[n][j][i]-16*Fp_1[n][j][i]+5*Fp_2[n][j][i]);
 					#endif
-					
+
 					// Old forcing becomes very old forcing 
 					Fp_2[n][j][i]=Fp_1[n][j][i];
-					
+
 					// Cuttent forcing becomes old forcing 
 					Fp_1[n][j][i]=Fp[n][j][i];
-					
+
 					// Average to find the mid-point data
 					p1[n][j+1][i+1]=(p[n][j+1][i+1]+p1[n][j+1][i+1])/2;
-				
+
 				}
 				
 			}

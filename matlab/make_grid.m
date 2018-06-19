@@ -22,8 +22,8 @@ bathy_source='SS';
 %bathy_source='GEBCO';
 
 % Choose stratification
-%strat_source='HYCOM';
-strat_source='WOA';
+strat_source='HYCOM';
+%strat_source='WOA';
 
 % Calculation parameters
 Nm=8; % Want Nm=8 eventually
@@ -288,10 +288,10 @@ parfor id_subindex=1:N_processors
                     if ~isempty(ind_z)
                         
                         % Mode at location of interest
-                        PHI=phi_C(ind_z,:,j-1);
+                        PHI=phi_C(1:ind_z,:,j-1);
                         
                         % Gradient in spherical coordinates
-                        dPHIdx=1/(a0*cos(lat(j-1)/180*pi))*(phi_E(ind_z,:,j-1)-phi_W(ind_z,:,j-1))/(2*dx/180*pi);
+                        dPHIdx=1/(a0*cos(lat(j-1)/180*pi))*(phi_E(1:ind_z,:,j-1)-phi_W(1:ind_z,:,j-1))/(2*dx/180*pi);
                         
                         % Integral for coupling coefficient
                         Tx(1,j-1,:,:)=dPHIdx'*PHI*dz;
@@ -302,10 +302,10 @@ parfor id_subindex=1:N_processors
                     if ~isempty(ind_z)
                         
                         % Mode at location of interest
-                        PHI=phi_C(ind_z,:,j-1);
+                        PHI=phi_C(1:ind_z,:,j-1);
                         
                         % Gradient in spherical coordinates
-                        dPHIdy=1/a0*(phi_C(ind_z,:,j)-phi_C(ind_z,:,j-2))/(2*dy/180*pi);
+                        dPHIdy=1/a0*(phi_C(1:ind_z,:,j)-phi_C(1:ind_z,:,j-2))/(2*dy/180*pi);
                         
                         % Integral for coupling coefficient
                         Ty(1,j-1,:,:)=dPHIdy'*PHI*dz;

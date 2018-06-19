@@ -32,6 +32,7 @@ int main(int argc, char *argv[])
 	#endif
 	int Na=1; // Number of points for diagnostic average (must define)
 
+
 	////////////////////////////////////////////////////////////////
 	// Start the MPI enviornment 
 	MPI_Init(&argc,&argv);    
@@ -50,11 +51,12 @@ int main(int argc, char *argv[])
 
 	// Initiate output file
 	init_output(rank);
-		
+
 
 	//////////////////////////////////////////////////////////////
 	// Begin forward integration
 	for(s=1; s<(NT+1); s++) {
+
 
 		////////////////////////////////////////////////////////////////
 		// Momentum calls
@@ -67,6 +69,7 @@ int main(int argc, char *argv[])
 		#if defined(CORIOLIS) || defined(AX)
 			pass_uv(rank);
 		#endif
+
 
 		////////////////////////////////////////////////////////////////
 		// Divergence calls

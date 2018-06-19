@@ -32,16 +32,17 @@
 
 #define DT_W (12.42*3600*1)       // Pressure write time step
 #define DT_D (12.42*3600*1)       // Diagnostics write time step
-#define NT   (30*12.42*3600/DT)  // Simulation duration (time steps)
+#define NT   (30*12.42*3600/DT)   // Simulation duration (time steps)
 
 // Dissipation (commenting these parameters removes the relevant code)
-#define R    (1.0/(3*24*3600))   // Linear "Rayleigh" damping
+#define R    (1.0/(3*24*3600))    // Linear "Rayleigh" damping
 #define CD   0.0025               // Quadratic bottom drag (CD=0.0025 is standard)
-//#define AX   100.0                // Horizontal Laplacian viscosity Bryan (1975) uses Ax=u*DX/2 
+//#define AX   100.0              // Horizontal Laplacian viscosity Bryan (1975) uses Ax=u*DX/2 
                                   // Quick reference for U=1 cm/s: 1/10 deg = 50, 1/25 deg = 20, 1/50 deg = 10, 1/100 deg = 5
 //#define R_MASK (1.0/(1*3600))   // Damping scale in low-wave resolution regions
 #define H_MIN        16.0         // Minimum depth to solve internal tides (set to 0.0 to turn off)
 #define H_MIN_FORCE  100.0        // Minimum depth to force internal tides (set to 0.0 to turn off)
+#define H_MIN_COUPLE 100.0        // Minimum depth to couple modes (set to 0.0 to turn off)
 
 // Flags (These could be written to the input file, but it's quicker to compile than run MATLAB)
 #define CORIOLIS                  // Include the Coriolis force
@@ -53,9 +54,9 @@
 #define NO_ANTARCTIC              // No forcing south of 60 S
 //#define WRITE_VELOCITY          // Controls whether snapshots of velocity will be written
 //#define WRITE_PRESSURE          // Controls whether snapshots of pressure will be written
-#define ENERGY                  // Compute and write energy diagnostics
+#define ENERGY                    // Compute and write energy diagnostics
 //#define FLUX                    // Compute and write energy diagnostics
-#define WORK                    // Compute and write energy diagnostics
+#define WORK                      // Compute and write energy diagnostics
 #define SSH                       // Compute and write the amplitude and phase of SSH
 
 // Constants 
@@ -83,6 +84,7 @@ struct type_ITGF {
 struct type_T {
 	double x[NM][NM][NY+2][NX+2], y[NM][NM][NY+2][NX+2];
 };
+
 
 ////////////////////////////////////////////////////////////////////////
 // Function prototypes

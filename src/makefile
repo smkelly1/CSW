@@ -3,13 +3,15 @@
 ########################################################################
 # Set compiler options
 
-# This set is for openmpi with gcc
-CC = mpicc
-CFLAGS = -Wall -O3 -mcmodel=large -fpic
+# This set is for openmpi with gcc 
+#CC = mpicc
+#CFLAGS = -Wall -O1 -mcmodel=large -fpic
+
+# NOTE: -01 seems to work find with gcc, but -O3 leads to problems in pass_UV.c that produces instabilities at the corners of the tiles. It could be a precision issue, or that the optimization is chopping the loops so that uninitialized values are being received. At any rate, putting print statements in the code to debug is a bad idea, because they may change the optimization methods. Some solutions might be (i) compiling pass_UV.c with O1 optimization, (ii) adding a precision flag or loop breaking flag, or (3) rewriting pass_UV.c to be "optimization safe" although, I'm not sure what that would entail. 
 
 # This set is for openmpi with icc
-#CC=mpiicc
-#CFLAGS=-cc=icc -Wall -O3  -mcmodel=large -mkl -ipo -fpic -axAVX 
+CC=mpiicc
+CFLAGS=-cc=icc -Wall -O3  -mcmodel=large -mkl -ipo -fpic -axAVX 
 
 LIBS = -lm -lnetcdf -lmpi
 
