@@ -3,14 +3,9 @@
 
 void calc_divergence(void)
 {
-	int i, j, n;
+	int i, j, m, n;
 	double cos01, cos1, cos12;
 	double gamma;
-
-	#ifdef MODECOUPLE
-		int m;
-	#endif
-
 
 	for(j=0; j<NY; j++){
 

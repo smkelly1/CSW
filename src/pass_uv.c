@@ -66,10 +66,10 @@ void pass_uv(int rank)
 			#endif
 
 			if (rank_e > -1) {
-				MPI_Send(v_Sew,NM*NY,MPI_DOUBLE,rank_e,12,MPI_COMM_WORLD);
+				MPI_Send(v_Sew,NM*(NY+1),MPI_DOUBLE,rank_e,12,MPI_COMM_WORLD);
 			}
 			if (rank_w > -1) {
-				MPI_Recv(v_Rew,NM*NY,MPI_DOUBLE,rank_w,12,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+				MPI_Recv(v_Rew,NM*(NY+1),MPI_DOUBLE,rank_w,12,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
 			}
 		}
 		else {
@@ -83,10 +83,10 @@ void pass_uv(int rank)
 			#endif
 
 			if (rank_w > -1) {
-				MPI_Recv(v_Rew,NM*NY,MPI_DOUBLE,rank_w,12,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+				MPI_Recv(v_Rew,NM*(NY+1),MPI_DOUBLE,rank_w,12,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
 			}
 			if (rank_e > -1) {
-				MPI_Send(v_Sew,NM*NY,MPI_DOUBLE,rank_e,12,MPI_COMM_WORLD);
+				MPI_Send(v_Sew,NM*(NY+1),MPI_DOUBLE,rank_e,12,MPI_COMM_WORLD);
 			}
 		}
 
@@ -131,10 +131,10 @@ void pass_uv(int rank)
 			#endif
 
 			if (rank_w > -1) {
-				MPI_Send(v_Sew,NM*NY,MPI_DOUBLE,rank_w,22,MPI_COMM_WORLD);
+				MPI_Send(v_Sew,NM*(NY+1),MPI_DOUBLE,rank_w,22,MPI_COMM_WORLD);
 			}
 			if (rank_e > -1) {
-				MPI_Recv(v_Rew,NM*NY,MPI_DOUBLE,rank_e,22,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+				MPI_Recv(v_Rew,NM*(NY+1),MPI_DOUBLE,rank_e,22,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
 			}
 		}
 		else {
@@ -148,10 +148,10 @@ void pass_uv(int rank)
 			#endif
 			
 			if (rank_e > -1) {
-				MPI_Recv(v_Rew,NM*NY,MPI_DOUBLE,rank_e,22,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+				MPI_Recv(v_Rew,NM*(NY+1),MPI_DOUBLE,rank_e,22,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
 			}
 			if (rank_w > -1) {
-				MPI_Send(v_Sew,NM*NY,MPI_DOUBLE,rank_w,22,MPI_COMM_WORLD);
+				MPI_Send(v_Sew,NM*(NY+1),MPI_DOUBLE,rank_w,22,MPI_COMM_WORLD);
 			}
 		}
 
@@ -213,25 +213,25 @@ void pass_uv(int rank)
 		// Odd rows send first to avoid deadlock
 		if (row % 2) {
 			if (rank_n < NPX*NPY) {
-				MPI_Send(u_Sns,NM*NX,MPI_DOUBLE,rank_n,31,MPI_COMM_WORLD);
+				MPI_Send(u_Sns,NM*(NX+1),MPI_DOUBLE,rank_n,31,MPI_COMM_WORLD);
 				#ifdef AX
 					MPI_Send(v_Sns,NM*NX,MPI_DOUBLE,rank_n,32,MPI_COMM_WORLD);
 				#endif
 			}
-			MPI_Recv(u_Rns,NM*NX,MPI_DOUBLE,rank_s,31,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+			MPI_Recv(u_Rns,NM*(NX+1),MPI_DOUBLE,rank_s,31,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
 			#ifdef AX
 				MPI_Recv(v_Rns,NM*NX,MPI_DOUBLE,rank_s,32,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
 			#endif
 		}
 		else {
 			if (rank_s >= 0){
-				MPI_Recv(u_Rns,NM*NX,MPI_DOUBLE,rank_s,31,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+				MPI_Recv(u_Rns,NM*(NX+1),MPI_DOUBLE,rank_s,31,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
 				#ifdef AX
 					MPI_Recv(v_Rns,NM*NX,MPI_DOUBLE,rank_s,32,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
 				#endif
 			}
 			if (rank_n < NPX*NPY) {
-				MPI_Send(u_Sns,NM*NX,MPI_DOUBLE,rank_n,31,MPI_COMM_WORLD);
+				MPI_Send(u_Sns,NM*(NX+1),MPI_DOUBLE,rank_n,31,MPI_COMM_WORLD);
 				#ifdef AX
 					MPI_Send(v_Sns,NM*NX,MPI_DOUBLE,rank_n,32,MPI_COMM_WORLD);
 				#endif
@@ -269,13 +269,13 @@ void pass_uv(int rank)
 
 		// Odd rows send first to avoid deadlock
 		if (row % 2) {
-			MPI_Send(u_Sns,NM*NX,MPI_DOUBLE,rank_s,41,MPI_COMM_WORLD);
+			MPI_Send(u_Sns,NM*(NX+1),MPI_DOUBLE,rank_s,41,MPI_COMM_WORLD);
 			#ifdef AX
 				MPI_Send(v_Sns,NM*NX,MPI_DOUBLE,rank_s,42,MPI_COMM_WORLD);
 			#endif
 
 			if (rank_n < NPX*NPY) {
-				MPI_Recv(u_Rns,NM*NX,MPI_DOUBLE,rank_n,41,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+				MPI_Recv(u_Rns,NM*(NX+1),MPI_DOUBLE,rank_n,41,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
 				#ifdef AX
 					MPI_Recv(v_Rns,NM*NX,MPI_DOUBLE,rank_n,42,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
 				#endif
@@ -283,13 +283,13 @@ void pass_uv(int rank)
 		}
 		else {
 			if (rank_n < NPX*NPY) {
-				MPI_Recv(u_Rns,NM*NX,MPI_DOUBLE,rank_n,41,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+				MPI_Recv(u_Rns,NM*(NX+1),MPI_DOUBLE,rank_n,41,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
 				#ifdef AX
 					MPI_Recv(v_Rns,NM*NX,MPI_DOUBLE,rank_n,42,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
 				#endif
 			}
 			if (rank_s >= 0){
-				MPI_Send(u_Sns,NM*NX,MPI_DOUBLE,rank_s,41,MPI_COMM_WORLD);
+				MPI_Send(u_Sns,NM*(NX+1),MPI_DOUBLE,rank_s,41,MPI_COMM_WORLD);
 				#ifdef AX
 					MPI_Send(v_Sns,NM*NX,MPI_DOUBLE,rank_s,42,MPI_COMM_WORLD);
 				#endif

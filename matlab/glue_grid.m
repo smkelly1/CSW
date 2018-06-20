@@ -200,7 +200,7 @@ ncwrite(fid.grid,'T_x',tmp,[1 1 1 1]);
 
 
 tmp=ncread(fid.grid,'T_y',[2 1 1 1],[1 Ny Nm Nm]);
-ncwrite(fid.grid,'T_x',tmp,[Nx 1 1 1]);
+ncwrite(fid.grid,'T_y',tmp,[Nx 1 1 1]);
 
 tmp=ncread(fid.grid,'T_y',[Nx-1 1 1 1],[1 Ny Nm Nm]);
 ncwrite(fid.grid,'T_y',tmp,[1 1 1 1]);

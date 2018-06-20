@@ -2,12 +2,12 @@
 
 #-------Copy configuration files------------
 #cp ../*_in.nc ./
-cp ../csw/matlab/make_tides.m ./make_tides.m
-cp ../csw/src/csw.h ./csw.h
+#cp ../csw/matlab/make_tides.m ./make_tides.m
+cp ../csw/src/csw.h ../csw/src/cswexec .
 
 #-------Start process-----------------------
 #time -o log mpirun -np 6 ../src_diag/cswexec > log &
-{ time mpirun -np 4 ../csw/src/cswexec; } >> log 2>&1 &
+{ time mpirun -np 8 ./cswexec; } >> log 2>&1 &
 # Run this job with "sh ../csw1.0/run_CSW.sh"
 
 
