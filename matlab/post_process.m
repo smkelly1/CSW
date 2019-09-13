@@ -4,12 +4,12 @@ fid.out='./out';
 fid.grid='../../18-6_grids/25th_deg_SS_bathy.nc';
 
 % Last cycle to analyze
-cycle=30;
+cycle=50;
 
 % Info about grid
 res=1/25;
 NM=1;
-NPX=8;
+NPX=4;
 NPY=4;
 NX0=9000; % Get from csw.h
 NY0=3648;
@@ -28,11 +28,13 @@ dy=res/180*pi*a;
 % Create mask to determine exponential growth
 Ai=zeros([NX*NPX NY*NPY]);
 out.A=zeros([NX*NPX NY*NPY]);
+out.phase=zeros([NX*NPX NY*NPY]);
 for n=0:NPX*NPY-1
     start.x=floor(n-floor(n/NPX)*NPX)*NX;
     start.y=floor(n/NPX)*NY;
     Ai(start.x+[1:NX],start.y+[1:NY])=ncread([fid.out,'.',num2str(n,'%03d'),'.nc'],'amp',[1 1 1 cycle-10],[NX NY NM 1]);
     out.A(start.x+[1:NX],start.y+[1:NY])=ncread([fid.out,'.',num2str(n,'%03d'),'.nc'],'amp',[1 1 1 cycle],[NX NY NM 1]);
+    out.phase(start.x+[1:NX],start.y+[1:NY])=ncread([fid.out,'.',num2str(n,'%03d'),'.nc'],'phase',[1 1 1 cycle],[NX NY NM 1]);
     error(start.x+[1:NX],start.y+[1:NY])=ncread([fid.out,'.',num2str(n,'%03d'),'.nc'],'error',[1 1 1 cycle],[NX NY NM 1]);
 end
 

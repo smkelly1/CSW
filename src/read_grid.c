@@ -35,11 +35,9 @@ void read_grid(int rank)
 		size_t count_lat[]={NY+2};
 	#endif
 
-
-	// Open the file
+	// Open the grid file
 	if ((status = nc_open(FILE_GRID, NC_NOWRITE, &ncid)))
 		ERR(status);
-
 
 	// Read the grid
 	if ((status = nc_inq_varid(ncid, "H", &varid)))
@@ -50,7 +48,7 @@ void read_grid(int rank)
 
 	if ((status = nc_inq_varid(ncid, "c", &varid)))
 		ERR(status);
-
+		
 	if ((status = nc_get_vara_double(ncid, varid, start_c, count_c, &c[0][0][0])))
 		ERR(status);
 
@@ -118,6 +116,30 @@ void read_grid(int rank)
 			f[j]=2*(2*M_PI)/(24*3600)*sin(lat[j]);	
 		}
 
+	#endif
+
+	#ifdef FILE_R
+	// Open the damping file
+	if ((status = nc_open(FILE_R, NC_NOWRITE, &ncid)))
+		ERR(status);
+
+	if ((status = nc_inq_varid(ncid, "r", &varid)))
+		ERR(status);
+		
+	if ((status = nc_get_vara_double(ncid, varid, start_c, count_c, &r[0][0][0])))
+		ERR(status);
+	#endif
+
+	#ifdef FILE_AX
+	// Open the viscosity file
+	if ((status = nc_open(FILE_AX, NC_NOWRITE, &ncid)))
+		ERR(status);
+		
+	if ((status = nc_inq_varid(ncid, "Ax", &varid)))
+		ERR(status);
+		
+	if ((status = nc_get_vara_double(ncid, varid, start_c, count_c, &Ax[0][0][0])))
+		ERR(status);
 	#endif
 
 }

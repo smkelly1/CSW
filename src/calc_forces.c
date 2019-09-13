@@ -5,19 +5,29 @@ void calc_forces(int Na)
 {
 	int i, j, m, n;
 	double Hu, Hv;
-	double cos01, cos1, cos12;
+	double cos0, cos01, cos1, cos12;
 
 	double invDX;
 	invDX=1/DX;
+	
+	#if defined(AX) || defined(FILE_AX)
+		double invDX2;
+		invDX2=1/(DX*DX);
+	#endif
 
 	// Define variables that might be needed
 	#ifdef CORIOLIS
 		double f01;
 	#endif
 
-	#if defined(AX) && defined(SPHERE)
+	#if (defined(AX) || defined(FILE_AX)) && defined(SPHERE)
+		double Ax0;
 		double dUdy[2], dUdx2, dUdy2;
 		double dVdy[2], dVdx2, dVdy2;
+	#endif
+
+	#if defined(R) || defined(FILE_R)
+		double r0;
 	#endif
 
 	#ifdef CD
@@ -29,14 +39,6 @@ void calc_forces(int Na)
 		double gamma;
 	#endif 
 
-	#ifdef AX
-		double invDX2;
-		invDX2=1/(DX*DX);
-
-		#ifdef SPHERE
-			double cos0;
-		#endif
-	#endif
 
 	////////////////////////////////////////////////////////////////////
 	// Forces in U-direction
@@ -81,7 +83,14 @@ void calc_forces(int Na)
 					Fu_eps[n][j][i]=0;
 
 					// Horizontal diffusion
-					#ifdef AX
+					#if defined(AX) || defined(FILE_AX)
+						// File values over-rides constant value
+						#ifdef FILE_AX
+							Ax0=(Ax[n][j+1][i]+Ax[n][j+1][i+1])/2;
+						#else
+							Ax0=AX;
+						#endif
+					
 						#ifdef SPHERE
 							dUdx2=1/(A*A*cos1*cos1)*(U[n][j+1][i+2]-2*U[n][j+1][i+1]+U[n][j+1][i]);	
 
@@ -89,16 +98,23 @@ void calc_forces(int Na)
 							dUdy[1]=cos12*(U[n][j+2][i+1]-U[n][j+1][i+1]);
 							dUdy2=1/(A*A*cos1)*(dUdy[1]-dUdy[0]);
 
-							Fu_eps[n][j][i]=Fu_eps[n][j][i]+AX*(dUdx2+dUdy2)*invDX2;
+							Fu_eps[n][j][i]=Fu_eps[n][j][i]+Ax0*(dUdx2+dUdy2)*invDX2;
 						#else
-							Fu_eps[n][j][i]=Fu_eps[n][j][i]+AX*((U[n][j+1][i+2]-2*U[n][j+1][i+1]+U[n][j+1][i])
+							Fu_eps[n][j][i]=Fu_eps[n][j][i]+Ax0*((U[n][j+1][i+2]-2*U[n][j+1][i+1]+U[n][j+1][i])
 								+(U[n][j+2][i+1]-2*U[n][j+1][i+1]+U[n][j][i+1]))*invDX2;
 						#endif
 					#endif
 
 					// Linear drag
-					#ifdef R
-						Fu_eps[n][j][i]=Fu_eps[n][j][i]-R*U[n][j+1][i+1];
+					#if defined(R) || defined(FILE_R)
+						// File values override constant value
+						#ifdef FILE_R
+							r0=(r[n][j+1][i]+r[n][j+1][i+1])/2;
+						#else
+							r0=R;
+						#endif
+
+						Fu_eps[n][j][i]=Fu_eps[n][j][i]-r0*U[n][j+1][i+1];
 					#endif
 
 					// Quadratic bottom drag
@@ -123,7 +139,7 @@ void calc_forces(int Na)
 
 	for(j=0; j<NY+1; j++){
 
-		#if defined(AX) && defined(SPHERE)
+		#if (defined(AX) || defined(FILE_AX)) && defined(SPHERE)
 			cos0=cos(lat[j]);      
 		#endif
 
@@ -168,7 +184,14 @@ void calc_forces(int Na)
 					Fv_eps[n][j][i]=0;
 
 					// Horizontal diffusion
-					#ifdef AX
+					#if defined(AX) || defined(FILE_AX)
+						// File values over-rides constant value
+						#ifdef FILE_AX
+							Ax0=(Ax[n][j][i+1]+Ax[n][j+1][i+1])/2;
+						#else
+							Ax0=AX;
+						#endif
+					
 						#ifdef SPHERE
 							dVdx2=1/(A*A*cos01*cos01)*(V[n][j+1][i+2]-2*V[n][j+1][i+1]+V[n][j+1][i]);
 
@@ -176,16 +199,22 @@ void calc_forces(int Na)
 							dVdy[1]=cos1*(V[n][j+2][i+1]-V[n][j+1][i+1]);
 							dVdy2=1/(A*A*cos01)*(dVdy[1]-dVdy[0]);
 
-							Fv_eps[n][j][i]=Fv_eps[n][j][i]+AX*(dVdx2+dVdy2)*invDX2;
+							Fv_eps[n][j][i]=Fv_eps[n][j][i]+Ax0*(dVdx2+dVdy2)*invDX2;
 						#else
-							Fv_eps[n][j][i]=Fv_eps[n][j][i]+AX*((V[n][j+1][i+2]-2*V[n][j+1][i+1]+V[n][j+1][i])
+							Fv_eps[n][j][i]=Fv_eps[n][j][i]+Ax0*((V[n][j+1][i+2]-2*V[n][j+1][i+1]+V[n][j+1][i])
 								+(V[n][j+2][i+1]-2*V[n][j+1][i+1]+V[n][j][i+1]))*invDX2;
 						#endif
 					#endif
 
 					// Linear drag
-					#ifdef R
-						Fv_eps[n][j][i]=Fv_eps[n][j][i]-R*V[n][j+1][i+1];
+					#if defined(R) || defined(FILE_R)
+						#ifdef FILE_R
+							r0=(r[n][j][i+1]+r[n][j+1][i+1])/2;
+						#else
+							r0=R;
+						#endif
+						
+						Fv_eps[n][j][i]=Fv_eps[n][j][i]-r0*V[n][j+1][i+1];
 					#endif
 
 					// Quadratic bottom drag

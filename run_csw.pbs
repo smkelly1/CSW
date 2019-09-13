@@ -1,5 +1,5 @@
 #!/bin/bash -l
-#PBS -l walltime=12:00:00,nodes=4:ppn=8
+#PBS -l walltime=18:00:00,nodes=2:ppn=8
 #PBS -q batch
 #PBS -j oe
 #PBS -o log
@@ -21,12 +21,12 @@
 cd $PBS_O_WORKDIR
 
 #-------Copy configuration files------------
-#cp ../*_in.nc ./
-#cp ../csw/matlab/make_tides.m ./make_tides.m
-#cp ../csw/src/csw.h ./csw.h
-#cp ../csw/src/cswexec ./cswexec
+cp ../csw/matlab/make_tides.m ./make_tides.m
+cp ../csw/matlab/make_r.m ./make_r.m
+cp ../csw/src/csw.h ./csw.h
+cp ../csw/src/cswexec ./cswexec
 
 #-------Start process-----------------------
-time mpirun -np 32 ./cswexec
+time mpirun -np 16 ./cswexec
 
 # Run this job in the "run" directory with "qsub ../csw/run_csw.pbs"

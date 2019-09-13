@@ -4,26 +4,28 @@
 #include <complex.h>
 
 // Input/output files
-#define FILE_GRID  "../../18-6_grids/25th_deg_HYCOM_SS_grid.nc"
+#define FILE_GRID  "../../18-6_grids/25th_deg_WOA_SS_grid.nc"
 #define FILE_TIDES "../TPXO_SS.nc"
 #define FILE_OUT   "out"
+#define FILE_R  "../r_wave.nc"         // Spatially variable linear damping
+#define FILE_AX  "../Ax.nc"     // Spatially variable horizontal viscosity
 
 // Grid spacing
 #define DX ((1.0/25)*M_PI/180)    // Grid spacing in m or radians
 
 // Grid size
-#define NPX 8                     // Number of processors in X
+#define NPX 4                     // Number of processors in X
 #define NPY 4                     // Number of processors in X
 
 #define NX (9000/NPX)             // Grid size, this must be an integer
 #define NY (3648/NPY)             // This must be an integer
                                   // Note: reducing the total y-grid size will eliminate arctic cells
-#define NM  8                     // Number of modes
+#define NM  4                     // Number of modes
 #define NMW 1                     // Number of modes to write
 #define NC  1                     // Number of tidal frequencies
 
 // Time steps
-#define DT (12.42*3600/200)       // Forward model time step [sec]
+#define DT (12.42*3600/400)       // Forward model time step [sec]
                                   // Approximate stable time steps:
                                   // 10th deg = 100 steps/period (dt=447 sec)
                                   // 25th deg = 200 (224 sec)
@@ -32,11 +34,11 @@
 
 #define DT_W (12.42*3600*1)       // Pressure write time step
 #define DT_D (12.42*3600*1)       // Diagnostics write time step
-#define NT   (30*12.42*3600/DT)   // Simulation duration (time steps)
+#define NT   (100*12.42*3600/DT)   // Simulation duration (time steps)
 
 // Dissipation (commenting these parameters removes the relevant code)
-#define R    (1.0/(3*24*3600))    // Linear "Rayleigh" damping
 #define CD   0.0025               // Quadratic bottom drag (CD=0.0025 is standard)
+//#define R    (1.0/(2*24*3600))  // Linear "Rayleigh" damping
 //#define AX   100.0              // Horizontal Laplacian viscosity Bryan (1975) uses Ax=u*DX/2 
                                   // Quick reference for U=1 cm/s: 1/10 deg = 50, 1/25 deg = 20, 1/50 deg = 10, 1/100 deg = 5
 //#define R_MASK (1.0/(1*3600))   // Damping scale in low-wave resolution regions
@@ -120,6 +122,14 @@ double H[NY+2][NX+2];
 double c[NM][NY+2][NX+2];
 double phi_bott[NM][NY+2][NX+2];
 struct type_T T; // Coupling coefficients 
+
+#ifdef FILE_R
+	double r[NM][NY+2][NX+2];
+#endif
+
+#ifdef FILE_AX
+	double Ax[NM][NY+2][NX+2];
+#endif
 
 // Variables and forces
 double U[NM][NY+2][NX+3];
