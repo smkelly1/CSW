@@ -27,20 +27,33 @@ dy=res/180*pi*a;
 
 % Create mask to determine exponential growth
 Ai=zeros([NX*NPX NY*NPY]);
-out.A=zeros([NX*NPX NY*NPY]);
-out.phase=zeros([NX*NPX NY*NPY]);
+out.SSH_AMP=zeros([NX*NPX NY*NPY]);
+out.SSH_phase=zeros([NX*NPX NY*NPY]);
+out.U_AMP=zeros([NX*NPX NY*NPY]);
+out.U_phase=zeros([NX*NPX NY*NPY]);
+out.V_AMP=zeros([NX*NPX NY*NPY]);
+out.V_phase=zeros([NX*NPX NY*NPY]);
 for n=0:NPX*NPY-1
     start.x=floor(n-floor(n/NPX)*NPX)*NX;
     start.y=floor(n/NPX)*NY;
-    Ai(start.x+[1:NX],start.y+[1:NY])=ncread([fid.out,'.',num2str(n,'%03d'),'.nc'],'amp',[1 1 1 cycle-10],[NX NY NM 1]);
-    out.A(start.x+[1:NX],start.y+[1:NY])=ncread([fid.out,'.',num2str(n,'%03d'),'.nc'],'amp',[1 1 1 cycle],[NX NY NM 1]);
-    out.phase(start.x+[1:NX],start.y+[1:NY])=ncread([fid.out,'.',num2str(n,'%03d'),'.nc'],'phase',[1 1 1 cycle],[NX NY NM 1]);
+    
+    Ai(start.x+[1:NX],start.y+[1:NY])=ncread([fid.out,'.',num2str(n,'%03d'),'.nc'],'SSH_amp',[1 1 1 cycle-10],[NX NY NM 1]);
+    
+    out.SSH_amp(start.x+[1:NX],start.y+[1:NY])=ncread([fid.out,'.',num2str(n,'%03d'),'.nc'],'SSH_amp',[1 1 1 cycle],[NX NY NM 1]);
+    out.SSH_phase(start.x+[1:NX],start.y+[1:NY])=ncread([fid.out,'.',num2str(n,'%03d'),'.nc'],'SSH_phase',[1 1 1 cycle],[NX NY NM 1]);
+    
+    out.U_amp(start.x+[1:NX],start.y+[1:NY])=ncread([fid.out,'.',num2str(n,'%03d'),'.nc'],'U_amp',[1 1 1 cycle],[NX NY NM 1]);
+    out.U_phase(start.x+[1:NX],start.y+[1:NY])=ncread([fid.out,'.',num2str(n,'%03d'),'.nc'],'U_phase',[1 1 1 cycle],[NX NY NM 1]);
+    
+    out.V_amp(start.x+[1:NX],start.y+[1:NY])=ncread([fid.out,'.',num2str(n,'%03d'),'.nc'],'V_amp',[1 1 1 cycle],[NX NY NM 1]);
+    out.V_phase(start.x+[1:NX],start.y+[1:NY])=ncread([fid.out,'.',num2str(n,'%03d'),'.nc'],'V_phase',[1 1 1 cycle],[NX NY NM 1]);
+    
     error(start.x+[1:NX],start.y+[1:NY])=ncread([fid.out,'.',num2str(n,'%03d'),'.nc'],'error',[1 1 1 cycle],[NX NY NM 1]);
 end
 
 % Mask points where amplitude changes by more than 1 cm and 10%
-tmp1=(out.A-Ai)./Ai;
-tmp2=(out.A-Ai);
+tmp1=(out.SSH_amp-Ai)./Ai;
+tmp2=(out.SSH_amp-Ai);
 %out.mask=(H>1000 & ~(abs(tmp1)>0.1 & abs(tmp2)>0.005) & error<0.1);
 out.mask=(H>1000 & ~(abs(tmp1)>0.5 & abs(tmp2)*100>2) & error<0.1);
 out.mask100=(H>100 & ~(abs(tmp1)>0.1 & abs(tmp2)>0.01) & error<0.1);

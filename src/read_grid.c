@@ -20,7 +20,7 @@ void read_grid(int rank)
 	size_t count_c[]={NM, NY+2, NX+2};
 
 	// Define variables that might be needed
-	#ifdef SSH
+	#ifdef WRITE_SSH
 		size_t start_phi0[]={0, y0, x0};
 		size_t count_phi0[]={NMW, NY+2, NX+2};
 	#endif
@@ -60,7 +60,7 @@ void read_grid(int rank)
 			ERR(status);
 	#endif
 	
-	#ifdef SSH
+	#ifdef WRITE_SSH
 		if ((status = nc_inq_varid(ncid, "phi_surf", &varid)))
 			ERR(status);
 

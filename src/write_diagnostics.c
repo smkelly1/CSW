@@ -36,9 +36,14 @@ void write_diagnostics(int sD, int Na, int rank)
 					tmp[n][j][i]=C0[n][j][i]+Cn[n][j][i]-divF[n][j][i]-D[n][j][i]; // residual/error
 				#endif
 
-				#ifdef SSH
+				#ifdef WRITE_SSH
 					SSH_amp[n][j][i]=SSH_amp[n][j][i]*phi_surf[n][j+1][i+1]/9.81; // Convert from pressure to SSH
 					SSH_phase[n][j][i]=SSH_phase[n][j][i]/Na*360; // This is time of high tide
+				#endif
+
+				#ifdef WRITE_TRANSPORT
+					U_phase[n][j][i]=U_phase[n][j][i]/Na*360; // This is time of strongest (positive) flow
+					V_phase[n][j][i]=V_phase[n][j][i]/Na*360; // This is time of strongest (positive) flow
 				#endif
 			}
 		}
@@ -114,17 +119,43 @@ void write_diagnostics(int sD, int Na, int rank)
 			ERR(status);
 	#endif
 
-	#ifdef SSH
-		if ((status = nc_inq_varid(ncid, "amp", &varid)))
+	#ifdef WRITE_SSH
+		if ((status = nc_inq_varid(ncid, "SSH_amp", &varid)))
 			ERR(status);
 	
 		if ((status = nc_put_vara_float(ncid, varid, start, count, &SSH_amp[0][0][0])))
 			ERR(status);
 
-		if ((status = nc_inq_varid(ncid, "phase", &varid)))
+		if ((status = nc_inq_varid(ncid, "SSH_phase", &varid)))
 			ERR(status);
 
 		if ((status = nc_put_vara_float(ncid, varid, start, count, &SSH_phase[0][0][0])))
+			ERR(status);
+	#endif
+	
+	#ifdef WRITE_TRANSPORT
+		if ((status = nc_inq_varid(ncid, "U_amp", &varid)))
+			ERR(status);
+	
+		if ((status = nc_put_vara_float(ncid, varid, start, count, &U_amp[0][0][0])))
+			ERR(status);
+
+		if ((status = nc_inq_varid(ncid, "U_phase", &varid)))
+			ERR(status);
+
+		if ((status = nc_put_vara_float(ncid, varid, start, count, &U_phase[0][0][0])))
+			ERR(status);
+			
+		if ((status = nc_inq_varid(ncid, "V_amp", &varid)))
+			ERR(status);
+	
+		if ((status = nc_put_vara_float(ncid, varid, start, count, &V_amp[0][0][0])))
+			ERR(status);
+
+		if ((status = nc_inq_varid(ncid, "V_phase", &varid)))
+			ERR(status);
+
+		if ((status = nc_put_vara_float(ncid, varid, start, count, &V_phase[0][0][0])))
 			ERR(status);
 	#endif
 
@@ -164,9 +195,16 @@ void write_diagnostics(int sD, int Na, int rank)
 					D[n][j][i]=0;
 				#endif
 
-				#ifdef SSH
+				#ifdef WRITE_SSH
 					SSH_amp[n][j][i]=0;
 					SSH_phase[n][j][i]=0;
+				#endif
+
+				#ifdef WRITE_TRANSPORT
+					U_amp[n][j][i]=0;
+					U_phase[n][j][i]=0;
+					V_amp[n][j][i]=0;
+					V_phase[n][j][i]=0;
 				#endif
 
 			}

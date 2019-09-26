@@ -59,7 +59,8 @@
 #define ENERGY                    // Compute and write energy diagnostics
 //#define FLUX                    // Compute and write energy diagnostics
 #define WORK                      // Compute and write energy diagnostics
-#define SSH                       // Compute and write the amplitude and phase of SSH
+#define WRITE_SSH                 // Compute and write the amplitude and phase of SSH
+#define WRITE_TRANSPORT            // Compute and write the amplitude and phase of transport
 
 // Constants 
 #define A   6371000.0             // radius of Earth
@@ -156,10 +157,17 @@ double Fp_2[NM][NY][NX];
 float tmp[NMW][NY][NX];
 
 // Energy diagnostics and temporary storage for writing output
-#ifdef SSH
+#ifdef WRITE_SSH
 	double phi_surf[NMW][NY+2][NX+2]; // Easier to define with padded border
 	float SSH_amp[NMW][NY][NX];
 	float SSH_phase[NMW][NY][NX];
+#endif
+
+#ifdef WRITE_TRANSPORT
+	float U_amp[NMW][NY][NX];
+	float U_phase[NMW][NY][NX];
+	float V_amp[NMW][NY][NX];
+	float V_phase[NMW][NY][NX];
 #endif
 
 #ifdef ENERGY

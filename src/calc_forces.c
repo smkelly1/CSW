@@ -39,6 +39,10 @@ void calc_forces(int Na)
 		double gamma;
 	#endif 
 
+	#ifdef WRITE_TRANSPORT
+		float tmp_ave;
+	#endif 
+
 
 	////////////////////////////////////////////////////////////////////
 	// Forces in U-direction
@@ -291,13 +295,37 @@ void calc_forces(int Na)
 
 	////////////////////////////////////////////////////////////////////
 	// Estimate SSH amplitude and phase
-	#ifdef SSH
+	#ifdef WRITE_SSH
 		for(n=0; n<NMW; n++){
 			for(j=0; j<NY; j++){
 				for(i=0; i<NX; i++){
 					if (p1[n][j+1][i+1]>SSH_amp[n][j][i]) {
 						SSH_amp[n][j][i]=p1[n][j+1][i+1];
 						SSH_phase[n][j][i]=Na;
+					}
+				}
+			}
+		}
+	#endif
+	
+	////////////////////////////////////////////////////////////////////
+	// Estimate transport amplitude and phase
+	#ifdef WRITE_TRANSPORT
+		for(n=0; n<NMW; n++){
+			for(j=0; j<NY; j++){
+				for(i=0; i<NX; i++){
+
+					tmp_ave=(float)((U[n][j+1][i+1]+U[n][j+1][i+2])/2);
+					if (tmp_ave>U_amp[n][j][i]) {
+						U_amp[n][j][i]=tmp_ave;
+						U_phase[n][j][i]=Na;
+					}
+
+					tmp_ave=(float)((V[n][j+1][i+1]+V[n][j+2][i+1])/2);
+					if (tmp_ave>V_amp[n][j][i]) {
+						V_amp[n][j][i]=tmp_ave;
+						V_phase[n][j][i]=Na;
+
 					}
 				}
 			}

@@ -47,11 +47,25 @@ void init_output(int rank)
 	#endif
 
 	// Define the diagnostics 
-	#ifdef SSH
-		if ((status = nc_def_var(ncid, "amp", NC_FLOAT, 4, dimid, &varid)))
+	#ifdef WRITE_SSH
+		if ((status = nc_def_var(ncid, "SSH_amp", NC_FLOAT, 4, dimid, &varid)))
 		ERR(status);
 
-		if ((status = nc_def_var(ncid, "phase", NC_FLOAT, 4, dimid, &varid)))
+		if ((status = nc_def_var(ncid, "SSH_phase", NC_FLOAT, 4, dimid, &varid)))
+		ERR(status);
+	#endif
+
+	#ifdef WRITE_TRANSPORT
+		if ((status = nc_def_var(ncid, "U_amp", NC_FLOAT, 4, dimid, &varid)))
+		ERR(status);
+
+		if ((status = nc_def_var(ncid, "U_phase", NC_FLOAT, 4, dimid, &varid)))
+		ERR(status);
+		
+		if ((status = nc_def_var(ncid, "V_amp", NC_FLOAT, 4, dimid, &varid)))
+		ERR(status);
+
+		if ((status = nc_def_var(ncid, "V_phase", NC_FLOAT, 4, dimid, &varid)))
 		ERR(status);
 	#endif
 
@@ -88,7 +102,7 @@ void init_output(int rank)
 			ERR(status);
 	#endif
 
-	#if defined(ENERGY) || defined(FLUX) || defined(WORK) || defined(SSH)
+	#if defined(ENERGY) || defined(FLUX) || defined(WORK) || defined(WRITE_SSH) || defined(WRITE_TRANSPORT)
 		if ((status = nc_def_var(ncid, "period", NC_INT, 1, &dimid[0], &varid)))
 			ERR(status);
 	#endif 

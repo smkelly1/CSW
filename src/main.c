@@ -27,7 +27,7 @@ int main(int argc, char *argv[])
 		int sW=0;   // Write index
 	#endif
 
-	#if defined(ENERGY) || defined(FLUX) || defined(WORK) || defined(SSH)
+	#if defined(ENERGY) || defined(FLUX) || defined(WORK) || defined(WRITE_SSH) || defined(WRITE_TRANSPORT)
 		int sD=1; // Diagnostic index (start writing after one period)
 	#endif
 	int Na=1; // Number of points for diagnostic average (must define)
@@ -40,7 +40,7 @@ int main(int argc, char *argv[])
 	MPI_Comm_size(MPI_COMM_WORLD,&nrank);
 
 
-	////////////////////////////////////////////////////////////////////		
+	////////////////////////////////////////////////////////////////////
 	// Read grid
 	read_grid(rank);
 
@@ -101,7 +101,7 @@ int main(int argc, char *argv[])
 		#endif
 
 		// Write diagnostics
-		#if defined(ENERGY) || defined(FLUX) || defined(WORK) || defined(SSH)
+		#if defined(ENERGY) || defined(FLUX) || defined(WORK) || defined(WRITE_SSH) || defined(WRITE_TRANSPORT)
 			if (t >= (sD*DT_D)) {
 				write_diagnostics(sD,Na,rank);
 				++sD;
