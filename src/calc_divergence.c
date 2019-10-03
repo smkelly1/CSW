@@ -7,6 +7,15 @@ void calc_divergence(void)
 	double cos01, cos1, cos12;
 	double gamma;
 
+	#if defined(KAPPA) || defined(FILE_KAPPA)
+		double kappa0, invDX2;
+		invDX2=1/(DX*DX);
+		
+		#ifdef SPHERE
+			double dpdy[2], dpdx2, dpdy2;
+		#endif
+	#endif
+
 	for(j=0; j<NY; j++){
 
 		// Only compute cos once for each latitude
@@ -41,6 +50,29 @@ void calc_divergence(void)
 								+T.y[m][n][j+1][i+1]*(V1[m][j+1][i+1]+V1[m][j+2][i+1]))
 								*c[n][j+1][i+1]*c[n][j+1][i+1]/(2*H[j+1][i+1]*H[j+1][i+1]);
 						}
+					#endif
+
+					// Diffusion
+					#if defined(KAPPA) || defined(FILE_KAPPA)
+						// File values over-rides constant value
+						#ifdef FILE_KAPPA
+							kappa0=kappa[n][j+1][i+1];
+						#else
+							kappa0=KAPPA;
+						#endif
+
+						#ifdef SPHERE
+							dpdx2=1/(A*A*cos1*cos1)*(p[n][j+1][i+2]-2*p[n][j+1][i+1]+p[n][j+1][i]);	
+
+							dpdy[0]=cos01*(p[n][j+1][i+1]-p[n][j][i+1]);
+							dpdy[1]=cos12*(p[n][j+2][i+1]-p[n][j+1][i+1]);
+							dpdy2=1/(A*A*cos1)*(dpdy[1]-dpdy[0]);
+
+							Fp[n][j][i]=Fp[n][j][i]+kappa0*(dpdx2+dpdy2)*invDX2;
+						#else
+							Fp[n][j][i]=Fp[n][j][i]+kappa0*((p[n][j+1][i+2]-2*p[n][j+1][i+1]+p[n][j+1][i])
+								+(p[n][j+2][i+1]-2*p[n][j+1][i+1]+p[n][j][i+1]))*invDX2;
+						#endif
 					#endif
 
 				} // end-if: land mask

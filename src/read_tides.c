@@ -17,41 +17,41 @@ void read_tides(int rank)
 
 
 	// Open the file
-	if ((status = nc_open(FILE_TIDES, NC_NOWRITE, &ncid)))
+	if((status = nc_open(FILE_TIDES, NC_NOWRITE, &ncid)))
 		ERR(status);
 
 
 	// Load surface tides
-	if ((status = nc_inq_varid(ncid, "omega", &varid)))
+	if((status = nc_inq_varid(ncid, "omega", &varid)))
 		ERR(status);
 
-	if ((status = nc_get_var_double(ncid, varid, &ITGF.omega[0])))
-		ERR(status);
-
-
-	if ((status = nc_inq_varid(ncid, "Ur", &varid)))
-		ERR(status);
-
-	if ((status = nc_get_vara_float(ncid, varid, start_ITGF, count_ITGF, &ITGF.Ur[0][0][0])))
-		ERR(status);
-
-	if ((status = nc_inq_varid(ncid, "Ui", &varid)))
-		ERR(status);
-
-	if ((status = nc_get_vara_float(ncid, varid, start_ITGF, count_ITGF, &ITGF.Ui[0][0][0])))
+	if((status = nc_get_var_double(ncid, varid, &ITGF.omega[0])))
 		ERR(status);
 
 
-	if ((status = nc_inq_varid(ncid, "Vr", &varid)))
+	if((status = nc_inq_varid(ncid, "Ur", &varid)))
 		ERR(status);
 
-	if ((status = nc_get_vara_float(ncid, varid, start_ITGF, count_ITGF, &ITGF.Vr[0][0][0])))
+	if((status = nc_get_vara_float(ncid, varid, start_ITGF, count_ITGF, &ITGF.Ur[0][0][0])))
 		ERR(status);
 
-	if ((status = nc_inq_varid(ncid, "Vi", &varid)))
+	if((status = nc_inq_varid(ncid, "Ui", &varid)))
 		ERR(status);
 
-	if ((status = nc_get_vara_float(ncid, varid, start_ITGF, count_ITGF, &ITGF.Vi[0][0][0])))
+	if((status = nc_get_vara_float(ncid, varid, start_ITGF, count_ITGF, &ITGF.Ui[0][0][0])))
+		ERR(status);
+
+
+	if((status = nc_inq_varid(ncid, "Vr", &varid)))
+		ERR(status);
+
+	if((status = nc_get_vara_float(ncid, varid, start_ITGF, count_ITGF, &ITGF.Vr[0][0][0])))
+		ERR(status);
+
+	if((status = nc_inq_varid(ncid, "Vi", &varid)))
+		ERR(status);
+
+	if((status = nc_get_vara_float(ncid, varid, start_ITGF, count_ITGF, &ITGF.Vi[0][0][0])))
 		ERR(status);
 
 
@@ -59,30 +59,31 @@ void read_tides(int rank)
 	for(k=0; k<NC; k++){
 		for(j=0; j<NY; j++){
 
-			#ifdef TURNING_LAT
-				if (ITGF.omega[k]>abs(f[j+1])) {
+			#ifdef NO_ANTARCTIC
+				if(lat[j+1]>-60*M_PI/180) { // Recall: lat is in radians
 			#endif
 
-				#ifdef NO_ANTARCTIC
-					if (lat[j+1]>-60*M_PI/180) { // Recall: lat is in radians
-				#endif
+					for(i=0; i<NX; i++){
 
-						for(i=0; i<NX; i++){
-							if (H[j+1][i+1]>H_MIN) {
+						if(H[j+1][i+1]>H_MIN) {
 
-								dHdx=(H[j+1][i+2]-H[j+1][i])/(2*A*cos(lat[j+1])*DX);
-								dHdy=(H[j+2][i+1]-H[j][i+1])/(2*A*DX);
+							#ifdef H_MIN_FORCE
+								if(H[j+1][i+1]>H_MIN_FORCE) {
+							#endif
 
-								ITGF.F[k][j][i]=(((double)(ITGF.Ur[k][j][i])+I*(double)(ITGF.Ui[k][j][i]))*dHdx+((double)(ITGF.Vr[k][j][i])+I*(double)(ITGF.Vi[k][j][i]))*dHdy)/H[j+1][i+1];
+									dHdx=(H[j+1][i+2]-H[j+1][i])/(2*A*cos(lat[j+1])*DX);
+									dHdy=(H[j+2][i+1]-H[j][i+1])/(2*A*DX);
 
-							}
-						}
+									ITGF.F[k][j][i]=(((double)(ITGF.Ur[k][j][i])+I*(double)(ITGF.Ui[k][j][i]))*dHdx+((double)(ITGF.Vr[k][j][i])+I*(double)(ITGF.Vi[k][j][i]))*dHdy)/H[j+1][i+1];
 
-				#ifdef NO_ANTARCTIC
-					}
-				#endif
+							#ifdef H_MIN_FORCE
+								}
+							#endif
 
-			#ifdef TURNING_LAT
+						} // Land mask
+					} // x-loop
+
+			#ifdef NO_ANTARCTIC
 				}
 			#endif
 

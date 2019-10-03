@@ -1,6 +1,8 @@
 #!/bin/bash -l
-#PBS -l walltime=18:00:00,nodes=2:ppn=8
+#PBS -l walltime=23:59:00,nodes=2:ppn=8
 #PBS -q batch
+# % PBS -l walltime=1:00:00,nodes=2:ppn=8
+# % PBS -q devel
 #PBS -j oe
 #PBS -o log
 # %PBS -m abe 
@@ -22,7 +24,7 @@ cd $PBS_O_WORKDIR
 
 #-------Copy configuration files------------
 cp ../csw/matlab/make_tides.m ./make_tides.m
-cp ../csw/matlab/make_r.m ./make_r.m
+cp ../csw/matlab/make_damping.m ./make_damping.m
 cp ../csw/src/csw.h ./csw.h
 cp ../csw/src/cswexec ./cswexec
 

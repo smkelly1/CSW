@@ -18,7 +18,7 @@ void calc_ITGF(double t)
 		for(n=0; n<NM; n++){
 			for(j=0; j<NY; j++){
 				for(i=0; i<NX; i++){
-					if (H[j+1][i+1]>H_MIN_FORCE) {
+					if(H[j+1][i+1]>H_MIN) {
 
 						// Add ITGF to pressure forcing at the current time=t-dt (we're trying to update the variables to time=t) 
 						Fp[n][j][i]=Fp[n][j][i]-c[n][j+1][i+1]*c[n][j+1][i+1]*phi_bott[n][j+1][i+1]*creal(ITGF.F[k][j][i]*phaseFp);
@@ -35,7 +35,7 @@ void calc_ITGF(double t)
 			for(n=0; n<NMW; n++){
 				for(j=0; j<NY; j++){
 					for(i=0; i<NX; i++){
-						if (H[j+1][i+1]>H_MIN_FORCE) {
+						if (H[j+1][i+1]>H_MIN) {
 
 							// Compute internal-tide generation between the last two time steps
 							C0[n][j][i]=C0[n][j][i]-(float)(RHO*H[j+1][i+1]*creal(ITGF.F[k][j][i]*phaseFt)*p1[n][j+1][i+1]*phi_bott[n][j+1][i+1]);

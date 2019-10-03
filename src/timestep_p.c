@@ -42,7 +42,7 @@ void timestep_p(void)
 					// Old forcing becomes very old forcing 
 					Fp_2[n][j][i]=Fp_1[n][j][i];
 
-					// Cuttent forcing becomes old forcing 
+					// Current forcing becomes old forcing 
 					Fp_1[n][j][i]=Fp[n][j][i];
 
 					// Average to find the mid-point data

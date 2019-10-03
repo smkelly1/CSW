@@ -7,23 +7,22 @@ void calc_forces(int Na)
 	double Hu, Hv;
 	double cos0, cos01, cos1, cos12;
 
-	double invDX;
+	double invDX, invDX2;
 	invDX=1/DX;
-	
-	#if defined(AX) || defined(FILE_AX)
-		double invDX2;
-		invDX2=1/(DX*DX);
+	invDX2=1/(DX*DX);
+
+	#if defined(NU) || defined(FILE_NU)
+		double nu0;
+
+		#ifdef SPHERE
+			double dUdy[2], dUdx2, dUdy2;
+			double dVdy[2], dVdx2, dVdy2;
+		#endif
 	#endif
 
 	// Define variables that might be needed
 	#ifdef CORIOLIS
 		double f01;
-	#endif
-
-	#if (defined(AX) || defined(FILE_AX)) && defined(SPHERE)
-		double Ax0;
-		double dUdy[2], dUdx2, dUdy2;
-		double dVdy[2], dVdx2, dVdy2;
 	#endif
 
 	#if defined(R) || defined(FILE_R)
@@ -37,6 +36,15 @@ void calc_forces(int Na)
 	#ifdef WORK
 		double dFdx, dFdy;
 		double gamma;
+
+		#if defined(KAPPA) || defined(FILE_KAPPA)
+			double kappa0;
+
+		#ifdef SPHERE
+			double dpdy[2], dpdx2, dpdy2;
+		#endif
+	#endif
+		
 	#endif 
 
 	#ifdef WRITE_TRANSPORT
@@ -87,12 +95,12 @@ void calc_forces(int Na)
 					Fu_eps[n][j][i]=0;
 
 					// Horizontal diffusion
-					#if defined(AX) || defined(FILE_AX)
+					#if defined(NU) || defined(FILE_NU)
 						// File values over-rides constant value
-						#ifdef FILE_AX
-							Ax0=(Ax[n][j+1][i]+Ax[n][j+1][i+1])/2;
+						#ifdef FILE_NU
+							nu0=(nu[n][j+1][i]+nu[n][j+1][i+1])/2;
 						#else
-							Ax0=AX;
+							nu0=NU;
 						#endif
 					
 						#ifdef SPHERE
@@ -102,9 +110,9 @@ void calc_forces(int Na)
 							dUdy[1]=cos12*(U[n][j+2][i+1]-U[n][j+1][i+1]);
 							dUdy2=1/(A*A*cos1)*(dUdy[1]-dUdy[0]);
 
-							Fu_eps[n][j][i]=Fu_eps[n][j][i]+Ax0*(dUdx2+dUdy2)*invDX2;
+							Fu_eps[n][j][i]=Fu_eps[n][j][i]+nu0*(dUdx2+dUdy2)*invDX2;
 						#else
-							Fu_eps[n][j][i]=Fu_eps[n][j][i]+Ax0*((U[n][j+1][i+2]-2*U[n][j+1][i+1]+U[n][j+1][i])
+							Fu_eps[n][j][i]=Fu_eps[n][j][i]+nu0*((U[n][j+1][i+2]-2*U[n][j+1][i+1]+U[n][j+1][i])
 								+(U[n][j+2][i+1]-2*U[n][j+1][i+1]+U[n][j][i+1]))*invDX2;
 						#endif
 					#endif
@@ -143,7 +151,7 @@ void calc_forces(int Na)
 
 	for(j=0; j<NY+1; j++){
 
-		#if (defined(AX) || defined(FILE_AX)) && defined(SPHERE)
+		#if (defined(NU) || defined(FILE_NU)) && defined(SPHERE)
 			cos0=cos(lat[j]);      
 		#endif
 
@@ -157,7 +165,7 @@ void calc_forces(int Na)
 		for(n=0; n<NM; n++){
 			for(i=0; i<NX; i++){
 
-				if (H[j][i+1]>H_MIN && H[j+1][i+1]>H_MIN) {
+				if(H[j][i+1]>H_MIN && H[j+1][i+1]>H_MIN) {
 
 					// Velocity node depth
 					Hv=(H[j][i+1]+H[j+1][i+1])/2;
@@ -188,12 +196,12 @@ void calc_forces(int Na)
 					Fv_eps[n][j][i]=0;
 
 					// Horizontal diffusion
-					#if defined(AX) || defined(FILE_AX)
+					#if defined(NU) || defined(FILE_NU)
 						// File values over-rides constant value
-						#ifdef FILE_AX
-							Ax0=(Ax[n][j][i+1]+Ax[n][j+1][i+1])/2;
+						#ifdef FILE_NU
+							nu0=(nu[n][j][i+1]+nu[n][j+1][i+1])/2;
 						#else
-							Ax0=AX;
+							nu0=NU;
 						#endif
 					
 						#ifdef SPHERE
@@ -203,9 +211,9 @@ void calc_forces(int Na)
 							dVdy[1]=cos1*(V[n][j+2][i+1]-V[n][j+1][i+1]);
 							dVdy2=1/(A*A*cos01)*(dVdy[1]-dVdy[0]);
 
-							Fv_eps[n][j][i]=Fv_eps[n][j][i]+Ax0*(dVdx2+dVdy2)*invDX2;
+							Fv_eps[n][j][i]=Fv_eps[n][j][i]+nu0*(dVdx2+dVdy2)*invDX2;
 						#else
-							Fv_eps[n][j][i]=Fv_eps[n][j][i]+Ax0*((V[n][j+1][i+2]-2*V[n][j+1][i+1]+V[n][j+1][i])
+							Fv_eps[n][j][i]=Fv_eps[n][j][i]+nu0*((V[n][j+1][i+2]-2*V[n][j+1][i+1]+V[n][j+1][i])
 								+(V[n][j+2][i+1]-2*V[n][j+1][i+1]+V[n][j][i+1]))*invDX2;
 						#endif
 					#endif
@@ -244,6 +252,7 @@ void calc_forces(int Na)
 		for(j=0; j<NY; j++){
 
 			cos01=cos((lat[j]+lat[j+1])/2);
+			cos1=cos(lat[j+1]);
 			cos12=cos((lat[j+1]+lat[j+2])/2);
 
 			#ifdef WORK
@@ -253,40 +262,65 @@ void calc_forces(int Na)
 			for(n=0; n<NMW; n++){
 				for(i=0; i<NX; i++){
 
-					#ifdef ENERGY
-						KE[n][j][i]=KE[n][j][i]+(float)(0.125*RHO*((U[n][j+1][i+1]+U[n][j+1][i+2])*(U[n][j+1][i+1]+U[n][j+1][i+2])
-							+(V[n][j+1][i+1]+V[n][j+2][i+1])*(V[n][j+1][i+1]+V[n][j+2][i+1]))/H[j+1][i+1]); // the extra factor of 1/4 comes from averaging U^2
-						PE[n][j][i]=PE[n][j][i]+(float)(0.5*RHO*H[j+1][i+1]*(p1[n][j+1][i+1]*p1[n][j+1][i+1]/(c[n][j+1][i+1]*c[n][j+1][i+1])));
-					#endif
+					if(H[j+1][i+1]>H_MIN) {
 
-					#ifdef FLUX
-						up[n][j][i]=up[n][j][i]+(float)(0.5*RHO*(U[n][j+1][i+1]+U[n][j+1][i+2])*p1[n][j+1][i+1]);
-						vp[n][j][i]=vp[n][j][i]+(float)(0.5*RHO*(V[n][j+1][i+1]+V[n][j+2][i+1])*p1[n][j+1][i+1]);
-					#endif
+						#ifdef ENERGY
+							KE[n][j][i]=KE[n][j][i]+(float)(0.125*RHO*((U[n][j+1][i+1]+U[n][j+1][i+2])*(U[n][j+1][i+1]+U[n][j+1][i+2])
+								+(V[n][j+1][i+1]+V[n][j+2][i+1])*(V[n][j+1][i+1]+V[n][j+2][i+1]))/H[j+1][i+1]); // the extra factor of 1/4 comes from averaging U^2
+							PE[n][j][i]=PE[n][j][i]+(float)(0.5*RHO*H[j+1][i+1]*p1[n][j+1][i+1]*p1[n][j+1][i+1]/(c[n][j+1][i+1]*c[n][j+1][i+1]));
+						#endif
 
-					#ifdef WORK
-						// Energy-flux divergence
-						dFdx=(U[n][j+1][i+2]*(p1[n][j+1][i+1]+p1[n][j+1][i+2])-U[n][j+1][i+1]*(p1[n][j+1][i]+p1[n][j+1][i+1]));
-						dFdy=(cos12*V[n][j+2][i+1]*(p1[n][j+1][i+1]+p1[n][j+2][i+1])-cos01*V[n][j+1][i+1]*(p1[n][j][i+1]+p1[n][j+1][i+1]));
-						divF[n][j][i]=divF[n][j][i]+(float)(0.5*RHO*(dFdx+dFdy)*gamma); // the factor of 1/2 comes from averaging p
+						#ifdef FLUX
+							up[n][j][i]=up[n][j][i]+(float)(0.5*RHO*(U[n][j+1][i+1]+U[n][j+1][i+2])*p1[n][j+1][i+1]);
+							vp[n][j][i]=vp[n][j][i]+(float)(0.5*RHO*(V[n][j+1][i+1]+V[n][j+2][i+1])*p1[n][j+1][i+1]);
+						#endif
 
-						// Compute dissipation
-						D[n][j][i]=D[n][j][i]
-							-(float)(RHO*0.25*((Fu_eps[n][j][i]+Fu_eps[n][j][i+1])*(U[n][j+1][i+1]+U[n][j+1][i+2])
+						#ifdef WORK
+							// Energy-flux divergence
+							dFdx=(U[n][j+1][i+2]*(p1[n][j+1][i+1]+p1[n][j+1][i+2])-U[n][j+1][i+1]*(p1[n][j+1][i]+p1[n][j+1][i+1]));
+							dFdy=(cos12*V[n][j+2][i+1]*(p1[n][j+1][i+1]+p1[n][j+2][i+1])-cos01*V[n][j+1][i+1]*(p1[n][j][i+1]+p1[n][j+1][i+1]));
+							divF[n][j][i]=divF[n][j][i]+(float)(0.5*RHO*(dFdx+dFdy)*gamma); // the factor of 1/2 comes from averaging p
+
+							// Compute dissipation
+							D[n][j][i]=D[n][j][i]-(float)(RHO*0.25*((Fu_eps[n][j][i]+Fu_eps[n][j][i+1])*(U[n][j+1][i+1]+U[n][j+1][i+2])
 								+(Fv_eps[n][j][i]+Fv_eps[n][j+1][i])*(V[n][j+1][i+1]+V[n][j+2][i+1]))/H[j+1][i+1]);	
 
-						// Only compute scattering if there is mode coupling.
-						#ifdef MODECOUPLE
-							for(m=0; m<NM; m++){
+							// Compute diffusion
+							#if defined(KAPPA) || defined(FILE_KAPPA)
+								// File values over-rides constant value
+								#ifdef FILE_KAPPA
+									kappa0=kappa[n][j+1][i+1];
+								#else
+									kappa0=KAPPA;
+								#endif
 
-								Cn[n][j][i]=Cn[n][j][i]
-									+(float)(0.5*RHO*(
-									 (T.x[m][n][j+1][i+1]*(U[m][j+1][i+1]+U[m][j+1][i+2])+T.y[m][n][j+1][i+1]*(V[m][j+1][i+1]+V[m][j+2][i+1]))*p1[n][j+1][i+1]
-									-(T.x[n][m][j+1][i+1]*(U[n][j+1][i+1]+U[n][j+1][i+2])+T.y[n][m][j+1][i+1]*(V[n][j+1][i+1]+V[n][j+2][i+1]))*p1[m][j+1][i+1])/H[j+1][i+1]); // the factor of 1/2 comes from averaging U and V
-							}
-						#endif 
+								#ifdef SPHERE
+									dpdx2=1/(A*A*cos1*cos1)*(p1[n][j+1][i+2]-2*p1[n][j+1][i+1]+p1[n][j+1][i]);	
 
-					#endif // end WORK if
+									dpdy[0]=cos01*(p1[n][j+1][i+1]-p1[n][j][i+1]);
+									dpdy[1]=cos12*(p1[n][j+2][i+1]-p1[n][j+1][i+1]);
+									dpdy2=1/(A*A*cos1)*(dpdy[1]-dpdy[0]);
+
+									D[n][j][i]=D[n][j][i]-(float)(RHO*H[j+1][i+1]*kappa0*(dpdx2+dpdy2)*invDX2*p1[n][j+1][i+1]/(c[n][j+1][i+1]*c[n][j+1][i+1]));
+								#else
+									D[n][j][i]=D[n][j][i]-(float)(RHO*H[j+1][i+1]*kappa*((p1[n][j+1][i+2]-2*p1[n][j+1][i+1]+p1[n][j+1][i])
+										+(p1[n][j+2][i+1]-2*p1[n][j+1][i+1]+p1[n][j][i+1]))*invDX2*p1[n][j+1][i+1]/(c[n][j+1][i+1]*c[n][j+1][i+1]));
+								#endif
+							#endif
+					
+							// Only compute scattering if there is mode coupling.
+							#ifdef MODECOUPLE
+								for(m=0; m<NM; m++){
+
+									Cn[n][j][i]=Cn[n][j][i]
+										+(float)(0.5*RHO*(
+										 (T.x[m][n][j+1][i+1]*(U[m][j+1][i+1]+U[m][j+1][i+2])+T.y[m][n][j+1][i+1]*(V[m][j+1][i+1]+V[m][j+2][i+1]))*p1[n][j+1][i+1]
+										-(T.x[n][m][j+1][i+1]*(U[n][j+1][i+1]+U[n][j+1][i+2])+T.y[n][m][j+1][i+1]*(V[n][j+1][i+1]+V[n][j+2][i+1]))*p1[m][j+1][i+1])/H[j+1][i+1]); // the factor of 1/2 comes from averaging U and V
+								}
+							#endif 
+
+						#endif // end WORK if
+					} // land mask
 				}
 			}
 		}
@@ -299,7 +333,7 @@ void calc_forces(int Na)
 		for(n=0; n<NMW; n++){
 			for(j=0; j<NY; j++){
 				for(i=0; i<NX; i++){
-					if (p1[n][j+1][i+1]>SSH_amp[n][j][i]) {
+					if(p1[n][j+1][i+1]>SSH_amp[n][j][i]) {
 						SSH_amp[n][j][i]=p1[n][j+1][i+1];
 						SSH_phase[n][j][i]=Na;
 					}
@@ -316,13 +350,13 @@ void calc_forces(int Na)
 				for(i=0; i<NX; i++){
 
 					tmp_ave=(float)((U[n][j+1][i+1]+U[n][j+1][i+2])/2);
-					if (tmp_ave>U_amp[n][j][i]) {
+					if(tmp_ave>U_amp[n][j][i]) {
 						U_amp[n][j][i]=tmp_ave;
 						U_phase[n][j][i]=Na;
 					}
 
 					tmp_ave=(float)((V[n][j+1][i+1]+V[n][j+2][i+1])/2);
-					if (tmp_ave>V_amp[n][j][i]) {
+					if(tmp_ave>V_amp[n][j][i]) {
 						V_amp[n][j][i]=tmp_ave;
 						V_phase[n][j][i]=Na;
 

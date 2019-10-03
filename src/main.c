@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
 		timestep_uv();
 
 		// Trade u & v at boundaries (only needed to compute diffusion and Coriolis)
-		#if defined(CORIOLIS) || defined(AX)
+		#if defined(CORIOLIS) || defined(NU)
 			pass_uv(rank);
 		#endif
 
@@ -107,7 +107,7 @@ int main(int argc, char *argv[])
 				++sD;
 				Na=0; // Reset averaging counter
 			}
-			++Na;// Increase the averaging counter
+			++Na; // Increase the averaging counter
 		#endif
 
 		// Print progress
