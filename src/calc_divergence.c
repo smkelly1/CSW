@@ -16,6 +16,10 @@ void calc_divergence(void)
 		#endif
 	#endif
 
+	#if defined(R) || defined(FILE_R)
+		double r0;
+	#endif
+
 	for(j=0; j<NY; j++){
 
 		// Only compute cos once for each latitude
@@ -61,6 +65,10 @@ void calc_divergence(void)
 							kappa0=KAPPA;
 						#endif
 
+						#ifdef GAMMA
+							kappa0=GAMMA*kappa0;
+						#endif
+
 						#ifdef SPHERE
 							dpdx2=1/(A*A*cos1*cos1)*(p[n][j+1][i+2]-2*p[n][j+1][i+1]+p[n][j+1][i]);	
 
@@ -73,6 +81,18 @@ void calc_divergence(void)
 							Fp[n][j][i]=Fp[n][j][i]+kappa0*((p[n][j+1][i+2]-2*p[n][j+1][i+1]+p[n][j+1][i])
 								+(p[n][j+2][i+1]-2*p[n][j+1][i+1]+p[n][j][i+1]))*invDX2;
 						#endif
+					#endif
+					
+					// Linear drag
+					#if defined(R) || defined(FILE_R)
+						// File values override constant value
+						#ifdef FILE_R
+							r0=r[n][j+1][i+1];
+						#else
+							r0=R;
+						#endif
+
+						Fp[n][j][i]=Fp[n][j][i]-r0*p[n][j+1][i+1];
 					#endif
 
 				} // end-if: land mask

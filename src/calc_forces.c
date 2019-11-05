@@ -102,6 +102,10 @@ void calc_forces(int Na)
 						#else
 							nu0=NU;
 						#endif
+
+						#ifdef GAMMA
+							nu0=GAMMA*nu0;
+						#endif
 					
 						#ifdef SPHERE
 							dUdx2=1/(A*A*cos1*cos1)*(U[n][j+1][i+2]-2*U[n][j+1][i+1]+U[n][j+1][i]);	
@@ -203,7 +207,11 @@ void calc_forces(int Na)
 						#else
 							nu0=NU;
 						#endif
-					
+
+						#ifdef GAMMA
+							nu0=GAMMA*nu0;
+						#endif
+
 						#ifdef SPHERE
 							dVdx2=1/(A*A*cos01*cos01)*(V[n][j+1][i+2]-2*V[n][j+1][i+1]+V[n][j+1][i]);
 
@@ -294,6 +302,10 @@ void calc_forces(int Na)
 									kappa0=KAPPA;
 								#endif
 
+								#ifdef GAMMA
+									kappa0=GAMMA*kappa0;
+								#endif
+
 								#ifdef SPHERE
 									dpdx2=1/(A*A*cos1*cos1)*(p1[n][j+1][i+2]-2*p1[n][j+1][i+1]+p1[n][j+1][i]);	
 
@@ -307,7 +319,19 @@ void calc_forces(int Na)
 										+(p1[n][j+2][i+1]-2*p1[n][j+1][i+1]+p1[n][j][i+1]))*invDX2*p1[n][j+1][i+1]/(c[n][j+1][i+1]*c[n][j+1][i+1]));
 								#endif
 							#endif
-					
+							
+							// Linear drag on pressure
+							#if defined(R) || defined(FILE_R)
+								// File values override constant value
+								#ifdef FILE_R
+									r0=r[n][j+1][i+1];
+								#else
+									r0=R;
+								#endif
+
+								D[n][j][i]=D[n][j][i]+(float)(RHO*H[j+1][i+1]*r0*p1[n][j+1][i+1]*p1[n][j+1][i+1]/(c[n][j+1][i+1]*c[n][j+1][i+1]));
+							#endif
+
 							// Only compute scattering if there is mode coupling.
 							#ifdef MODECOUPLE
 								for(m=0; m<NM; m++){

@@ -10,6 +10,7 @@
 #define FILE_R     "../r.nc"      // Spatially variable linear damping
 //#define FILE_NU    "../nu.nc"     // Spatially variable horizontal viscosity
 #define FILE_KAPPA "../kappa.nc"     // Spatially variable horizontal diffusivity
+#define GAMMA 0.25                 // Mixing efficiency
 
 // Grid spacing
 #define DX ((1.0/25)*M_PI/180)    // Grid spacing in m or radians
@@ -22,33 +23,37 @@
 #define NY (3648/NPY)             // This must be an integer
                                   // Note: reducing the total y-grid size will eliminate arctic cells
 
-#define NM  4                     // Number of modes
+#define NM  8                     // Number of modes
 #define NMW 1                     // Number of modes to write
 #define NC  1                     // Number of tidal frequencies
 
 // Time steps
-#define DT (12.42*3600/800)       // Forward model time step [sec]
+#define DT (12.42*3600/200)       // Forward model time step [sec]
                                   // Approximate stable time steps:
                                   // 10th deg = 100 steps/period (dt=447 sec)
                                   // 25th deg = 200 (224 sec)
                                   // 50th deg = 400 (112 sec)
                                   // 100th deg = 800 (56 sec)
 
-#define DT_W (12.42*3600/10)       // Pressure write time step
+#define DT_W (12.42*3600/10)      // Pressure write time step
 #define DT_D (12.42*3600*1)       // Diagnostics write time step
-#define NT   (100*12.42*3600/DT)  // Simulation duration (time steps)
+#define NT   (51*12.42*3600/DT)   // Simulation duration (time steps)
 
 // Dissipation (commenting these parameters removes the relevant code)
-#define CD   0.0025               // Constant quadratic bottom drag (CD=0.0025 is standard)
-//#define R    (1.0/(2*24*3600))  // Constant linear "Rayleigh" damping 
-//#define NU   100.0              // Constant horizontal viscosity. Bryan (1975) uses Ax=u*DX/2 
-                                  // Quick reference for U=1 cm/s: 1/10 deg = 50, 1/25 deg = 20, 1/50 deg = 10, 1/100 deg = 5
-//#define KAPPA 0.0               // Constant horizontal diffusivity 
-//#define R_MASK (1.0/(1*3600))   // Damping time-scale in low-wave resolution regions
+//#define CD   0.0025             // Constant quadratic bottom drag (CD=0.0025 is standard)
+//#define R    (1.0/(32*24*3600))   // Constant linear "Rayleigh" damping (or minimum value)
+#define NU   20.0                 // Constant horizontal viscosity (or minimum value). Bryan (1975) uses NU=u*DX/2 
+                                  // Quick reference for U=1 cm/s: 
+                                  // 1/10 deg = 50
+                                  // 1/25 deg = 20
+                                  // 1/50 deg = 10
+                                  // 1/100 deg = 5
+//#define KAPPA 0.0               // Constant horizontal diffusivity (or minimum value)
+//#define R_MASK (1.0/(12*3600))  // Damping time-scale in low-wave resolution regions (applied in timestep_p.c)
 
 // Set minimum depths for dynamics, forcing, and topographic coupling
 #define H_MIN        16.0         // Minimum depth to solve equations
-#define H_MIN_FORCE  100.0        // Minimum depth to force internal tides (applied in read_tides.c)
+#define H_MIN_FORCE  300.0        // Minimum depth to force internal tides (applied in read_tides.c)
 #define H_MIN_COUPLE 100.0        // Minimum depth to couple modes (applied in read_grid.c)
 
 // Flags for dynamics (These could be written to the input file, but it's quicker to compile than run MATLAB)
@@ -68,7 +73,7 @@
 //#define FLUX                    // Compute and write energy diagnostics
 #define WORK                      // Compute and write energy diagnostics
 #define WRITE_SSH                 // Compute and write the amplitude and phase of SSH
-#define WRITE_TRANSPORT           // Compute and write the amplitude and phase of transport
+//#define WRITE_TRANSPORT         // Compute and write the amplitude and phase of transport
 
 // Constants 
 #define A   6371000.0             // radius of Earth

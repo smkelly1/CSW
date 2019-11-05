@@ -1,7 +1,6 @@
 #!/bin/bash -l
-#PBS -l walltime=23:59:00,nodes=2:ppn=8
+#PBS -l walltime=12:00:00,nodes=2:ppn=8
 #PBS -q batch
-# % PBS -l walltime=1:00:00,nodes=2:ppn=8
 # % PBS -q devel
 #PBS -j oe
 #PBS -o log

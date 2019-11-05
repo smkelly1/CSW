@@ -67,7 +67,23 @@ void read_grid(int rank)
 		if((status = nc_get_vara_double(ncid, varid, start_phi0, count_phi0, &phi_surf[0][0][0])))
 			ERR(status);
 	#endif
+
+	// Read latitude in degrees and convert to radians
+	#if defined(SPHERE) || defined(CORIOLIS)
 	
+		if((status = nc_inq_varid(ncid, "lat", &varid)))
+			ERR(status);
+
+		if((status = nc_get_vara_double(ncid, varid, start_lat, count_lat, &lat[0])))
+			ERR(status);
+
+		for(j=0; j<NY+2; j++){
+			lat[j]=lat[j]*M_PI/180;
+			f[j]=2*(2*M_PI)/(24*3600)*sin(lat[j]);	
+		}
+		
+	#endif
+
 	// Read the topographic coupling coefficients if necessary
 	#ifdef MODECOUPLE
 
@@ -97,7 +113,7 @@ void read_grid(int rank)
 						#endif
 
 						#ifdef NO_ANTARCTIC
-							if(lat[j+1]>-60*M_PI/180) { // Recall: lat is in radians
+							if(lat[j]<-60*M_PI/180) { // Recall: lat is in radians
 								T.x[n][m][j][i]=0.0;
 								T.y[n][m][j][i]=0.0;
 							}
@@ -117,24 +133,8 @@ void read_grid(int rank)
 		}
 	#endif
 
-	// Read latitude in degrees and convert to radians
-	#if defined(SPHERE) || defined(CORIOLIS)
-
-		if((status = nc_inq_varid(ncid, "lat", &varid)))
-			ERR(status);
-
-		if((status = nc_get_vara_double(ncid, varid, start_lat, count_lat, &lat[0])))
-			ERR(status);
-
-		for(j=0; j<NY+2; j++){
-			lat[j]=lat[j]*M_PI/180;
-			f[j]=2*(2*M_PI)/(24*3600)*sin(lat[j]);	
-		}
-
-	#endif
-
-	#ifdef FILE_R
 	// Open the damping file
+	#ifdef FILE_R
 	if((status = nc_open(FILE_R, NC_NOWRITE, &ncid)))
 		ERR(status);
 
@@ -147,18 +147,28 @@ void read_grid(int rank)
 		#ifdef NO_ANTARCTIC
 			for(n=0; n<NM; n++){
 				for(j=0; j<NY+2; j++){
-					for(i=0; i<NX+2; i++){
-						if(lat[j+1]>-60*M_PI/180) { // Recall: lat is in radians
+					if(lat[j]<-60*M_PI/180) { // Recall: lat is in radians
+						for(i=0; i<NX+2; i++){
 							r[n][j][i]=0.0;
 						}
 					}
 				}
 			}
 		#endif
+
+		#ifdef R
+			for(n=0; n<NM; n++){
+				for(j=0; j<NY+2; j++){
+					for(i=0; i<NX+2; i++){
+						r[n][j][i]=fmax(r[n][j][i],R);
+					}
+				}
+			}
+		#endif
 	#endif
 
-	#ifdef FILE_NU
 	// Open the viscosity file
+	#ifdef FILE_NU
 	if((status = nc_open(FILE_NU, NC_NOWRITE, &ncid)))
 		ERR(status);
 		
@@ -171,22 +181,33 @@ void read_grid(int rank)
 		#ifdef NO_ANTARCTIC
 			for(n=0; n<NM; n++){
 				for(j=0; j<NY+2; j++){
-					for(i=0; i<NX+2; i++){
-						if(lat[j+1]>-60*M_PI/180) { // Recall: lat is in radians
+					if(lat[j]<-60*M_PI/180) { // Recall: lat is in radians
+						for(i=0; i<NX+2; i++){
 							nu[n][j][i]=0.0;
 						}
 					}
 				}
 			}
 		#endif
+
+		#ifdef NU
+			for(n=0; n<NM; n++){
+				for(j=0; j<NY+2; j++){
+					for(i=0; i<NX+2; i++){
+						nu[n][j][i]=fmax(nu[n][j][i],NU);
+					}
+				}
+			}
+		#endif
 	#endif
 
+	// Open the diffusivity file
 	#ifdef FILE_KAPPA
-	// Open the viscosity file
 	if((status = nc_open(FILE_KAPPA, NC_NOWRITE, &ncid)))
 		ERR(status);
 		
 	if((status = nc_inq_varid(ncid, "kappa", &varid)))
+	  //if((status = nc_inq_varid(ncid, "nu", &varid)))
 		ERR(status);
 		
 	if((status = nc_get_vara_double(ncid, varid, start_c, count_c, &kappa[0][0][0])))
@@ -195,10 +216,20 @@ void read_grid(int rank)
 		#ifdef NO_ANTARCTIC
 			for(n=0; n<NM; n++){
 				for(j=0; j<NY+2; j++){
-					for(i=0; i<NX+2; i++){
-						if(lat[j+1]>-60*M_PI/180) { // Recall: lat is in radians
+					if(lat[j]<-60*M_PI/180) { // Recall: lat is in radians
+						for(i=0; i<NX+2; i++){
 							kappa[n][j][i]=0.0;
 						}
+					}
+				}
+			}
+		#endif
+
+		#ifdef KAPPA
+			for(n=0; n<NM; n++){
+				for(j=0; j<NY+2; j++){
+					for(i=0; i<NX+2; i++){
+						kappa[n][j][i]=fmax(kappa[n][j][i],KAPPA);
 					}
 				}
 			}

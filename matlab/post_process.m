@@ -42,11 +42,14 @@ for n=0:NPX*NPY-1
     out.SSH_amp(start.x+[1:NX],start.y+[1:NY])=ncread([fid.out,'.',num2str(n,'%03d'),'.nc'],'SSH_amp',[1 1 1 cycle],[NX NY NM 1]);
     out.SSH_phase(start.x+[1:NX],start.y+[1:NY])=ncread([fid.out,'.',num2str(n,'%03d'),'.nc'],'SSH_phase',[1 1 1 cycle],[NX NY NM 1]);
     
+    try 
     out.U_amp(start.x+[1:NX],start.y+[1:NY])=ncread([fid.out,'.',num2str(n,'%03d'),'.nc'],'U_amp',[1 1 1 cycle],[NX NY NM 1]);
     out.U_phase(start.x+[1:NX],start.y+[1:NY])=ncread([fid.out,'.',num2str(n,'%03d'),'.nc'],'U_phase',[1 1 1 cycle],[NX NY NM 1]);
     
     out.V_amp(start.x+[1:NX],start.y+[1:NY])=ncread([fid.out,'.',num2str(n,'%03d'),'.nc'],'V_amp',[1 1 1 cycle],[NX NY NM 1]);
     out.V_phase(start.x+[1:NX],start.y+[1:NY])=ncread([fid.out,'.',num2str(n,'%03d'),'.nc'],'V_phase',[1 1 1 cycle],[NX NY NM 1]);
+    catch
+    end
     
     error(start.x+[1:NX],start.y+[1:NY])=ncread([fid.out,'.',num2str(n,'%03d'),'.nc'],'error',[1 1 1 cycle],[NX NY NM 1]);
 end

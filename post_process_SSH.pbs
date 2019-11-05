@@ -1,0 +1,20 @@
+#!/bin/bash -l
+#PBS -l walltime=00:15:00,nodes=1:ppn=8,mem=32gb 
+#PBS -q lab
+#PBS -j oe
+#PBS -o ./log
+#PBS -S /bin/bash
+
+#-------Load modules------------------------
+module load matlab/R2016b
+
+#-------Change to working directory---------
+cd $PBS_O_WORKDIR
+
+#-------Get matlab script-------------------
+cp ../csw/matlab/post_process_SSH.m ./post_process_SSH.m
+
+#-------Start processes---------------------
+matlab -nodisplay -r "maxNumCompThreads(8); post_process_SSH; quit;"
+
+# Run this job from the run directory with "qsub ../csw/post_process_SSH.pbs"
