@@ -1,12 +1,13 @@
 #!/bin/bash -l
-#PBS -l walltime=00:30:00,nodes=1:ppn=8,mem=32gb 
-#PBS -q lab
+#PBS -l walltime=00:45:00,nodes=1:ppn=4,mem=32gb 
+#PBS -q amdsmall
 #PBS -j oe
 #PBS -o ./log
 #PBS -S /bin/bash
 
 #-------Load modules------------------------
-module load matlab/R2016b
+#module load matlab/R2016b
+module load matlab
 
 #-------Change to working directory---------
 cd $PBS_O_WORKDIR
@@ -15,6 +16,6 @@ cd $PBS_O_WORKDIR
 cp ../csw/matlab/post_process.m ./post_process.m
 
 #-------Start processes---------------------
-matlab -nodisplay -r "maxNumCompThreads(8); post_process; quit;"
+matlab -nodisplay -r "maxNumCompThreads(4); post_process; quit;"
 
 # Run this job from the run directory with "qsub ../csw/post_process.pbs"

@@ -1,0 +1,18 @@
+#!/bin/bash -l
+#PBS -l walltime=00:30:00,nodes=1:ppn=4,mem=32gb 
+#PBS -q amdsmall
+#PBS -j oe
+#PBS -o ../../logs/job
+#PBS -S /bin/bash
+
+#-------Load modules------------------------
+#module load matlab/R2016b
+
+#-------Change to working directory---------
+cd $PBS_O_WORKDIR
+
+#-------Start processes---------------------
+matlab -nodisplay -r "maxNumCompThreads(4); make_delta_c2; quit;"
+
+# Run this job from the csw/matlab directory with "qsub ../make_damping.pbs"
+# make sure the ../../logs directory exists before submitting the job.
