@@ -28,12 +28,13 @@ void write_diagnostics(int sD, int Na, int rank)
 				#endif
 
 				#ifdef WORK
+					W[n][j][i]=W[n][j][i]/Na;
 					C0[n][j][i]=C0[n][j][i]/Na;
 					Cn[n][j][i]=Cn[n][j][i]/Na;
 					D[n][j][i]=D[n][j][i]/Na;
 					divF[n][j][i]=divF[n][j][i]/Na;
 
-					tmp[n][j][i]=C0[n][j][i]+Cn[n][j][i]-divF[n][j][i]-D[n][j][i]; // residual/error
+					tmp[n][j][i]=W[n][j][i]+C0[n][j][i]+Cn[n][j][i]-divF[n][j][i]-D[n][j][i]; // residual/error
 				#endif
 
 				#ifdef WRITE_SSH
@@ -88,6 +89,12 @@ void write_diagnostics(int sD, int Na, int rank)
 	#endif
 
 	#ifdef WORK
+		if ((status = nc_inq_varid(ncid, "W", &varid)))
+			ERR(status);
+
+		if ((status = nc_put_vara_float(ncid, varid, start, count, &W[0][0][0])))
+			ERR(status);
+			
 		if ((status = nc_inq_varid(ncid, "C0", &varid)))
 			ERR(status);
 
@@ -189,6 +196,7 @@ void write_diagnostics(int sD, int Na, int rank)
 				#endif
 
 				#ifdef WORK
+					W[n][j][i]=0;
 					C0[n][j][i]=0;
 					Cn[n][j][i]=0;
 					divF[n][j][i]=0;

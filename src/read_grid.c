@@ -6,7 +6,11 @@ void read_grid(int rank)
 {
 
 	int x0, y0, ncid, varid, status;
-	int i, j, m, n;
+	int i, j;
+
+	#if defined(FILE_R) || defined(FILE_KAPPA) || defined(FILE_NU)
+		int n;
+	#endif
 
 	// Define start points 
 	y0=(int)(floor(rank/NPX)*NY); // y start
@@ -20,17 +24,10 @@ void read_grid(int rank)
 	size_t count_c[]={NM, NY+2, NX+2};
 
 	// Define variables that might be needed
-	#ifdef WRITE_SSH
-		size_t start_phi0[]={0, y0, x0};
-		size_t count_phi0[]={NMW, NY+2, NX+2};
-	#endif
-
-	#ifdef MODECOUPLE
-		size_t start_T[]={0, 0, y0, x0};
-		size_t count_T[]={NM, NM, NY+2, NX+2};
-	#endif
-
 	#if defined(SPHERE) || defined(CORIOLIS)
+		size_t start_lon[]={x0};
+		size_t count_lon[]={NX+2};
+		
 		size_t start_lat[]={y0};
 		size_t count_lat[]={NY+2};
 	#endif
@@ -52,85 +49,43 @@ void read_grid(int rank)
 	if((status = nc_get_vara_double(ncid, varid, start_c, count_c, &c[0][0][0])))
 		ERR(status);
 
-	#ifdef IT_FORCING
-		if((status = nc_inq_varid(ncid, "phi_bott", &varid)))
-			ERR(status);
-
-		if((status = nc_get_vara_double(ncid, varid, start_c, count_c, &phi_bott[0][0][0])))
-			ERR(status);
-	#endif
+	if((status = nc_inq_varid(ncid, "phi_bott", &varid)))
+		ERR(status);
 	
-	#ifdef WRITE_SSH
-		if((status = nc_inq_varid(ncid, "phi_surf", &varid)))
-			ERR(status);
-
-		if((status = nc_get_vara_double(ncid, varid, start_phi0, count_phi0, &phi_surf[0][0][0])))
-			ERR(status);
-	#endif
+	if((status = nc_get_vara_double(ncid, varid, start_c, count_c, &phi_bott[0][0][0])))
+		ERR(status);
+		
+	if((status = nc_inq_varid(ncid, "phi_surf", &varid)))
+		ERR(status);
+	
+	if((status = nc_get_vara_double(ncid, varid, start_c, count_c, &phi_surf[0][0][0])))
+		ERR(status);
 
 	// Read latitude in degrees and convert to radians
 	#if defined(SPHERE) || defined(CORIOLIS)
+	
+		if((status = nc_inq_varid(ncid, "lon", &varid)))
+			ERR(status);
+	
+		if((status = nc_get_vara_double(ncid, varid, start_lon, count_lon, &lon[0])))
+			ERR(status);
 	
 		if((status = nc_inq_varid(ncid, "lat", &varid)))
 			ERR(status);
 
 		if((status = nc_get_vara_double(ncid, varid, start_lat, count_lat, &lat[0])))
 			ERR(status);
-
+			
+		// Convert degrees to radians and calculate the inertial frequency
+		for(i=0; i<NX+2; i++) {
+			lon[i]=lon[i]*M_PI/180;
+		}
+		
 		for(j=0; j<NY+2; j++){
 			lat[j]=lat[j]*M_PI/180;
 			f[j]=2*(2*M_PI)/(24*3600)*sin(lat[j]);	
 		}
 		
-	#endif
-
-	// Read the topographic coupling coefficients if necessary
-	#ifdef MODECOUPLE
-
-		if((status = nc_inq_varid(ncid, "T_x", &varid)))
-			ERR(status);
-
-		if((status = nc_get_vara_double(ncid, varid, start_T, count_T, &T.x[0][0][0][0])))
-			ERR(status);
-	
-		if((status = nc_inq_varid(ncid, "T_y", &varid)))
-			ERR(status);
-
-		if((status = nc_get_vara_double(ncid, varid, start_T, count_T, &T.y[0][0][0][0])))
-			ERR(status);
-
-		// Zero out crazy values
-		for(n=0; n<NM; n++){
-			for(m=0; m<NM; m++){
-				for(j=0; j<NY+2; j++){
-					for(i=0; i<NX+2; i++){
-
-						#ifdef H_MIN_COUPLE
-							if(H[j][i]<H_MIN_COUPLE) {
-								T.x[n][m][j][i]=0.0;
-								T.y[n][m][j][i]=0.0;
-							}
-						#endif
-
-						#ifdef NO_ANTARCTIC
-							if(lat[j]<-60*M_PI/180) { // Recall: lat is in radians
-								T.x[n][m][j][i]=0.0;
-								T.y[n][m][j][i]=0.0;
-							}
-						#endif
-
-						if(T.x[n][m][j][i]>100.0 || H[j][i]<H_MIN) {
-							T.x[n][m][j][i]=0.0;
-							T.x[m][n][j][i]=0.0;
-						}
-						if(T.y[n][m][j][i]>100.0 || H[j][i]<H_MIN) {
-							T.y[n][m][j][i]=0.0;
-							T.y[m][n][j][i]=0.0;
-						}
-					}
-				}
-			}
-		}
 	#endif
 
 	// Open the damping file
@@ -165,7 +120,7 @@ void read_grid(int rank)
 				}
 			}
 		#endif
-	#endif
+	#endif // end FILE_R
 
 	// Open the viscosity file
 	#ifdef FILE_NU
@@ -199,7 +154,7 @@ void read_grid(int rank)
 				}
 			}
 		#endif
-	#endif
+	#endif // end FILE_NU
 
 	// Open the diffusivity file
 	#ifdef FILE_KAPPA
@@ -207,7 +162,6 @@ void read_grid(int rank)
 		ERR(status);
 		
 	if((status = nc_inq_varid(ncid, "kappa", &varid)))
-	  //if((status = nc_inq_varid(ncid, "nu", &varid)))
 		ERR(status);
 		
 	if((status = nc_get_vara_double(ncid, varid, start_c, count_c, &kappa[0][0][0])))
@@ -234,7 +188,38 @@ void read_grid(int rank)
 				}
 			}
 		#endif
-	#endif
+	#endif // end FILE_KAPPA
+	
+	// Compute topographic gradients
+	for(j=0; j<NY; j++){
+		for(i=0; i<NX; i++){			
+			dHdx[j][i]=(H[j+1][i+2]-H[j+1][i])/(2*A*cos(lat[j+1])*DX);
+			dHdy[j][i]=(H[j+2][i+1]-H[j][i+1])/(2*A*DX);
+
+			if((H[j+1][i+2]-H[j+1][i])/(2*H[j+1][i+1]) > 0.25){dHdx[j][i]=0.25*H[j+1][i+1]/(A*cos(lat[j+1])*DX);}
+			if((H[j+1][i+2]-H[j+1][i])/(2*H[j+1][i+1]) < -0.25){dHdx[j][i]=-0.25*H[j+1][i+1]/(A*cos(lat[j+1])*DX);}
+
+			if((H[j+2][i+1]-H[j][i+1])/(2*H[j+1][i+1]) > 0.25){dHdy[j][i]=0.25*H[j+1][i+1]/(A*DX);}
+			if((H[j+2][i+1]-H[j][i+1])/(2*H[j+1][i+1]) < -0.25){dHdy[j][i]=-0.25*H[j+1][i+1]/(A*DX);}
+		}
+	}
+	
+	for(j=0; j<NY; j++){
+		for(i=0; i<NX+1; i++){
+			dHdx_u[j][i]=(H[j+1][i+1]-H[j+1][i])/(A*cos(lat[j+1])*DX);
+
+			if((H[j+1][i+1]-H[j+1][i])/((H[j+1][i]+H[j+1][i+1])/2) > 0.25){dHdx_u[j][i]=0.25*((H[j+1][i]+H[j+1][i+1])/2)/(A*DX);}
+			if((H[j+1][i+1]-H[j+1][i])/((H[j+1][i]+H[j+1][i+1])/2) < -0.25){dHdx_u[j][i]=-0.25*((H[j+1][i]+H[j+1][i+1])/2)/(A*DX);}
+		}
+	}
+	
+	for(j=0; j<NY+1; j++){
+		for(i=0; i<NX; i++){
+			dHdy_v[j][i]=(H[j+1][i+1]-H[j][i+1])/(A*DX);
+			if((H[j+1][i+1]-H[j][i+1])/((H[j][i+1]+H[j+1][i+1])/2) > 0.25){dHdy_v[j][i]=0.25*((H[j][i+1]+H[j+1][i+1])/2)/(A*DX);}
+			if((H[j+1][i+1]-H[j][i+1])/((H[j][i+1]+H[j+1][i+1])/2) < -0.25){dHdy_v[j][i]=-0.25*((H[j][i+1]+H[j+1][i+1])/2)/(A*DX);}		
+		}
+	}
 
 
 }

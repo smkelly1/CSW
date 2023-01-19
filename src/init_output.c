@@ -33,7 +33,7 @@ void init_output(int rank)
 
 	// Write pressure
 	#ifdef WRITE_PRESSURE
-		if ((status = nc_def_var(ncid, "p", NC_FLOAT, 4, dimid, &varid)))
+		if ((status = nc_def_var(ncid, "eta", NC_FLOAT, 4, dimid, &varid)))
 			ERR(status);
 	#endif
 
@@ -46,27 +46,36 @@ void init_output(int rank)
 		ERR(status);
 	#endif
 
+	// Write wind
+	#ifdef WRITE_WIND
+		if ((status = nc_def_var(ncid, "TAUX", NC_FLOAT, 4, dimid, &varid)))
+			ERR(status);
+			
+		if ((status = nc_def_var(ncid, "TAUY", NC_FLOAT, 4, dimid, &varid)))
+			ERR(status);
+	#endif
+
 	// Define the diagnostics 
 	#ifdef WRITE_SSH
 		if ((status = nc_def_var(ncid, "SSH_amp", NC_FLOAT, 4, dimid, &varid)))
-		ERR(status);
+			ERR(status);
 
 		if ((status = nc_def_var(ncid, "SSH_phase", NC_FLOAT, 4, dimid, &varid)))
-		ERR(status);
+			ERR(status);
 	#endif
 
 	#ifdef WRITE_TRANSPORT
 		if ((status = nc_def_var(ncid, "U_amp", NC_FLOAT, 4, dimid, &varid)))
-		ERR(status);
+			ERR(status);
 
 		if ((status = nc_def_var(ncid, "U_phase", NC_FLOAT, 4, dimid, &varid)))
-		ERR(status);
+			ERR(status);
 		
 		if ((status = nc_def_var(ncid, "V_amp", NC_FLOAT, 4, dimid, &varid)))
-		ERR(status);
+			ERR(status);
 
 		if ((status = nc_def_var(ncid, "V_phase", NC_FLOAT, 4, dimid, &varid)))
-		ERR(status);
+			ERR(status);
 	#endif
 
 	#ifdef ENERGY
@@ -86,6 +95,9 @@ void init_output(int rank)
 	#endif
 
 	#ifdef WORK  
+		if ((status = nc_def_var(ncid, "W", NC_FLOAT, 4, dimid, &varid)))
+			ERR(status);
+			
 		if ((status = nc_def_var(ncid, "C0", NC_FLOAT, 4, dimid, &varid)))
 			ERR(status);
 
@@ -106,7 +118,6 @@ void init_output(int rank)
 		if ((status = nc_def_var(ncid, "period", NC_INT, 1, &dimid[0], &varid)))
 			ERR(status);
 	#endif 
-
 
 	// Close the file
 	if ((status = nc_close(ncid)))

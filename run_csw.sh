@@ -7,8 +7,8 @@ cp ../csw/src/csw.h ../csw/src/cswexec .
 
 #-------Start process-----------------------
 #time -o log mpirun -np 6 ../src_diag/cswexec > log &
-{ time mpirun -np 8 ./cswexec; } >> log 2>&1 &
-# Run this job with "sh ../csw1.0/run_CSW.sh"
+{ time mpirun -np 2 ./cswexec; } >> log 2>&1 &
+# Run this job with "sh ../csw/run_CSW.sh"
 
 
 # Debugging options

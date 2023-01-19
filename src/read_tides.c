@@ -6,7 +6,6 @@ void read_tides(int rank)
 {
 
 	int i, j, k, x0, y0, ncid, varid, status;
-	double dHdx, dHdy;
 
 	// Define start points
 	y0=(int)(floor(rank/NPX)*NY); // y start
@@ -70,11 +69,8 @@ void read_tides(int rank)
 							#ifdef H_MIN_FORCE
 								if(H[j+1][i+1]>H_MIN_FORCE) {
 							#endif
-
-									dHdx=(H[j+1][i+2]-H[j+1][i])/(2*A*cos(lat[j+1])*DX);
-									dHdy=(H[j+2][i+1]-H[j][i+1])/(2*A*DX);
-
-									ITGF.F[k][j][i]=(((double)(ITGF.Ur[k][j][i])+I*(double)(ITGF.Ui[k][j][i]))*dHdx+((double)(ITGF.Vr[k][j][i])+I*(double)(ITGF.Vi[k][j][i]))*dHdy)/H[j+1][i+1];
+									
+									ITGF.F[k][j][i]=(((double)(ITGF.Ur[k][j][i])+I*(double)(ITGF.Ui[k][j][i]))*dHdx[j][i]+((double)(ITGF.Vr[k][j][i])+I*(double)(ITGF.Vi[k][j][i]))*dHdy[j][i])/H[j+1][i+1];
 
 							#ifdef H_MIN_FORCE
 								}

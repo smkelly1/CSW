@@ -25,6 +25,10 @@ void calc_forces(int Na)
 		double f01;
 	#endif
 
+	#ifdef MODECOUPLE
+		double cn2, cm2, phi_n, phi_m;
+	#endif
+
 	#if defined(R) || defined(FILE_R)
 		double r0;
 	#endif
@@ -82,13 +86,42 @@ void calc_forces(int Na)
 						Fu[n][j][i]=Fu[n][j][i]+f[j+1]*(V[n][j+1][i]+V[n][j+2][i]+V[n][j+1][i+1]+V[n][j+2][i+1])/4;
 					#endif
 
-					// Topographic coupling
-					#ifdef MODECOUPLE
-						// Note: This code assumes T is a depth integral (not depth average), hence there is no multiplication by Hu.
-						for(m=0; m<NM; m++){
-							Fu[n][j][i]=Fu[n][j][i]-(T.x[n][m][j+1][i]+T.x[n][m][j+1][i+1])*(p1[m][j+1][i]+p1[m][j+1][i+1])/4;
-						}
+					// Wind forcing
+					#ifdef WIND_FORCING
+						Fu[n][j][i]=Fu[n][j][i]+(tau_x[j+1][i]+tau_x[j+1][i+1])*(phi_surf[n][j+1][i]+phi_surf[n][j+1][i+1])/(4*RHO);
 					#endif
+
+					// Topographic coupling 
+					#ifdef MODECOUPLE
+						if(H[j+1][i]>H_MIN_COUPLE && H[j+1][i+1]>H_MIN_COUPLE) {
+							
+							#ifdef NO_ANTARCTIC
+								if(lat[j+1]>-60*M_PI/180) { // Recall: lat is in radians
+							#endif							
+									// Note: See Zaron et al. (2020; JPO)
+									cn2=(c[n][j+1][i]+c[n][j+1][i+1])*(c[n][j+1][i]+c[n][j+1][i+1])/4;
+									phi_n=(phi_bott[n][j+1][i]+phi_bott[n][j+1][i+1])/2;
+						
+									for(m=0; m<NM; m++){
+										if (m==n) {
+											Fu[n][j][i]=Fu[n][j][i]-
+												(1-phi_n*phi_n)/2*dHdx_u[j][i]
+												*(p1[n][j+1][i]+p1[n][j+1][i+1])/2;
+										}
+										else {
+											cm2=(c[m][j+1][i]+c[m][j+1][i+1])*(c[m][j+1][i]+c[m][j+1][i+1])/4;
+											phi_m=(phi_bott[m][j+1][i]+phi_bott[m][j+1][i+1])/2;
+
+											Fu[n][j][i]=Fu[n][j][i]-
+												cn2/(cm2-cn2)*phi_m*phi_n*dHdx_u[j][i]
+												*(p1[m][j+1][i]+p1[m][j+1][i+1])/2;
+										}
+									}							
+							#ifdef NO_ANTARCTIC
+								}
+							#endif
+						}
+					#endif 
 
 					////////////////////////////////////////////////////
 					// Frictional forces
@@ -186,15 +219,43 @@ void calc_forces(int Na)
 						Fv[n][j][i]=Fv[n][j][i]-f01*(U[n][j][i+1]+U[n][j][i+2]+U[n][j+1][i+1]+U[n][j+1][i+2])/4;
 					#endif
 
-					// Topographic coupling
+					// Wind forcing
+					#ifdef WIND_FORCING
+						Fv[n][j][i]=Fv[n][j][i]+(tau_y[j][i+1]+tau_y[j+1][i+1])*(phi_surf[n][j][i+1]+phi_surf[n][j+1][i+1])/(4*RHO);
+					#endif
+				
+					// Topographic coupling 
 					#ifdef MODECOUPLE
-						// Note: This code assumes T is a depth integral (not depth average)
-						for(m=0; m<NM; m++){
-							Fv[n][j][i]=Fv[n][j][i]-(T.y[n][m][j][i+1]+T.y[n][m][j+1][i+1])*(p1[m][j][i+1]+p1[m][j+1][i+1])/4;
+						if(H[j][i+1]>H_MIN_COUPLE && H[j+1][i+1]>H_MIN_COUPLE) {
+							
+							#ifdef NO_ANTARCTIC
+								if((lat[j]+lat[j+1])/2>-60*M_PI/180) { // Recall: lat is in radians
+							#endif
+									// Note: See Zaron et al. (2020; JPO)
+									cn2=(c[n][j][i+1]+c[n][j+1][i+1])*(c[n][j][i+1]+c[n][j+1][i+1])/4;
+									phi_n=(phi_bott[n][j][i+1]+phi_bott[n][j+1][i+1])/2;
+						
+									for(m=0; m<NM; m++){
+										if (m==n) {
+											Fv[n][j][i]=Fv[n][j][i]-
+												(1-phi_n*phi_n)/2*dHdy_v[j][i]
+												*(p1[n][j][i+1]+p1[n][j+1][i+1])/2;
+										}
+										else {
+											cm2=(c[m][j][i+1]+c[m][j+1][i+1])*(c[m][j][i+1]+c[m][j+1][i+1])/4;
+											phi_m=(phi_bott[m][j][i+1]+phi_bott[m][j+1][i+1])/2;
+
+											Fv[n][j][i]=Fv[n][j][i]-
+												cn2/(cm2-cn2)*phi_m*phi_n*dHdy_v[j][i]
+												*(p1[m][j][i+1]+p1[m][j+1][i+1])/2;
+										}
+									}
+							#ifdef NO_ANTARCTIC
+								}
+							#endif								
 						}
 					#endif
-
-
+					
 					////////////////////////////////////////////////////
 					// Frictional forces
 					Fv_eps[n][j][i]=0;
@@ -289,6 +350,15 @@ void calc_forces(int Na)
 							dFdy=(cos12*V[n][j+2][i+1]*(p1[n][j+1][i+1]+p1[n][j+2][i+1])-cos01*V[n][j+1][i+1]*(p1[n][j][i+1]+p1[n][j+1][i+1]));
 							divF[n][j][i]=divF[n][j][i]+(float)(0.5*RHO*(dFdx+dFdy)*gamma); // the factor of 1/2 comes from averaging p
 
+							// Wind forcing
+							#ifdef WIND_FORCING
+								W[n][j][i]=W[n][j][i]+(float)(0.5*(
+									tau_x[j+1][i+1]*(U[n][j+1][i+1]+U[n][j+1][i+2])
+									+tau_y[j+1][i+1]*(V[n][j+1][i+1]+V[n][j+2][i+1]))
+									*phi_surf[n][j+1][i+1]/H[j+1][i+1]);	
+									// The factor of 1/2 comes from averaging U
+							#endif
+
 							// Compute dissipation
 							D[n][j][i]=D[n][j][i]-(float)(RHO*0.25*((Fu_eps[n][j][i]+Fu_eps[n][j][i+1])*(U[n][j+1][i+1]+U[n][j+1][i+2])
 								+(Fv_eps[n][j][i]+Fv_eps[n][j+1][i])*(V[n][j+1][i+1]+V[n][j+2][i+1]))/H[j+1][i+1]);	
@@ -333,14 +403,37 @@ void calc_forces(int Na)
 							#endif
 
 							// Only compute scattering if there is mode coupling.
-							#ifdef MODECOUPLE
-								for(m=0; m<NM; m++){
-
-									Cn[n][j][i]=Cn[n][j][i]
-										+(float)(0.5*RHO*(
-										 (T.x[m][n][j+1][i+1]*(U[m][j+1][i+1]+U[m][j+1][i+2])+T.y[m][n][j+1][i+1]*(V[m][j+1][i+1]+V[m][j+2][i+1]))*p1[n][j+1][i+1]
-										-(T.x[n][m][j+1][i+1]*(U[n][j+1][i+1]+U[n][j+1][i+2])+T.y[n][m][j+1][i+1]*(V[n][j+1][i+1]+V[n][j+2][i+1]))*p1[m][j+1][i+1])/H[j+1][i+1]); // the factor of 1/2 comes from averaging U and V
-								}
+							#ifdef MODECOUPLE					
+								if (H[j+1][i+1]>H_MIN_COUPLE) {
+									
+									#ifdef NO_ANTARCTIC
+										if(lat[j+1]>-60*M_PI/180) { // Recall: lat is in radians
+									#endif
+							
+											cn2=c[n][j+1][i+1]*c[n][j+1][i+1];
+											phi_n=phi_bott[n][j+1][i+1];
+												
+											for(m=0; m<NM; m++){									
+												if (m!=n){
+													cm2=c[m][j+1][i+1]*c[m][j+1][i+1];
+													phi_m=phi_bott[m][j+1][i+1];
+									
+													Cn[n][j][i]=Cn[n][j][i]
+														+(float)(0.5*RHO*(
+														cm2/(cn2-cm2)*phi_m*phi_n
+														*p1[n][j+1][i+1]
+														*((U[m][j+1][i+1]+U[m][j+1][i+2])*dHdx[j][i]+(V[m][j+1][i+1]+V[m][j+2][i+1])*dHdy[j][i])
+														-cn2/(cm2-cn2)*phi_n*phi_m
+														*p1[m][j+1][i+1]
+														*((U[n][j+1][i+1]+U[n][j+1][i+2])*dHdx[j][i]+(V[n][j+1][i+1]+V[n][j+2][i+1])*dHdy[j][i]))
+														/H[j+1][i+1]); 
+														//the factor of 1/2 comes from averaging U and V
+												}										
+											}
+									#ifdef NO_ANTARCTIC
+										}
+									#endif
+								}							
 							#endif 
 
 						#endif // end WORK if

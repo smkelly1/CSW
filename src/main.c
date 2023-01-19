@@ -30,7 +30,12 @@ int main(int argc, char *argv[])
 	#if defined(ENERGY) || defined(FLUX) || defined(WORK) || defined(WRITE_SSH) || defined(WRITE_TRANSPORT)
 		int sD=1; // Diagnostic index (start writing after one period)
 	#endif
+	
 	int Na=1; // Number of points for diagnostic average (must define)
+
+	#ifdef WIND_FORCING 
+		int sF=0; // Index for wind forcing
+	#endif
 
 
 	////////////////////////////////////////////////////////////////
@@ -39,13 +44,13 @@ int main(int argc, char *argv[])
 	MPI_Comm_rank(MPI_COMM_WORLD,&rank);
 	MPI_Comm_size(MPI_COMM_WORLD,&nrank);
 
-
+	
 	////////////////////////////////////////////////////////////////////
 	// Read grid
 	read_grid(rank);
 
 	// Read forcing data
-	#ifdef IT_FORCING
+	#ifdef TIDE_FORCING
 		read_tides(rank);
 	#endif
 
@@ -57,6 +62,13 @@ int main(int argc, char *argv[])
 	// Begin forward integration
 	for(s=1; s<(NT+1); s++) {
 
+		// Read WIND data
+		#ifdef WIND_FORCING
+			if (t >= (sF*DT_F)) {
+				read_wind(sF,rank);
+				++sF;
+			}
+		#endif
 
 		////////////////////////////////////////////////////////////////
 		// Momentum calls
@@ -76,7 +88,7 @@ int main(int argc, char *argv[])
 		calc_divergence();
 
 		// Add internal-tide generating force
-		#ifdef IT_FORCING
+		#ifdef TIDE_FORCING
 			calc_ITGF(t);
 		#endif
 
@@ -92,7 +104,7 @@ int main(int argc, char *argv[])
 
 		t=s*DT; // U, V, and p1 now correspond to this time
 
-		// Write ouput
+		// Write output
 		#if defined(WRITE_PRESSURE) || defined(WRITE_VELOCITY)
 			if (t >= (sW*DT_W)) {
 				write_output(sW,t,rank);

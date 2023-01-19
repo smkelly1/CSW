@@ -7,6 +7,10 @@ void calc_divergence(void)
 	double cos01, cos1, cos12;
 	double gamma;
 
+	#ifdef MODECOUPLE
+		double cm2, cn2, phi_m, phi_n;
+	#endif
+
 	#if defined(KAPPA) || defined(FILE_KAPPA)
 		double kappa0, invDX2;
 		invDX2=1/(DX*DX);
@@ -45,16 +49,41 @@ void calc_divergence(void)
 							+(V1[n][j+2][i+1]-V1[n][j+1][i+1]))/DX;
 					#endif
 
-					// Topographic coupling
+					// Topographic coupling 
 					#ifdef MODECOUPLE
-						// Note: This code assumes T is a depth integral (not depth average), hence the division by H^2.
-						for(m=0; m<NM; m++){
-							Fp[n][j][i]=Fp[n][j][i]+
-								(T.x[m][n][j+1][i+1]*(U1[m][j+1][i+1]+U1[m][j+1][i+2])
-								+T.y[m][n][j+1][i+1]*(V1[m][j+1][i+1]+V1[m][j+2][i+1]))
-								*c[n][j+1][i+1]*c[n][j+1][i+1]/(2*H[j+1][i+1]*H[j+1][i+1]);
+						if (H[j+1][i+1]>H_MIN_COUPLE) {	
+							
+							#ifdef NO_ANTARCTIC
+								if(lat[j+1]>-60*M_PI/180) { // Recall: lat is in radians
+							#endif	
+									// Note: See Zaron et al. (2020; JPO)
+									cn2=c[n][j+1][i+1]*c[n][j+1][i+1];
+									phi_n=phi_bott[n][j+1][i+1];
+										
+									for(m=0; m<NM; m++){								
+										if (m==n) {
+											Fp[n][j][i]=Fp[n][j][i]+
+												((U1[n][j+1][i+1]+U1[n][j+1][i+2])/2*dHdx[j][i]
+												+(V1[n][j+1][i+1]+V1[n][j+2][i+1])/2*dHdy[j][i])
+												*0.5*(1-phi_n*phi_n)
+												*cn2/(H[j+1][i+1]*H[j+1][i+1]);
+										}
+										else {
+											cm2=c[m][j+1][i+1]*c[m][j+1][i+1];
+											phi_m=phi_bott[m][j+1][i+1];
+
+											Fp[n][j][i]=Fp[n][j][i]+
+												((U1[m][j+1][i+1]+U1[m][j+1][i+2])/2*dHdx[j][i]
+												+(V1[m][j+1][i+1]+V1[m][j+2][i+1])/2*dHdy[j][i])
+												*cm2/(cn2-cm2)*phi_m*phi_n
+												*cn2/(H[j+1][i+1]*H[j+1][i+1]);
+										}
+									}
+							#ifdef NO_ANTARCTIC
+								}
+							#endif
 						}
-					#endif
+					#endif           
 
 					// Diffusion
 					#if defined(KAPPA) || defined(FILE_KAPPA)
