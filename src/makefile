@@ -20,7 +20,7 @@ LIBS = -lm -lnetcdf -lmpi
 
 ########################################################################
 # Source files and executable name
-OBJECTS = main.o calc_divergence.o calc_forces.o calc_ITGF.o init_output.o pass_p.o pass_uv.o read_grid.o read_tides.o read_wind.o timestep_p.o  timestep_uv.o write_diagnostics.o write_output.o
+OBJECTS = main.o calc_divergence.o calc_forces.o calc_ITGF.o pass_p.o pass_uv.o read_grid.o read_tides.o read_wind.o timestep_p.o  timestep_uv.o write_diagnostics.o write_output.o
 
 TARGET=cswexec
 # To run, try: mpirun --mca orte_base_help_aggregate 0 -np 6 cswexec

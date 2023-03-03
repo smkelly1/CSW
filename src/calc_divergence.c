@@ -6,10 +6,7 @@ void calc_divergence(void)
 	int i, j, m, n;
 	double cos01, cos1, cos12;
 	double gamma;
-
-	#ifdef MODECOUPLE
-		double cm2, cn2, phi_m, phi_n;
-	#endif
+	double cm2, cn2, phi_m, phi_n;
 
 	#if defined(KAPPA) || defined(FILE_KAPPA)
 		double kappa0, invDX2;
@@ -24,7 +21,20 @@ void calc_divergence(void)
 		double r0;
 	#endif
 
-	for(j=0; j<NY; j++){
+	////////////////////////////////////////////////////////////////////
+	// Average velocity in time
+	for(n=0; n<NM; n++){
+		for(j=0; j<NY+2; j++){
+			for(i=0; i<NX+2; i++){
+				U1[n][j][i]=(U[n][j][i]+U1[n][j][i])/2;
+				V1[n][j][i]=(V[n][j][i]+V1[n][j][i])/2;
+			}
+		}
+	}
+
+	////////////////////////////////////////////////////////////////////
+	// Start pressure forcing 
+		for(j=0; j<NY; j++){
 
 		// Only compute cos once for each latitude
 		cos01=cos((lat[j]+lat[j+1])/2);
@@ -120,8 +130,8 @@ void calc_divergence(void)
 						#else
 							r0=R;
 						#endif
-
-						Fp[n][j][i]=Fp[n][j][i]-r0*p[n][j+1][i+1];
+						cn2=c[n][j][i]*c[n][j][i];
+						Fp[n][j][i]=Fp[n][j][i]-fmin(r0/cn2,R_MAX)*p[n][j+1][i+1];						
 					#endif
 
 				} // end-if: land mask

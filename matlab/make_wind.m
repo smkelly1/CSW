@@ -1,13 +1,12 @@
 % Create NetCDF wind file
 clear;
 
-%fid.MERRA2='./wind_pre_processing/out_198710.nc';
-fid.MERRA2='./wind_pre_processing/out_1987_winter.nc';
-fid.wind='1987_winter_CSW.nc';
+fid.MERRA2='./wind_pre_processing/out_HYCOM.nc';
+fid.wind='HYCOM_CSW.nc';
 folder.wind='../../';
 cutoff=0.8;
 equator=[10 15];
-antarctic=[-65 -60];
+antarctic=[-70 -65];
 
 % Load MERRA2 wind
 lon=ncread(fid.MERRA2,'lon');        

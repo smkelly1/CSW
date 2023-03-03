@@ -4,11 +4,8 @@
 
 void write_output(int sW, double t, int rank)
 {
-	#if defined(WRITE_PRESSURE) || defined(WRITE_VELOCITY)
-		int i, j, n; 
-	#endif
-	
-	int ncid, status, varid;
+	int i, j, n; 
+	int ncid, status, varid, dimid[4];
 	char name[100];
 	double day;
 
@@ -18,7 +15,67 @@ void write_output(int sW, double t, int rank)
 	// Get file name
 	sprintf(name,FILE_OUT ".%03d.nc",rank);    
 
-	// Open the file
+
+	////////////////////////////////////////////////////////////////////
+	// Initiate the output file if this is the first call
+	if (sW==0) {
+
+		// Create file 
+		if ((status = nc_create(name, NC_CLOBBER, &ncid)))
+			ERR(status);
+
+		// Create dimensions  
+		if ((status = nc_def_dim(ncid, "longitude", NX, &dimid[3])))
+			ERR(status);
+
+		if ((status = nc_def_dim(ncid, "latitude", NY, &dimid[2])))
+			ERR(status);
+
+		if ((status = nc_def_dim(ncid, "mode", NMW, &dimid[1])))
+			ERR(status);
+
+		if ((status = nc_def_dim(ncid, "time", NC_UNLIMITED, &dimid[0])))
+			ERR(status);
+
+		// Define the variables						
+		if ((status = nc_def_var(ncid, "yday", NC_DOUBLE, 1, &dimid[0], &varid)))
+			ERR(status);
+
+		#ifdef WRITE_ETA
+			if ((status = nc_def_var(ncid, "eta", NC_FLOAT, 4, dimid, &varid)))
+				ERR(status);
+				
+			#if defined(FLAG_GROWTH) || defined(HIGH_PASS)
+				if ((status = nc_def_var(ncid, "eta_low", NC_FLOAT, 4, dimid, &varid)))
+					ERR(status);
+			#endif
+		#endif
+
+		#ifdef WRITE_VELOCITY
+			if ((status = nc_def_var(ncid, "u", NC_FLOAT, 4, dimid, &varid)))
+				ERR(status);
+		
+			if ((status = nc_def_var(ncid, "v", NC_FLOAT, 4, dimid, &varid)))
+				ERR(status);
+		#endif
+
+		#ifdef WRITE_WIND
+			if ((status = nc_def_var(ncid, "TAUX", NC_FLOAT, 4, dimid, &varid)))
+				ERR(status);
+				
+			if ((status = nc_def_var(ncid, "TAUY", NC_FLOAT, 4, dimid, &varid)))
+				ERR(status);
+		#endif
+				
+		// Close the file
+		if ((status = nc_close(ncid)))
+			ERR(status);
+			
+	} // Done initiating file 
+
+
+	////////////////////////////////////////////////////////////////////
+	// Open the file for writing
 	if ((status = nc_open(name, NC_WRITE, &ncid)))
 		ERR(status);
 
@@ -57,7 +114,7 @@ void write_output(int sW, double t, int rank)
 	#endif // WRITE_VELOCITY
 
 
-	#ifdef WRITE_PRESSURE
+	#ifdef WRITE_ETA
 
 		// Write pressure
 		for(i=0; i<NX; i++){
@@ -73,8 +130,31 @@ void write_output(int sW, double t, int rank)
 
 		if ((status = nc_put_vara_float(ncid, varid, start, count, &tmp[0][0][0])))
 			ERR(status);
+		
+		#if defined(FLAG_GROWTH) || defined(HIGH_PASS)
+			// Write pressure
+			for(i=0; i<NX; i++){
+				for(j=0; j<NY; j++){
+					for(n=0; n<NMW; n++){
+						#ifdef FLAG_GROWTH
+							tmp[n][j][i]=(float)(p_low[n][j+1][i+1]*phi_surf[n][j+1][i+1]/9.81);
+						#endif
+						
+						#ifdef HIGH_PASS
+							tmp[n][j][i]=(float)((p_low1[n][j+1][i+1]+p_low2[n][j+1][i+1]+p_low3[n][j+1][i+1])*phi_surf[n][j+1][i+1]/9.81);
+						#endif
+					}
+				}
+			}
 
-	#endif // WRITE_PRESSURE
+			if ((status = nc_inq_varid(ncid, "eta_low", &varid)))
+				ERR(status);
+
+			if ((status = nc_put_vara_float(ncid, varid, start, count, &tmp[0][0][0])))
+				ERR(status);		
+		#endif		
+
+	#endif // WRITE_ETA
 
 
 	#ifdef WRITE_WIND
@@ -111,7 +191,8 @@ void write_output(int sW, double t, int rank)
 		if ((status = nc_put_vara_float(ncid, varid, start, count, &tmp[0][0][0])))
 			ERR(status);
 
-	#endif // WRITE_PRESSURE
+	#endif // WRITE_WIND
+
 
 	// Write time
 	day=t/(24*3600);

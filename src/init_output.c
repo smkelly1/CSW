@@ -35,6 +35,10 @@ void init_output(int rank)
 	#ifdef WRITE_PRESSURE
 		if ((status = nc_def_var(ncid, "eta", NC_FLOAT, 4, dimid, &varid)))
 			ERR(status);
+		#ifdef HIGH_PASS	
+			if ((status = nc_def_var(ncid, "eta_low", NC_FLOAT, 4, dimid, &varid)))
+				ERR(status);
+		#endif
 	#endif
 
 	// Write velocity

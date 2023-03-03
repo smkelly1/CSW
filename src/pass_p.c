@@ -8,17 +8,16 @@ void pass_p(int rank)
 	int i, j, m;
 	int rank_e, rank_w, rank_n, rank_s, row;
 
-
 	// NOTE: Both sent and received data is labeled by it's direction of travel 
-	
-		
+			
 	////////////////////////////////////////////////////////////////////
 	// Step 0: implement periodic boundaries if we don't need MPI
+	
 	#if NPX==1 && defined(PERIODICBC) // Simple case for NPX==1
 		for(m=0; m<NM; m++) {
 			for (j=0; j<NY; j++) {
-				p1[m][j+1][NX+1]=p1[m][j+1][1]; //Second point -> last point
-				p1[m][j+1][0]=p1[m][j+1][NX];   //Second to last point -> first point
+				p[m][j+1][NX+1]=p[m][j+1][1];   //Second point -> last point
+				p[m][j+1][0]=p[m][j+1][NX];     //Second to last point -> first point
 			}
 		}
 	#endif
@@ -68,8 +67,8 @@ void pass_p(int rank)
 		// Load points going east and west
 		for (m=0; m<NM; m++) {
 			for (j=0; j<NY; j++) {
-				BOUNDARY.p_Se[m*NY+j]=p1[m][j+1][NX];  // Second to last point goes east (Size is NX+2, last point is NX+1) 
-				BOUNDARY.p_Sw[m*NY+j]=p1[m][j+1][1];   // Second point goes west
+				BOUNDARY.p_Se[m*NY+j]=p[m][j+1][NX];  // Second to last point goes east (Size is NX+1, last point is NX) 
+				BOUNDARY.p_Sw[m*NY+j]=p[m][j+1][1];   // Second point goes west
 			}
 		}		
 	#endif
@@ -78,8 +77,8 @@ void pass_p(int rank)
 		// Load points going north and south
 		for (m=0; m<NM; m++) {
 			for (i=0; i<NX; i++) {
-				BOUNDARY.p_Sn[m*NX+i]=p1[m][NY][i+1];  // Second to last point goes north (Size is NY+2, last point is NY+1) 
-				BOUNDARY.p_Ss[m*NX+i]=p1[m][1][i+1];   // Second point goes south
+				BOUNDARY.p_Sn[m*NX+i]=p[m][NY][i+1];  // Second to last point goes north (Size is NY+2, last point is NY+1) 
+				BOUNDARY.p_Ss[m*NX+i]=p[m][1][i+1];   // Second point goes south
 			}
 		}		
 	#endif	
@@ -173,7 +172,7 @@ void pass_p(int rank)
 		if (rank_w > -1) {
 			for (m=0; m<NM; m++) {
 				for (j=0; j<NY; j++) {
-					p1[m][j+1][0]=BOUNDARY.p_Re[m*NY+j];	// Data moving east lands in first slot
+					p[m][j+1][0]=BOUNDARY.p_Re[m*NY+j];	// Data moving east lands in first slot
 				}
 			}
 		}
@@ -181,7 +180,7 @@ void pass_p(int rank)
 		if (rank_e > -1) {
 			for (m=0; m<NM; m++) {
 				for (j=0; j<NY; j++) {
-					p1[m][j+1][NX+1]=BOUNDARY.p_Rw[m*NY+j];	// Data moving west lands in last slot
+					p[m][j+1][NX+1]=BOUNDARY.p_Rw[m*NY+j];	// Data moving west lands in last slot
 				}
 			}
 		}
@@ -192,7 +191,7 @@ void pass_p(int rank)
 		if (rank_s >= 0){
 			for (m=0; m<NM; m++) {
 				for (i=0; i<NX; i++) {
-					p1[m][0][i+1]=BOUNDARY.p_Rn[m*NX+i]; 	// Data moving north lands in first slot 
+					p[m][0][i+1]=BOUNDARY.p_Rn[m*NX+i]; 	// Data moving north lands in first slot 
 				}
 			}
 		}
@@ -200,10 +199,10 @@ void pass_p(int rank)
 		if (rank_n < NPX*NPY) {
 			for (m=0; m<NM; m++) {
 				for (i=0; i<NX; i++) {
-					p1[m][NY+1][i+1]=BOUNDARY.p_Rs[m*NX+i]; // Data moving south lands in last slot
+					p[m][NY+1][i+1]=BOUNDARY.p_Rs[m*NX+i]; // Data moving south lands in last slot
 				}
 			}
 		}		
-	#endif
+	#endif	
 
 }

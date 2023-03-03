@@ -4,6 +4,8 @@
 
 void calc_ITGF(double t)
 {
+#ifdef TIDE_FORCING
+
 	int i, j, k, n;
 	double complex phaseFp;
 
@@ -48,4 +50,5 @@ void calc_ITGF(double t)
 
 	}
 
+#endif	
 }

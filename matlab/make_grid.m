@@ -5,12 +5,12 @@ clear
 res=5; % Degrees, want 1/100 at some point
 
 % Define the base grid
-fid_in='../../../22-12_grid/SS_WOA_grid.nc';
+fid_in='./grid_pre_processing/SS_WOA_winter_grid.nc';
 
 % Define the new grid goes
-folder='../../../22-12_grid/';
-filename=[num2str(res),'th_deg_grid.nc'];
-fid_out=[folder,filename];
+folder='./grid_pre_processing/';
+filename=[num2str(res),'th_deg_winter_grid.nc'];
+fid_out=[folder,filename]; 
 
 % Grid parameters (probably leave these alone)
 latlims=[-80 66];

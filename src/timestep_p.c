@@ -6,48 +6,45 @@ void timestep_p(void)
 	int i, j, n;
 	double gamma;
 	
-	#ifdef R_MASK
-		double c_crit, mask;
+	#if defined(HIGH_PASS) || defined(FLAG_GROWTH)
+		double alpha;
 	#endif
 
 	gamma=DT/12;
 
 	for(n=0; n<NM; n++){
 		for(j=0; j<NY; j++){
-
-			// Slowest resolvable wave on the grid (Adcroft et al. 1999) 
-			#ifdef R_MASK
-				c_crit=fabs(f[j+1])*A*cos(lat[j+1])*DX;  
-			#endif
-
 			for(i=0; i<NX; i++){
 
-				if (H[j+1][i+1]>H_MIN) {
-
-					// Create a sponge with an R_MASK decay time scale where there is insufficient wave resolution
-					#ifdef R_MASK
-						mask=1-fmax(0,(1-c[n][j+1][i+1]/c_crit)*DT*R_MASK);  
-					#endif
+				if (H[j+1][i+1]>H_MIN && -65<(lat[j+1])*180/M_PI) {
 					
 					// Save the current data
 					p1[n][j+1][i+1]=p[n][j+1][i+1];
 					
-					// Integrate to find the new data
-					#ifdef R_MASK
-						p[n][j+1][i+1]=(p1[n][j+1][i+1]+gamma*(23*Fp[n][j][i]-16*Fp_1[n][j][i]+5*Fp_2[n][j][i]))*mask;
-					#else
-						p[n][j+1][i+1]=p1[n][j+1][i+1]+gamma*(23*Fp[n][j][i]-16*Fp_1[n][j][i]+5*Fp_2[n][j][i]);
-					#endif
+					// Integrate to find the new data			
+					p[n][j+1][i+1]=p[n][j+1][i+1]+gamma*(23*Fp[n][j][i]-16*Fp_1[n][j][i]+5*Fp_2[n][j][i]);
 
 					// Old forcing becomes very old forcing 
 					Fp_2[n][j][i]=Fp_1[n][j][i];
 
 					// Current forcing becomes old forcing 
-					Fp_1[n][j][i]=Fp[n][j][i];
-
-					// Average to find the mid-point data
-					p1[n][j+1][i+1]=(p[n][j+1][i+1]+p1[n][j+1][i+1])/2;
-
+					Fp_1[n][j][i]=Fp[n][j][i];					
+					
+					// Identify any exponential growth (don't remove, but use this field to flag bad data later)
+					#ifdef FLAG_GROWTH
+						alpha=fabs(DT/(NUM_PERIODS*2*M_PI/f[j]));
+						p_low[n][j][i]=alpha*p[n][j][i]+(1-alpha)*p_low[n][j][i];
+					#endif
+					
+					// Remove the exponential running average (this alters the high-frequency solution slightly)
+					#ifdef HIGH_PASS
+						alpha=fabs(DT/(NUM_PERIODS*2*M_PI/f[j]));
+						p_low1[n][j][i]=alpha*p[n][j][i]+(1-alpha)*p_low1[n][j][i];
+						p_low2[n][j][i]=alpha*(p[n][j][i]-p_low1[n][j][i])+(1-alpha)*p_low2[n][j][i];
+						p_low3[n][j][i]=alpha*(p[n][j][i]-p_low1[n][j][i]-p_low2[n][j][i])+(1-alpha)*p_low3[n][j][i];
+						p[n][j][i]=p[n][j][i]-p_low1[n][j][i]-p_low2[n][j][i]-p_low3[n][j][i];							
+					#endif
+												
 				}
 				
 			}

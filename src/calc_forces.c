@@ -6,10 +6,12 @@ void calc_forces(int Na)
 	int i, j, m, n;
 	double Hu, Hv;
 	double cos0, cos01, cos1, cos12;
-
+	
 	double invDX, invDX2;
 	invDX=1/DX;
 	invDX2=1/(DX*DX);
+
+	double cn2, cm2, phi_n, phi_m;
 
 	#if defined(NU) || defined(FILE_NU)
 		double nu0;
@@ -23,10 +25,7 @@ void calc_forces(int Na)
 	// Define variables that might be needed
 	#ifdef CORIOLIS
 		double f01;
-	#endif
-
-	#ifdef MODECOUPLE
-		double cn2, cm2, phi_n, phi_m;
+		double wC, wSW, wNW, wSE, wNE;
 	#endif
 
 	#if defined(R) || defined(FILE_R)
@@ -57,6 +56,27 @@ void calc_forces(int Na)
 
 
 	////////////////////////////////////////////////////////////////////
+	// Average pressure in time	
+	for(n=0; n<NM; n++){
+		for(j=0; j<NY+2; j++){
+			for(i=0; i<NX+2; i++){
+				// Average to find the mid-point data
+				p1[n][j][i]=(p[n][j][i]+p1[n][j][i])/2;
+				
+				// Compute the exponential running average
+				#ifdef HIGH_PASS
+					alpha=fabs(DT/(NUM_PERIODS*2*M_PI/f[j]));
+					p_low1[n][j][i]=alpha*p[n][j][i]+(1-alpha)*p_low1[n][j][i];
+					p_low2[n][j][i]=alpha*(p[n][j][i]-p_low1[n][j][i])+(1-alpha)*p_low2[n][j][i];
+					p_low3[n][j][i]=alpha*(p[n][j][i]-p_low1[n][j][i]-p_low2[n][j][i])+(1-alpha)*p_low3[n][j][i];
+					//p[n][j][i]=p[n][j][i]-p_low1[n][j][i]-p_low2[n][j][i]-p_low3[n][j][i];	
+				#endif
+			}
+		}
+	}
+
+
+	////////////////////////////////////////////////////////////////////
 	// Forces in U-direction
 
 
@@ -67,7 +87,7 @@ void calc_forces(int Na)
 		cos12=cos((lat[j+1]+lat[j+2])/2);
 
 		for(n=0; n<NM; n++){
-			for(i=0; i<NX+1; i++){
+			for(i=0; i<NX; i++){
 				
 				if (H[j+1][i]>H_MIN && H[j+1][i+1]>H_MIN) {
 
@@ -83,7 +103,13 @@ void calc_forces(int Na)
 
 					// Coriolis
 					#ifdef CORIOLIS
-						Fu[n][j][i]=Fu[n][j][i]+f[j+1]*(V[n][j+1][i]+V[n][j+2][i]+V[n][j+1][i+1]+V[n][j+2][i+1])/4;
+						//Fu[n][j][i]=Fu[n][j][i]+f[j+1]*(V[n][j+1][i]+V[n][j+2][i]+V[n][j+1][i+1]+V[n][j+2][i+1])/4;
+						wC=sqrt(fabs(f[j+1]))/fmax((H[j+1][i]+H[j+1][i+1])/2,0.01);
+						wSW=sqrt(fabs((f[j]+f[j+1])/2))/fmax((H[j][i]+H[j+1][i])/2,0.01);
+						wNW=sqrt(fabs((f[j+1]+f[j+2])/2))/fmax((H[j+1][i]+H[j+2][i])/2,0.01);
+						wSE=sqrt(fabs((f[j]+f[j+1])/2))/fmax((H[j][i+1]+H[j+1][i+1])/2,0.01);
+						wNE=sqrt(fabs((f[j+1]+f[j+2])/2))/fmax((H[j+1][i+1]+H[j+2][i+1])/2,0.01);
+						Fu[n][j][i]=Fu[n][j][i]+f[j+1]/(4*wC)*(wSW*V[n][j+1][i]+wNW*V[n][j+2][i]+wSE*V[n][j+1][i+1]+wNE*V[n][j+2][i+1]);
 					#endif
 
 					// Wind forcing
@@ -162,8 +188,8 @@ void calc_forces(int Na)
 						#else
 							r0=R;
 						#endif
-
-						Fu_eps[n][j][i]=Fu_eps[n][j][i]-r0*U[n][j+1][i+1];
+						cn2=(c[n][j+1][i]+c[n][j+1][i+1])*(c[n][j+1][i]+c[n][j+1][i+1])/4;
+						Fu_eps[n][j][i]=Fu_eps[n][j][i]-fmin(r0/cn2,R_MAX)*U[n][j+1][i+1];
 					#endif
 
 					// Quadratic bottom drag
@@ -186,7 +212,7 @@ void calc_forces(int Na)
 	// Forces in V-direction
 
 
-	for(j=0; j<NY+1; j++){
+	for(j=0; j<NY; j++){
 
 		#if (defined(NU) || defined(FILE_NU)) && defined(SPHERE)
 			cos0=cos(lat[j]);      
@@ -216,7 +242,13 @@ void calc_forces(int Na)
 
 					// Coriolis
 					#ifdef CORIOLIS
-						Fv[n][j][i]=Fv[n][j][i]-f01*(U[n][j][i+1]+U[n][j][i+2]+U[n][j+1][i+1]+U[n][j+1][i+2])/4;
+						//Fv[n][j][i]=Fv[n][j][i]-f01*(U[n][j][i+1]+U[n][j][i+2]+U[n][j+1][i+1]+U[n][j+1][i+2])/4;
+						wC=sqrt(fabs(f01))/fmax((H[j][i+1]+H[j+1][i+1])/2,0.01);
+						wSW=sqrt(fabs(f[j]))/fmax((H[j][i]+H[j][i+1])/2,0.01);	
+						wSE=sqrt(fabs(f[j]))/fmax((H[j][i+1]+H[j][i+2])/2,0.01);
+						wNW=sqrt(fabs(f[j+1]))/fmax((H[j+1][i]+H[j+1][i+1])/2,0.01);
+						wNE=sqrt(fabs(f[j+1]))/fmax((H[j+1][i+1]+H[j+1][i+2])/2,0.01);
+						Fv[n][j][i]=Fv[n][j][i]-f01/(4*wC)*(wSW*U[n][j][i+1]+wSE*U[n][j][i+2]+wNW*U[n][j+1][i+1]+wNE*U[n][j+1][i+2]);
 					#endif
 
 					// Wind forcing
@@ -294,8 +326,8 @@ void calc_forces(int Na)
 						#else
 							r0=R;
 						#endif
-						
-						Fv_eps[n][j][i]=Fv_eps[n][j][i]-r0*V[n][j+1][i+1];
+						cn2=(c[n][j][i+1]+c[n][j+1][i+1])*(c[n][j][i+1]+c[n][j+1][i+1])/4;
+						Fv_eps[n][j][i]=Fv_eps[n][j][i]-fmin(r0/cn2,R_MAX)*V[n][j+1][i+1];						
 					#endif
 
 					// Quadratic bottom drag

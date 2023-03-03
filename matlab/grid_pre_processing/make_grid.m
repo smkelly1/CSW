@@ -20,25 +20,73 @@
 clear
 
 % User-defined inputs
-fid.grid='SS_WOA_grid.nc';
+season=3; % 0 for annual mean, 1 for NH winter, 2 for NH summer, 3 for June, 4 for October 
 Nm=16;
 Nm0=128; % 128 seems good
 dz=1;
 H_max=6000;
 z=(dz/2):dz:H_max;
 
+if season==0
+    fid.grid='SS_WOA_grid.nc';
+elseif season==1
+    fid.grid='SS_WOA_winter_grid.nc';
+elseif season==2
+    fid.grid='SS_WOA_summer_grid.nc';
+elseif season==3
+    fid.grid='SS_WOA_JUN_grid.nc';
+elseif season==4
+    fid.grid='SS_WOA_OCT_grid.nc';
+end
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Load World Ocean Atlas (1/4 degree)
-if 1 
-    load('strat.mat');
+if 0
+    if season==0
+        load('strat.mat');
+    elseif season==1
+        load('strat_winter.mat');
+    elseif season==2
+        load('strat_summer.mat');
+    elseif season==3
+        load('strat_JUN.mat');
+    elseif season==4
+        load('strat_OCT.mat');
+    end
     
 else
-    strat.lon=ncread('woa23_decav91C0_t00_04.nc','lon');
-    strat.lat=ncread('woa23_decav91C0_t00_04.nc','lat');
-    strat.z=ncread('woa23_decav91C0_t00_04.nc','depth');
-    strat.T=ncread('woa23_decav91C0_t00_04.nc','t_an');
-    strat.S=ncread('woa23_decav91C0_s00_04.nc','s_an');
+    if season==0
+        strat.lon=ncread('woa23_decav91C0_t00_04.nc','lon');
+        strat.lat=ncread('woa23_decav91C0_t00_04.nc','lat');
+        strat.z=ncread('woa23_decav91C0_t00_04.nc','depth');
+        strat.T=ncread('woa23_decav91C0_t00_04.nc','t_an');
+        strat.S=ncread('woa23_decav91C0_s00_04.nc','s_an');
+    elseif season==1
+        strat.lon=ncread('woa23_decav91C0_t13_04.nc','lon');
+        strat.lat=ncread('woa23_decav91C0_t13_04.nc','lat');
+        strat.z=ncread('woa23_decav91C0_t13_04.nc','depth');
+        strat.T=ncread('woa23_decav91C0_t13_04.nc','t_an');
+        strat.S=ncread('woa23_decav91C0_s13_04.nc','s_an');
+    elseif season==2
+        strat.lon=ncread('woa23_decav91C0_t15_04.nc','lon');
+        strat.lat=ncread('woa23_decav91C0_t15_04.nc','lat');
+        strat.z=ncread('woa23_decav91C0_t15_04.nc','depth');
+        strat.T=ncread('woa23_decav91C0_t15_04.nc','t_an');
+        strat.S=ncread('woa23_decav91C0_s15_04.nc','s_an');
+    elseif season==3
+        strat.lon=ncread('woa23_decav91C0_t06_04.nc','lon');
+        strat.lat=ncread('woa23_decav91C0_t06_04.nc','lat');
+        strat.z=ncread('woa23_decav91C0_t06_04.nc','depth');
+        strat.T=ncread('woa23_decav91C0_t06_04.nc','t_an');
+        strat.S=ncread('woa23_decav91C0_s06_04.nc','s_an');
+    elseif season==4
+        strat.lon=ncread('woa23_decav91C0_t10_04.nc','lon');
+        strat.lat=ncread('woa23_decav91C0_t10_04.nc','lat');
+        strat.z=ncread('woa23_decav91C0_t10_04.nc','depth');
+        strat.T=ncread('woa23_decav91C0_t10_04.nc','t_an');
+        strat.S=ncread('woa23_decav91C0_s10_04.nc','s_an');
+    end
     [Nx Ny Nz]=size(strat.T);
     
     disp('Calculating buoyancy frequency')
@@ -70,7 +118,7 @@ else
                 end
             end
         end
-        PROGRESS_BAR(j,1:Ny)
+        PROGRESS_BAR(i,1:Nx)
     end
     strat.N2=tmp;
     
@@ -83,17 +131,19 @@ else
     strat=rmfield(strat,'z_ave');
     strat=rmfield(strat,'T');
     strat=rmfield(strat,'S');
-
-    save('strat','strat');
+    
+    if season==0
+        save('strat','strat');
+    elseif season==1
+        save('strat_winter','strat');
+    elseif season==2
+        save('strat_summer','strat');
+    elseif season==3
+        save('strat_JUN','strat');
+    elseif season==4
+        save('strat_OCT','strat');
+    end
 end
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Load SS topography (1/60 degree)
-lon=ncread('topo_24.1.nc','lon');
-lat=ncread('topo_24.1.nc','lat');
-H=-ncread('topo_24.1.nc','z');
-H(H<0)=0;
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -108,7 +158,7 @@ tmp=mix.H;
 for i=1:Nx
     indx=i-2:i+2;
     indx(indx<1)=indx(indx<1)+Nx;
-    indx(Nx<indx)=indx(Nx<indx)-Nx;
+    indx(indx>Nx)=indx(indx>Nx)-Nx;
     
     for j=1:Ny
         indy=j-2:j+2;
@@ -123,16 +173,57 @@ for i=1:Nx
     end
 end
 mix.H=permute(tmp,[2 3 1]);
-mix.H0=nanmean(mix.H,3);
+
+if season==0
+    mix.H0=nanmean(mix.H,3);
+    mix.zT=mix.H0;
+elseif season==1
+    mix.H0=nanmean(mix.H(:,:,1:3),3);
+    mix.zT=mix.H0;
+elseif season==2
+    mix.H0=nanmean(mix.H(:,:,7:9),3);
+    mix.zT=mix.H0;
+elseif season==3
+    mix.H0=mix.H(:,:,6);
+     mix.zT=mix.H0;
+    mix.H0(100:220,90:180)=10;
+    mix.zT(100:220,90:180)=40;
+elseif season==4
+    mix.H0=mix.H(:,:,10);
+    mix.zT=mix.H0;
+    mix.H0([1:82 287:360],90:180)=35;
+    mix.zT([1:82 287:360],90:180)=70;
+end
+
+% Smooth slightly
+tmp=[mix.H0(end,:); mix.H0; mix.H0(1,:)];
+tmp=AVE2D(tmp,3);
+mix.H0=tmp(2:end-1,:);
+
+tmp=[mix.zT(end,:); mix.zT; mix.zT(1,:)];
+tmp=AVE2D(tmp,3);
+mix.zT=tmp(2:end-1,:);
 
 % Pad at the dateline
 mix.lon=[mix.lon(end)-360; mix.lon; mix.lon(1)+360];
-mix.H=[mix.H(end,:,:); mix.H; mix.H(1,:,:)];
 mix.H0=[mix.H0(end,:,:); mix.H0; mix.H0(1,:,:)];
+mix.zT=[mix.zT(end,:,:); mix.zT; mix.zT(1,:,:)];
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Load SS topography (1/60 degree)
+lon=ncread('topo_24.1.nc','lon');
+lat=ncread('topo_24.1.nc','lat');
+H=-ncread('topo_24.1.nc','z');
+H(H<0)=0;
 
 % Interpolate mixedlayer depth
 H_mix=interp2(mix.lon,mix.lat',mix.H0',lon,lat')';
 H_mix(isnan(H_mix) | H_mix<10)=10;
+
+zT=interp2(mix.lon,mix.lat',mix.zT',lon,lat')';
+zT(isnan(zT) | zT<10)=10;
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -170,7 +261,7 @@ Nys=length(strat.lat);
 [Nx Ny]=size(H);
 Nz=size(strat.z);
 
-for i=4746:Nx    
+for i=1:Nx    
     c=zeros([1 Ny Nm]);
     phi_surf=zeros([1 Ny Nm]);
     phi_bott=zeros([1 Ny Nm]);
@@ -206,9 +297,20 @@ for i=4746:Nx
                 
                 % Phi_surf is really an integral of the stress profile
                 dZdz=z*0;
-                dZdz(z<=H_mix(i,j))=1/H_mix(i,j);
+                alpha=1-(H_mix(i,j)/zT(i,j))^2;
+
+                keep=z<zT(i,j);
+                dZdz(keep)=2/(alpha*zT(i,j))*(1-z(keep)/zT(i,j));
+
+                keep=z<=H_mix(i,j);
+                dZdz(keep)=2/(zT(i,j)+H_mix(i,j));                
+                
+                % % Legacy code: Just a mixed layer
+                %dZdz2=z*0; 
+                %dZdz2(z<=H_mix(i,j))=1/H_mix(i,j);
+                
                 phi_surf(1,j,1:Nm_ij)=sum(dZdz(1:ind_z)'.*PHI)'*dz; % This is the projection of the surface stress divergence onto the mode
-                %phi_surf(1,j,1:Nm_ij)=PHI(1,:)'; % This is the un-weighted surface value
+                %phi_surf(1,j,1:Nm_ij)=PHI(1,:)'; % Legacy code: This is the un-weighted surface value
                 phi_bott(1,j,1:Nm_ij)=PHI(end,:)';
             end
             
@@ -218,7 +320,7 @@ for i=4746:Nx
     ncwrite(fid.grid,'phi_surf',phi_surf,[i 1 1]);
     ncwrite(fid.grid,'phi_bott',phi_bott,[i 1 1]);
    
-    PROGRESS_BAR(i,4746:Nx);
+    PROGRESS_BAR(i,1:Nx);
 end
 
 

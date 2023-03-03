@@ -4,6 +4,7 @@
 
 void read_tides(int rank)
 {
+#ifdef TIDE_FORCING
 
 	int i, j, k, x0, y0, ncid, varid, status;
 
@@ -85,5 +86,6 @@ void read_tides(int rank)
 
 		}
 	}
-
+	
+#endif	
 }
