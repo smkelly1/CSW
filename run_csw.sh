@@ -17,8 +17,8 @@ cp ../csw/src/csw.h ../csw/src/cswexec .
 # mpirun -np 6 xterm -e gdb ../src_diag/cswexec
 #
 # compile with -pg in cflags and lflags
-# run the program: mpirun -np 6 ../src_diag/cswexec
-# view the report: gprof ../src_diag/cswexec
+# run the program: ../csw/run_csw.sh
+# view the report: gprof ./cswexec
 #
 # compile with -convert in cflags and -lgcov  in lflags
 # run program

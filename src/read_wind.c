@@ -150,12 +150,6 @@ void read_wind(int sF, int rank)
 		for(i=0; i<NXW+3; i++){
 			if(WIND.tau_x[j][i]<-10 || 10<WIND.tau_x[j][i]){WIND.tau_x[j][i]=0;}		
 			if(WIND.tau_y[j][i]<-10 || 10<WIND.tau_y[j][i]){WIND.tau_y[j][i]=0;}
-			//#ifdef NO_ANTARCTIC
-			//	if(WIND.lat[j]<-60*M_PI/180){
-			//		WIND.tau_x[j][i]=0;
-			//		WIND.tau_y[j][i]=0;
-			//	}
-			//#endif						
 		}		
 	}
 			

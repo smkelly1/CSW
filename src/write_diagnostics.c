@@ -39,7 +39,7 @@ void write_diagnostics(int sD, int Na, int rank)
 		if ((status = nc_def_var(ncid, "period", NC_DOUBLE, 1, &dimid[0], &varid)))
 			ERR(status);
 
-		#if defined(FLAG_GROWTH) || defined(HIGH_PASS)
+		#if defined(FLAG_GROWTH) 
 			if ((status = nc_def_var(ncid, "eta_low", NC_FLOAT, 4, dimid, &varid)))
 				ERR(status);
 		#endif
@@ -115,17 +115,11 @@ void write_diagnostics(int sD, int Na, int rank)
 		ERR(status);
 
 	// Write Flag for exponential growth
-	#if defined(FLAG_GROWTH) || defined(HIGH_PASS)
+	#ifdef FLAG_GROWTH
 		for(i=0; i<NX; i++){
 			for(j=0; j<NY; j++){
-				for(n=0; n<NMW; n++){
-					#ifdef FLAG_GROWTH
-						tmp[n][j][i]=(float)(p_low[n][j+1][i+1]*phi_surf[n][j+1][i+1]/9.81);
-					#endif
-					
-					#ifdef HIGH_PASS
-						tmp[n][j][i]=(float)((p_low1[n][j+1][i+1]+p_low2[n][j+1][i+1]+p_low3[n][j+1][i+1])*phi_surf[n][j+1][i+1]/9.81);
-					#endif
+				for(n=0; n<NMW; n++){					
+					tmp[n][j][i]=(float)(p_low[n][j+1][i+1]*phi_surf[n][j+1][i+1]/9.81);					
 				}
 			}
 		}

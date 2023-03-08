@@ -57,33 +57,23 @@ void read_tides(int rank)
 
 	// Compute forcing
 	for(k=0; k<NC; k++){
-		for(j=0; j<NY; j++){
+		for(j=0; j<NY; j++){	
+			for(i=0; i<NX; i++){
 
-			#ifdef NO_ANTARCTIC
-				if(lat[j+1]>-60*M_PI/180) { // Recall: lat is in radians
-			#endif
+				if(H[j+1][i+1]>H_MIN) {
 
-					for(i=0; i<NX; i++){
+					#ifdef H_MIN_FORCE
+						if(H[j+1][i+1]>H_MIN_FORCE) {
+					#endif
+							
+							ITGF.F[k][j][i]=(((double)(ITGF.Ur[k][j][i])+I*(double)(ITGF.Ui[k][j][i]))*dHdx[j][i]+((double)(ITGF.Vr[k][j][i])+I*(double)(ITGF.Vi[k][j][i]))*dHdy[j][i])/H[j+1][i+1];
 
-						if(H[j+1][i+1]>H_MIN) {
+					#ifdef H_MIN_FORCE
+						}
+					#endif
 
-							#ifdef H_MIN_FORCE
-								if(H[j+1][i+1]>H_MIN_FORCE) {
-							#endif
-									
-									ITGF.F[k][j][i]=(((double)(ITGF.Ur[k][j][i])+I*(double)(ITGF.Ui[k][j][i]))*dHdx[j][i]+((double)(ITGF.Vr[k][j][i])+I*(double)(ITGF.Vi[k][j][i]))*dHdy[j][i])/H[j+1][i+1];
-
-							#ifdef H_MIN_FORCE
-								}
-							#endif
-
-						} // Land mask
-					} // x-loop
-
-			#ifdef NO_ANTARCTIC
-				}
-			#endif
-
+				} // Land mask
+			} // x-loop		
 		}
 	}
 	

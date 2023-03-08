@@ -11,7 +11,7 @@ void pass_uv(int rank)
 	////////////////////////////////////////////////////////////////////
 	// Step 0: implement periodic boundaries if we don't need MPI
 	
-	#if NPX==1 && defined(PERIODICBC) //The simple case when NPX==1
+	#if NPX==1 //The simple case when NPX==1
 		for(m=0; m<NM; m++) {		
 			for (j=0; j<NY; j++) {
 				U[m][j+1][NX+1]=U[m][j+1][1]; //Second point -> last point
@@ -28,36 +28,24 @@ void pass_uv(int rank)
 	
 	// Identify east/west ranks
 	#if NPX>1 // Only bother if there are multiple tiles in the X direction
-
 		rank_e=rank+1;
 		rank_w=rank-1;
 
 		// Adjust for periodic boundaries
 		if ((rank+1) % NPX == 0) {
-			#ifdef PERIODICBC
-				rank_e=(rank-NPX)+1;
-			#else
-				rank_e=-1;
-			#endif
+			rank_e=(rank-NPX)+1;			
 		}
 
 		if (rank % NPX == 0) {
-			#ifdef PERIODICBC
-				rank_w=(rank+NPX)-1;
-			#else
-				rank_w=-1;
-			#endif
+			rank_w=(rank+NPX)-1;			
 		}
-		
 	#endif
 
 	// Identify north/south ranks	
 	#if NPY>1 // Only bother if there are multiple tiles in the Y direction
-
 		rank_n=rank+NPX;
 		rank_s=rank-NPX;
 		row=rank/NPX;
-
 	#endif
 
 

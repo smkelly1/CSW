@@ -17,8 +17,8 @@ int main(int argc, char *argv[])
 	double t=0; // time
 
 	int sW=0; // Write index
-	int sD=1; // Diagnostic index (start writing after one period)
 	int sF=0; // Index for wind forcing
+	int sD=1; // Diagnostic index (start writing after one period)
 	int Na=1; // Number of points for diagnostic average (must define)
 
 	////////////////////////////////////////////////////////////////

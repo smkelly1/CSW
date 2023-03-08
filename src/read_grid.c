@@ -6,11 +6,7 @@ void read_grid(int rank)
 {
 
 	int x0, y0, ncid, varid, status;
-	int i, j;
-
-	#if defined(FILE_R) || defined(FILE_KAPPA) || defined(FILE_NU)
-		int n;
-	#endif
+	int i, j, n;
 
 	// Define start points 
 	y0=(int)(floor(rank/NPX)*NY); // y start
@@ -23,14 +19,11 @@ void read_grid(int rank)
 	size_t count_H[]={NY+2, NX+2};
 	size_t count_c[]={NM, NY+2, NX+2};
 
-	// Define variables that might be needed
-	#if defined(SPHERE) || defined(CORIOLIS)
-		size_t start_lon[]={x0};
-		size_t count_lon[]={NX+2};
+	size_t start_lon[]={x0};
+	size_t count_lon[]={NX+2};
 		
-		size_t start_lat[]={y0};
-		size_t count_lat[]={NY+2};
-	#endif
+	size_t start_lat[]={y0};
+	size_t count_lat[]={NY+2};
 
 	// Open the grid file
 	if((status = nc_open(FILE_GRID, NC_NOWRITE, &ncid)))
@@ -61,133 +54,93 @@ void read_grid(int rank)
 	if((status = nc_get_vara_double(ncid, varid, start_c, count_c, &phi_surf[0][0][0])))
 		ERR(status);
 
-	// Read latitude in degrees and convert to radians
-	#if defined(SPHERE) || defined(CORIOLIS)
-	
-		if((status = nc_inq_varid(ncid, "lon", &varid)))
-			ERR(status);
-	
-		if((status = nc_get_vara_double(ncid, varid, start_lon, count_lon, &lon[0])))
-			ERR(status);
-	
-		if((status = nc_inq_varid(ncid, "lat", &varid)))
-			ERR(status);
+	// Read latitude in degrees and convert to radians	
+	if((status = nc_inq_varid(ncid, "lon", &varid)))
+		ERR(status);
 
-		if((status = nc_get_vara_double(ncid, varid, start_lat, count_lat, &lat[0])))
-			ERR(status);
-			
-		// Convert degrees to radians and calculate the inertial frequency
-		for(i=0; i<NX+2; i++) {
-			lon[i]=lon[i]*M_PI/180;
-		}
-		
-		for(j=0; j<NY+2; j++){
-			lat[j]=lat[j]*M_PI/180;
-			f[j]=2*(2*M_PI)/(24*3600)*sin(lat[j]);	
-		}
-		
-	#endif
+	if((status = nc_get_vara_double(ncid, varid, start_lon, count_lon, &lon[0])))
+		ERR(status);
 
+	if((status = nc_inq_varid(ncid, "lat", &varid)))
+		ERR(status);
+
+	if((status = nc_get_vara_double(ncid, varid, start_lat, count_lat, &lat[0])))
+		ERR(status);
+		
+	// Convert degrees to radians and calculate the inertial frequency
+	for(i=0; i<NX+2; i++) {
+		lon[i]=lon[i]*M_PI/180;
+	}
+	
+	for(j=0; j<NY+2; j++){
+		lat[j]=lat[j]*M_PI/180;
+		f[j]=2*(2*M_PI)/(24*3600)*sin(lat[j]);	
+	}
+		
 	// Open the damping file
 	#ifdef FILE_R
-	if((status = nc_open(FILE_R, NC_NOWRITE, &ncid)))
-		ERR(status);
-
-	if((status = nc_inq_varid(ncid, "r", &varid)))
-		ERR(status);
-		
-	if((status = nc_get_vara_double(ncid, varid, start_c, count_c, &r[0][0][0])))
-		ERR(status);
-
-		#ifdef NO_ANTARCTIC
-			for(n=0; n<NM; n++){
-				for(j=0; j<NY+2; j++){
-					if(lat[j]<-60*M_PI/180) { // Recall: lat is in radians
+		if((status = nc_open(FILE_R, NC_NOWRITE, &ncid)))
+			ERR(status);
+	
+		if((status = nc_inq_varid(ncid, "r", &varid)))
+			ERR(status);
+			
+		if((status = nc_get_vara_double(ncid, varid, start_c, count_c, &r[0][0][0])))
+			ERR(status);		
+	
+			#ifdef R
+				for(n=0; n<NM; n++){
+					for(j=0; j<NY+2; j++){
 						for(i=0; i<NX+2; i++){
-							r[n][j][i]=0.0;
+							r[n][j][i]=fmax(r[n][j][i],R);
 						}
 					}
 				}
-			}
-		#endif
-
-		#ifdef R
-			for(n=0; n<NM; n++){
-				for(j=0; j<NY+2; j++){
-					for(i=0; i<NX+2; i++){
-						r[n][j][i]=fmax(r[n][j][i],R);
-					}
-				}
-			}
-		#endif
+			#endif
 	#endif // end FILE_R
 
 	// Open the viscosity file
 	#ifdef FILE_NU
-	if((status = nc_open(FILE_NU, NC_NOWRITE, &ncid)))
-		ERR(status);
-		
-	if((status = nc_inq_varid(ncid, "nu", &varid)))
-		ERR(status);
-		
-	if((status = nc_get_vara_double(ncid, varid, start_c, count_c, &nu[0][0][0])))
-		ERR(status);
-
-		#ifdef NO_ANTARCTIC
-			for(n=0; n<NM; n++){
-				for(j=0; j<NY+2; j++){
-					if(lat[j]<-60*M_PI/180) { // Recall: lat is in radians
+		if((status = nc_open(FILE_NU, NC_NOWRITE, &ncid)))
+			ERR(status);
+			
+		if((status = nc_inq_varid(ncid, "nu", &varid)))
+			ERR(status);
+			
+		if((status = nc_get_vara_double(ncid, varid, start_c, count_c, &nu[0][0][0])))
+			ERR(status);		
+	
+			#ifdef NU
+				for(n=0; n<NM; n++){
+					for(j=0; j<NY+2; j++){
 						for(i=0; i<NX+2; i++){
-							nu[n][j][i]=0.0;
+							nu[n][j][i]=fmax(nu[n][j][i],NU);
 						}
 					}
 				}
-			}
-		#endif
-
-		#ifdef NU
-			for(n=0; n<NM; n++){
-				for(j=0; j<NY+2; j++){
-					for(i=0; i<NX+2; i++){
-						nu[n][j][i]=fmax(nu[n][j][i],NU);
-					}
-				}
-			}
-		#endif
+			#endif
 	#endif // end FILE_NU
 
 	// Open the diffusivity file
 	#ifdef FILE_KAPPA
-	if((status = nc_open(FILE_KAPPA, NC_NOWRITE, &ncid)))
-		ERR(status);
-		
-	if((status = nc_inq_varid(ncid, "kappa", &varid)))
-		ERR(status);
-		
-	if((status = nc_get_vara_double(ncid, varid, start_c, count_c, &kappa[0][0][0])))
-		ERR(status);
-
-		#ifdef NO_ANTARCTIC
-			for(n=0; n<NM; n++){
-				for(j=0; j<NY+2; j++){
-					if(lat[j]<-60*M_PI/180) { // Recall: lat is in radians
+		if((status = nc_open(FILE_KAPPA, NC_NOWRITE, &ncid)))
+			ERR(status);
+			
+		if((status = nc_inq_varid(ncid, "kappa", &varid)))
+			ERR(status);
+			
+		if((status = nc_get_vara_double(ncid, varid, start_c, count_c, &kappa[0][0][0])))
+			ERR(status);		
+	
+			#ifdef KAPPA
+				for(n=0; n<NM; n++){
+					for(j=0; j<NY+2; j++){
 						for(i=0; i<NX+2; i++){
-							kappa[n][j][i]=0.0;
+							kappa[n][j][i]=fmax(kappa[n][j][i],KAPPA);
 						}
 					}
 				}
-			}
-		#endif
-
-		#ifdef KAPPA
-			for(n=0; n<NM; n++){
-				for(j=0; j<NY+2; j++){
-					for(i=0; i<NX+2; i++){
-						kappa[n][j][i]=fmax(kappa[n][j][i],KAPPA);
-					}
-				}
-			}
-		#endif
+			#endif
 	#endif // end FILE_KAPPA
 	
 	// Compute topographic gradients

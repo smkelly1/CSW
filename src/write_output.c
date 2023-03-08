@@ -82,9 +82,9 @@ void write_output(int sW, double t, int rank)
 	#ifdef WRITE_VELOCITY
 
 		// Write u velocity
-		for(i=0; i<NX; i++){
+		for(n=0; n<NMW; n++){
 			for(j=0; j<NY; j++){
-				for(n=0; n<NMW; n++){
+				for(i=0; i<NX; i++){
 					tmp[n][j][i]=(float)((U[n][j+1][i+1]+U[n][j+1][i+2])/(2*H[j+1][i+1]));
 				}
 			}
@@ -97,9 +97,9 @@ void write_output(int sW, double t, int rank)
 			ERR(status);
 			
 		// Write v velocity
-		for(i=0; i<NX; i++){
+		for(n=0; n<NMW; n++){
 			for(j=0; j<NY; j++){
-				for(n=0; n<NMW; n++){
+				for(i=0; i<NX; i++){
 					tmp[n][j][i]=(float)((V[n][j+1][i+1]+V[n][j+2][i+1])/(2*H[j+1][i+1]));
 				}
 			}
@@ -117,9 +117,9 @@ void write_output(int sW, double t, int rank)
 	#ifdef WRITE_ETA
 
 		// Write pressure
-		for(i=0; i<NX; i++){
+		for(n=0; n<NMW; n++){
 			for(j=0; j<NY; j++){
-				for(n=0; n<NMW; n++){
+				for(i=0; i<NX; i++){
 					tmp[n][j][i]=(float)(p1[n][j+1][i+1]*phi_surf[n][j+1][i+1]/9.81);
 				}
 			}
@@ -131,18 +131,12 @@ void write_output(int sW, double t, int rank)
 		if ((status = nc_put_vara_float(ncid, varid, start, count, &tmp[0][0][0])))
 			ERR(status);
 		
-		#if defined(FLAG_GROWTH) || defined(HIGH_PASS)
+		#ifdef FLAG_GROWTH
 			// Write pressure
-			for(i=0; i<NX; i++){
+			for(n=0; n<NMW; n++){
 				for(j=0; j<NY; j++){
-					for(n=0; n<NMW; n++){
-						#ifdef FLAG_GROWTH
-							tmp[n][j][i]=(float)(p_low[n][j+1][i+1]*phi_surf[n][j+1][i+1]/9.81);
-						#endif
-						
-						#ifdef HIGH_PASS
-							tmp[n][j][i]=(float)((p_low1[n][j+1][i+1]+p_low2[n][j+1][i+1]+p_low3[n][j+1][i+1])*phi_surf[n][j+1][i+1]/9.81);
-						#endif
+					for(i=0; i<NX; i++){
+						tmp[n][j][i]=(float)(p_low[n][j+1][i+1]*phi_surf[n][j+1][i+1]/9.81);												
 					}
 				}
 			}

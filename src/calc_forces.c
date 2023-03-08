@@ -6,24 +6,26 @@ void calc_forces(int Na)
 	int i, j, m, n;
 	double Hu, Hv;
 	double cos0, cos01, cos1, cos12;
-	
+	double tmp2;
+
 	double invDX, invDX2;
 	invDX=1/DX;
 	invDX2=1/(DX*DX);
 
 	double cn2, cm2, phi_n, phi_m;
 
+	#ifdef CORIOLIS
+		double wave_res;
+	#endif
+
 	#if defined(NU) || defined(FILE_NU)
 		double nu0;
-
-		#ifdef SPHERE
-			double dUdy[2], dUdx2, dUdy2;
-			double dVdy[2], dVdx2, dVdy2;
-		#endif
+		double dUdy[2], dUdx2, dUdy2;
+		double dVdy[2], dVdx2, dVdy2;
 	#endif
 
 	// Define variables that might be needed
-	#ifdef CORIOLIS
+	#if defined(CORIOLIS) || defined(CD) 
 		double f01;
 		double wC, wSW, wNW, wSE, wNE;
 	#endif
@@ -42,12 +44,8 @@ void calc_forces(int Na)
 
 		#if defined(KAPPA) || defined(FILE_KAPPA)
 			double kappa0;
-
-		#ifdef SPHERE
 			double dpdy[2], dpdx2, dpdy2;
-		#endif
-	#endif
-		
+		#endif		
 	#endif 
 
 	#ifdef WRITE_TRANSPORT
@@ -60,17 +58,7 @@ void calc_forces(int Na)
 	for(n=0; n<NM; n++){
 		for(j=0; j<NY+2; j++){
 			for(i=0; i<NX+2; i++){
-				// Average to find the mid-point data
-				p1[n][j][i]=(p[n][j][i]+p1[n][j][i])/2;
-				
-				// Compute the exponential running average
-				#ifdef HIGH_PASS
-					alpha=fabs(DT/(NUM_PERIODS*2*M_PI/f[j]));
-					p_low1[n][j][i]=alpha*p[n][j][i]+(1-alpha)*p_low1[n][j][i];
-					p_low2[n][j][i]=alpha*(p[n][j][i]-p_low1[n][j][i])+(1-alpha)*p_low2[n][j][i];
-					p_low3[n][j][i]=alpha*(p[n][j][i]-p_low1[n][j][i]-p_low2[n][j][i])+(1-alpha)*p_low3[n][j][i];
-					//p[n][j][i]=p[n][j][i]-p_low1[n][j][i]-p_low2[n][j][i]-p_low3[n][j][i];	
-				#endif
+				p1[n][j][i]=(p[n][j][i]+p1[n][j][i])/2;	
 			}
 		}
 	}
@@ -78,8 +66,6 @@ void calc_forces(int Na)
 
 	////////////////////////////////////////////////////////////////////
 	// Forces in U-direction
-
-
 	for(j=0; j<NY; j++){
 
 		cos01=cos((lat[j]+lat[j+1])/2);
@@ -95,21 +81,19 @@ void calc_forces(int Na)
 					Hu=(H[j+1][i]+H[j+1][i+1])/2;
 
 					// Pressure gradient force
-					#ifdef SPHERE
-						Fu[n][j][i]=-Hu*(p1[n][j+1][i+1]-p1[n][j+1][i])*invDX/(A*cos1);
-					#else
-						Fu[n][j][i]=-Hu*(p1[n][j+1][i+1]-p1[n][j+1][i])*invDX;
-					#endif
-
+					//Fu[n][j][i]=-Hu*(p1[n][j+1][i+1]-p1[n][j+1][i])*invDX/(A*cos1);
+					Fu[n][j][i]=-(H[j+1][i+1]*p1[n][j+1][i+1]-H[j+1][i]*p1[n][j+1][i])*invDX/(A*cos1);
+					
 					// Coriolis
 					#ifdef CORIOLIS
-						//Fu[n][j][i]=Fu[n][j][i]+f[j+1]*(V[n][j+1][i]+V[n][j+2][i]+V[n][j+1][i+1]+V[n][j+2][i+1])/4;
-						wC=sqrt(fabs(f[j+1]))/fmax((H[j+1][i]+H[j+1][i+1])/2,0.01);
-						wSW=sqrt(fabs((f[j]+f[j+1])/2))/fmax((H[j][i]+H[j+1][i])/2,0.01);
-						wNW=sqrt(fabs((f[j+1]+f[j+2])/2))/fmax((H[j+1][i]+H[j+2][i])/2,0.01);
-						wSE=sqrt(fabs((f[j]+f[j+1])/2))/fmax((H[j][i+1]+H[j+1][i+1])/2,0.01);
-						wNE=sqrt(fabs((f[j+1]+f[j+2])/2))/fmax((H[j+1][i+1]+H[j+2][i+1])/2,0.01);
-						Fu[n][j][i]=Fu[n][j][i]+f[j+1]/(4*wC)*(wSW*V[n][j+1][i]+wNW*V[n][j+2][i]+wSE*V[n][j+1][i+1]+wNE*V[n][j+2][i+1]);
+						if (0<fabs(f[j+1])){
+							wC=sqrt(fabs(f[j+1]))/fmax(Hu,1);
+							wSW=sqrt(fabs((f[j]+f[j+1])/2))/fmax((H[j][i]+H[j+1][i])/2,1);
+							wNW=sqrt(fabs((f[j+1]+f[j+2])/2))/fmax((H[j+1][i]+H[j+2][i])/2,1);
+							wSE=sqrt(fabs((f[j]+f[j+1])/2))/fmax((H[j][i+1]+H[j+1][i+1])/2,1);
+							wNE=sqrt(fabs((f[j+1]+f[j+2])/2))/fmax((H[j+1][i+1]+H[j+2][i+1])/2,1);
+							Fu[n][j][i]=Fu[n][j][i]+f[j+1]/(4*wC)*(wSW*V[n][j+1][i]+wNW*V[n][j+2][i]+wSE*V[n][j+1][i+1]+wNE*V[n][j+2][i+1]);
+						}
 					#endif
 
 					// Wind forcing
@@ -119,39 +103,43 @@ void calc_forces(int Na)
 
 					// Topographic coupling 
 					#ifdef MODECOUPLE
-						if(H[j+1][i]>H_MIN_COUPLE && H[j+1][i+1]>H_MIN_COUPLE) {
-							
-							#ifdef NO_ANTARCTIC
-								if(lat[j+1]>-60*M_PI/180) { // Recall: lat is in radians
-							#endif							
-									// Note: See Zaron et al. (2020; JPO)
-									cn2=(c[n][j+1][i]+c[n][j+1][i+1])*(c[n][j+1][i]+c[n][j+1][i+1])/4;
-									phi_n=(phi_bott[n][j+1][i]+phi_bott[n][j+1][i+1])/2;
-						
-									for(m=0; m<NM; m++){
-										if (m==n) {
-											Fu[n][j][i]=Fu[n][j][i]-
-												(1-phi_n*phi_n)/2*dHdx_u[j][i]
-												*(p1[n][j+1][i]+p1[n][j+1][i+1])/2;
-										}
-										else {
-											cm2=(c[m][j+1][i]+c[m][j+1][i+1])*(c[m][j+1][i]+c[m][j+1][i+1])/4;
-											phi_m=(phi_bott[m][j+1][i]+phi_bott[m][j+1][i+1])/2;
-
-											Fu[n][j][i]=Fu[n][j][i]-
-												cn2/(cm2-cn2)*phi_m*phi_n*dHdx_u[j][i]
-												*(p1[m][j+1][i]+p1[m][j+1][i+1])/2;
-										}
-									}							
-							#ifdef NO_ANTARCTIC
+						if (H[j+1][i]>H_MIN_COUPLE && H[j+1][i+1]>H_MIN_COUPLE) {																	
+							// Note: See Zaron et al. (2020; JPO)
+							cn2=(c[n][j+1][i]+c[n][j+1][i+1])*(c[n][j+1][i]+c[n][j+1][i+1])/4;
+							phi_n=(phi_bott[n][j+1][i]+phi_bott[n][j+1][i+1])/2;
+				
+							for(m=0; m<NM; m++){
+								if (m==n) {
+									//Fu[n][j][i]=Fu[n][j][i]-
+									//	(1-phi_n*phi_n)/2*dHdx_u[j][i]
+									//	*(p1[n][j+1][i]+p1[n][j+1][i+1])/2;
+									Fu[n][j][i]=Fu[n][j][i]-
+										(-1-phi_n*phi_n)/2*dHdx_u[j][i]
+										*(p1[n][j+1][i]+p1[n][j+1][i+1])/2;
 								}
-							#endif
+								else {
+									cm2=(c[m][j+1][i]+c[m][j+1][i+1])*(c[m][j+1][i]+c[m][j+1][i+1])/4;
+									phi_m=(phi_bott[m][j+1][i]+phi_bott[m][j+1][i+1])/2;
+
+									tmp2=-cn2/(cm2-cn2)*phi_m*phi_n*dHdx_u[j][i]
+										*(p1[m][j+1][i]+p1[m][j+1][i+1])/2;
+									
+									if (isfinite(tmp2)) {
+										Fu[n][j][i]=Fu[n][j][i]+tmp2;
+									}
+								}
+							}
 						}
 					#endif 
 
 					////////////////////////////////////////////////////
 					// Frictional forces
 					Fu_eps[n][j][i]=0;
+
+					// Wave resolution
+					#ifdef CORIOLIS
+						wave_res=fabs((c[n][j+1][i]+c[n][j+1][i+1])/(f[j+1]*DX*A*cos1));												
+					#endif
 
 					// Horizontal diffusion
 					#if defined(NU) || defined(FILE_NU)
@@ -166,35 +154,49 @@ void calc_forces(int Na)
 							nu0=GAMMA*nu0;
 						#endif
 					
-						#ifdef SPHERE
-							dUdx2=1/(A*A*cos1*cos1)*(U[n][j+1][i+2]-2*U[n][j+1][i+1]+U[n][j+1][i]);	
+						// Increase diffusion and add linear-damping in under-resolved regions 
+						//#ifdef CORIOLIS
+							//if (wave_res<2) {
+								//nu0=(NU_MAX-nu0)*(2-wave_res)/2+nu0; 
+							//}
+						//#endif
+					
+						dUdx2=1/(A*A*cos1*cos1)*(U[n][j+1][i+2]-2*U[n][j+1][i+1]+U[n][j+1][i]);	
 
-							dUdy[0]=cos01*(U[n][j+1][i+1]-U[n][j][i+1]);
-							dUdy[1]=cos12*(U[n][j+2][i+1]-U[n][j+1][i+1]);
-							dUdy2=1/(A*A*cos1)*(dUdy[1]-dUdy[0]);
+						dUdy[0]=cos01*(U[n][j+1][i+1]-U[n][j][i+1]);
+						dUdy[1]=cos12*(U[n][j+2][i+1]-U[n][j+1][i+1]);
+						dUdy2=1/(A*A*cos1)*(dUdy[1]-dUdy[0]);
 
-							Fu_eps[n][j][i]=Fu_eps[n][j][i]+nu0*(dUdx2+dUdy2)*invDX2;
-						#else
-							Fu_eps[n][j][i]=Fu_eps[n][j][i]+nu0*((U[n][j+1][i+2]-2*U[n][j+1][i+1]+U[n][j+1][i])
-								+(U[n][j+2][i+1]-2*U[n][j+1][i+1]+U[n][j][i+1]))*invDX2;
-						#endif
+						Fu_eps[n][j][i]=Fu_eps[n][j][i]+nu0*(dUdx2+dUdy2)*invDX2;						
 					#endif
 
 					// Linear drag
 					#if defined(R) || defined(FILE_R)
+					
 						// File values override constant value
 						#ifdef FILE_R
 							r0=(r[n][j+1][i]+r[n][j+1][i+1])/2;
 						#else
-							r0=R;
+							r0=fmin(R/(c[n][j+1][i]+c[n][j+1][i+1])*(c[n][j+1][i]+c[n][j+1][i+1])/4,R_MAX);
 						#endif
-						cn2=(c[n][j+1][i]+c[n][j+1][i+1])*(c[n][j+1][i]+c[n][j+1][i+1])/4;
-						Fu_eps[n][j][i]=Fu_eps[n][j][i]-fmin(r0/cn2,R_MAX)*U[n][j+1][i+1];
+						
+						#ifdef CORIOLIS
+							r0=fmin(r0,fabs(f[j+1])); // Nothing larger than f
+							if (wave_res<2) {
+								r0=fmax(fabs(f[j+i])*(2-wave_res)/2,r0); // Increase damping for poor resolution	
+							}							
+						#endif
+
+						Fu_eps[n][j][i]=Fu_eps[n][j][i]-r0*U[n][j+1][i+1];
 					#endif
 
 					// Quadratic bottom drag
 					#ifdef CD
-						absU=cabs(U[n][j+1][i+1]+I*(V[n][j+1][i]+V[n][j+2][i]+V[n][j+1][i+1]+V[n][j+2][i+1])/4);
+						wSW=1/fmax((H[j][i]+H[j+1][i])/2,1);
+						wNW=1/fmax((H[j+1][i]+H[j+2][i])/2,1);
+						wSE=1/fmax((H[j][i+1]+H[j+1][i+1])/2,1);
+						wNE=1/fmax((H[j+1][i+1]+H[j+2][i+1])/2,1);					
+						absU=cabs(U[n][j+1][i+1]+I*(Hu/4)*(wSW*V[n][j+1][i]+wNW*V[n][j+2][i]+wSE*V[n][j+1][i+1]+wNE*V[n][j+2][i+1]));
 						Fu_eps[n][j][i]=Fu_eps[n][j][i]-CD*absU*U[n][j+1][i+1]/(Hu*Hu);
 					#endif
 
@@ -210,11 +212,9 @@ void calc_forces(int Na)
 
 	////////////////////////////////////////////////////////////////////
 	// Forces in V-direction
-
-
 	for(j=0; j<NY; j++){
 
-		#if (defined(NU) || defined(FILE_NU)) && defined(SPHERE)
+		#if (defined(NU) || defined(FILE_NU))
 			cos0=cos(lat[j]);      
 		#endif
 
@@ -228,27 +228,25 @@ void calc_forces(int Na)
 		for(n=0; n<NM; n++){
 			for(i=0; i<NX; i++){
 
-				if(H[j][i+1]>H_MIN && H[j+1][i+1]>H_MIN) {
+				if (H[j][i+1]>H_MIN && H[j+1][i+1]>H_MIN) {
 
 					// Velocity node depth
 					Hv=(H[j][i+1]+H[j+1][i+1])/2;
 
-					// Pressure gradient force
-					#ifdef SPHERE
-						Fv[n][j][i]=-Hv*(p1[n][j+1][i+1]-p1[n][j][i+1])*invDX/A;
-					#else
-						Fv[n][j][i]=-Hv*(p1[n][j+1][i+1]-p1[n][j][i+1])*invDX;
-					#endif
-
+					// Pressure gradient force					
+					//Fv[n][j][i]=-Hv*(p1[n][j+1][i+1]-p1[n][j][i+1])*invDX/A;
+					Fv[n][j][i]=-(H[j+1][i+1]*p1[n][j+1][i+1]-H[j][i+1]*p1[n][j][i+1])*invDX/A;
+					
 					// Coriolis
 					#ifdef CORIOLIS
-						//Fv[n][j][i]=Fv[n][j][i]-f01*(U[n][j][i+1]+U[n][j][i+2]+U[n][j+1][i+1]+U[n][j+1][i+2])/4;
-						wC=sqrt(fabs(f01))/fmax((H[j][i+1]+H[j+1][i+1])/2,0.01);
-						wSW=sqrt(fabs(f[j]))/fmax((H[j][i]+H[j][i+1])/2,0.01);	
-						wSE=sqrt(fabs(f[j]))/fmax((H[j][i+1]+H[j][i+2])/2,0.01);
-						wNW=sqrt(fabs(f[j+1]))/fmax((H[j+1][i]+H[j+1][i+1])/2,0.01);
-						wNE=sqrt(fabs(f[j+1]))/fmax((H[j+1][i+1]+H[j+1][i+2])/2,0.01);
-						Fv[n][j][i]=Fv[n][j][i]-f01/(4*wC)*(wSW*U[n][j][i+1]+wSE*U[n][j][i+2]+wNW*U[n][j+1][i+1]+wNE*U[n][j+1][i+2]);
+						if (0<fabs(f01)) {
+							wC=sqrt(fabs(f01))/fmax((H[j][i+1]+H[j+1][i+1])/2,1);
+							wSW=sqrt(fabs(f[j]))/fmax((H[j][i]+H[j][i+1])/2,1);	
+							wSE=sqrt(fabs(f[j]))/fmax((H[j][i+1]+H[j][i+2])/2,1);
+							wNW=sqrt(fabs(f[j+1]))/fmax((H[j+1][i]+H[j+1][i+1])/2,1);
+							wNE=sqrt(fabs(f[j+1]))/fmax((H[j+1][i+1]+H[j+1][i+2])/2,1);
+							Fv[n][j][i]=Fv[n][j][i]-f01/(4*wC)*(wSW*U[n][j][i+1]+wSE*U[n][j][i+2]+wNW*U[n][j+1][i+1]+wNE*U[n][j+1][i+2]);
+						}
 					#endif
 
 					// Wind forcing
@@ -258,39 +256,43 @@ void calc_forces(int Na)
 				
 					// Topographic coupling 
 					#ifdef MODECOUPLE
-						if(H[j][i+1]>H_MIN_COUPLE && H[j+1][i+1]>H_MIN_COUPLE) {
-							
-							#ifdef NO_ANTARCTIC
-								if((lat[j]+lat[j+1])/2>-60*M_PI/180) { // Recall: lat is in radians
-							#endif
-									// Note: See Zaron et al. (2020; JPO)
-									cn2=(c[n][j][i+1]+c[n][j+1][i+1])*(c[n][j][i+1]+c[n][j+1][i+1])/4;
-									phi_n=(phi_bott[n][j][i+1]+phi_bott[n][j+1][i+1])/2;
-						
-									for(m=0; m<NM; m++){
-										if (m==n) {
-											Fv[n][j][i]=Fv[n][j][i]-
-												(1-phi_n*phi_n)/2*dHdy_v[j][i]
-												*(p1[n][j][i+1]+p1[n][j+1][i+1])/2;
-										}
-										else {
-											cm2=(c[m][j][i+1]+c[m][j+1][i+1])*(c[m][j][i+1]+c[m][j+1][i+1])/4;
-											phi_m=(phi_bott[m][j][i+1]+phi_bott[m][j+1][i+1])/2;
-
-											Fv[n][j][i]=Fv[n][j][i]-
-												cn2/(cm2-cn2)*phi_m*phi_n*dHdy_v[j][i]
-												*(p1[m][j][i+1]+p1[m][j+1][i+1])/2;
-										}
-									}
-							#ifdef NO_ANTARCTIC
+						if (H[j][i+1]>H_MIN_COUPLE && H[j+1][i+1]>H_MIN_COUPLE) {
+							// Note: See Zaron et al. (2020; JPO)
+							cn2=(c[n][j][i+1]+c[n][j+1][i+1])*(c[n][j][i+1]+c[n][j+1][i+1])/4;
+							phi_n=(phi_bott[n][j][i+1]+phi_bott[n][j+1][i+1])/2;
+				
+							for(m=0; m<NM; m++){
+								if (m==n) {
+									//Fv[n][j][i]=Fv[n][j][i]-
+									//	(1-phi_n*phi_n)/2*dHdy_v[j][i]
+									//	*(p1[n][j][i+1]+p1[n][j+1][i+1])/2;
+									Fv[n][j][i]=Fv[n][j][i]-
+										(-1-phi_n*phi_n)/2*dHdy_v[j][i]
+										*(p1[n][j][i+1]+p1[n][j+1][i+1])/2;
 								}
-							#endif								
+								else {
+									cm2=(c[m][j][i+1]+c[m][j+1][i+1])*(c[m][j][i+1]+c[m][j+1][i+1])/4;
+									phi_m=(phi_bott[m][j][i+1]+phi_bott[m][j+1][i+1])/2;
+
+									tmp2=-cn2/(cm2-cn2)*phi_m*phi_n*dHdy_v[j][i]
+										*(p1[m][j][i+1]+p1[m][j+1][i+1])/2;
+
+									if (isfinite(tmp2)) {
+										Fv[n][j][i]=Fv[n][j][i]+tmp2;
+									}
+								}
+							}													
 						}
 					#endif
 					
 					////////////////////////////////////////////////////
 					// Frictional forces
 					Fv_eps[n][j][i]=0;
+
+					// Wave resolution
+					#ifdef CORIOLIS
+						wave_res=fabs((c[n][j+1][i]+c[n][j+1][i+1])/(f01*DX*A*cos1));													
+					#endif
 
 					// Horizontal diffusion
 					#if defined(NU) || defined(FILE_NU)
@@ -304,19 +306,21 @@ void calc_forces(int Na)
 						#ifdef GAMMA
 							nu0=GAMMA*nu0;
 						#endif
+						
+						// Increase diffusion and add linear-damping in under-resolved regions 
+						//#ifdef CORIOLIS
+							//if (wave_res<2) {
+								//nu0=(NU_MAX-nu0)*(2-wave_res)/2+nu0;								
+							//}
+						//#endif
+						
+						dVdx2=1/(A*A*cos01*cos01)*(V[n][j+1][i+2]-2*V[n][j+1][i+1]+V[n][j+1][i]);
 
-						#ifdef SPHERE
-							dVdx2=1/(A*A*cos01*cos01)*(V[n][j+1][i+2]-2*V[n][j+1][i+1]+V[n][j+1][i]);
+						dVdy[0]=cos0*(V[n][j+1][i+1]-V[n][j][i+1]);
+						dVdy[1]=cos1*(V[n][j+2][i+1]-V[n][j+1][i+1]);
+						dVdy2=1/(A*A*cos01)*(dVdy[1]-dVdy[0]);
 
-							dVdy[0]=cos0*(V[n][j+1][i+1]-V[n][j][i+1]);
-							dVdy[1]=cos1*(V[n][j+2][i+1]-V[n][j+1][i+1]);
-							dVdy2=1/(A*A*cos01)*(dVdy[1]-dVdy[0]);
-
-							Fv_eps[n][j][i]=Fv_eps[n][j][i]+nu0*(dVdx2+dVdy2)*invDX2;
-						#else
-							Fv_eps[n][j][i]=Fv_eps[n][j][i]+nu0*((V[n][j+1][i+2]-2*V[n][j+1][i+1]+V[n][j+1][i])
-								+(V[n][j+2][i+1]-2*V[n][j+1][i+1]+V[n][j][i+1]))*invDX2;
-						#endif
+						Fv_eps[n][j][i]=Fv_eps[n][j][i]+nu0*(dVdx2+dVdy2)*invDX2;						
 					#endif
 
 					// Linear drag
@@ -324,15 +328,26 @@ void calc_forces(int Na)
 						#ifdef FILE_R
 							r0=(r[n][j][i+1]+r[n][j+1][i+1])/2;
 						#else
-							r0=R;
+							r0=fmin(R/(c[n][j][i+1]+c[n][j+1][i+1])*(c[n][j][i+1]+c[n][j+1][i+1])/4,R_MAX);
 						#endif
-						cn2=(c[n][j][i+1]+c[n][j+1][i+1])*(c[n][j][i+1]+c[n][j+1][i+1])/4;
-						Fv_eps[n][j][i]=Fv_eps[n][j][i]-fmin(r0/cn2,R_MAX)*V[n][j+1][i+1];						
+						
+						#ifdef CORIOLIS
+							r0=fmin(r0,fabs(f01)); // Nothing larger than f
+							if (wave_res<2) {
+								r0=fmax(fabs(f01)*(2-wave_res)/2,r0); // Increase damping for poor resolution	
+							}							
+						#endif
+					
+						Fv_eps[n][j][i]=Fv_eps[n][j][i]-r0*V[n][j+1][i+1];						
 					#endif
 
 					// Quadratic bottom drag
 					#ifdef CD
-						absV=cabs((U[n][j][i+1]+U[n][j][i+2]+U[n][j+1][i+1]+U[n][j+1][i+2])/4+I*V[n][j+1][i+1]);
+						wSW=1/fmax((H[j][i]+H[j][i+1])/2,1);	
+						wSE=1/fmax((H[j][i+1]+H[j][i+2])/2,1);
+						wNW=1/fmax((H[j+1][i]+H[j+1][i+1])/2,1);
+						wNE=1/fmax((H[j+1][i+1]+H[j+1][i+2])/2,1);
+						absV=cabs((Hv/4)*(wSW*U[n][j][i+1]+wSE*U[n][j][i+2]+wNW*U[n][j+1][i+1]+wNE*U[n][j+1][i+2])+I*V[n][j+1][i+1]);
 						Fv_eps[n][j][i]=Fv_eps[n][j][i]-CD*absV*V[n][j+1][i+1]/(Hv*Hv);
 					#endif
 
@@ -363,7 +378,7 @@ void calc_forces(int Na)
 			for(n=0; n<NMW; n++){
 				for(i=0; i<NX; i++){
 
-					if(H[j+1][i+1]>H_MIN) {
+					if (H[j+1][i+1]>H_MIN) {
 
 						#ifdef ENERGY
 							KE[n][j][i]=KE[n][j][i]+(float)(0.125*RHO*((U[n][j+1][i+1]+U[n][j+1][i+2])*(U[n][j+1][i+1]+U[n][j+1][i+2])
@@ -407,19 +422,14 @@ void calc_forces(int Na)
 								#ifdef GAMMA
 									kappa0=GAMMA*kappa0;
 								#endif
+								
+								dpdx2=1/(A*A*cos1*cos1)*(p1[n][j+1][i+2]-2*p1[n][j+1][i+1]+p1[n][j+1][i]);	
 
-								#ifdef SPHERE
-									dpdx2=1/(A*A*cos1*cos1)*(p1[n][j+1][i+2]-2*p1[n][j+1][i+1]+p1[n][j+1][i]);	
+								dpdy[0]=cos01*(p1[n][j+1][i+1]-p1[n][j][i+1]);
+								dpdy[1]=cos12*(p1[n][j+2][i+1]-p1[n][j+1][i+1]);
+								dpdy2=1/(A*A*cos1)*(dpdy[1]-dpdy[0]);
 
-									dpdy[0]=cos01*(p1[n][j+1][i+1]-p1[n][j][i+1]);
-									dpdy[1]=cos12*(p1[n][j+2][i+1]-p1[n][j+1][i+1]);
-									dpdy2=1/(A*A*cos1)*(dpdy[1]-dpdy[0]);
-
-									D[n][j][i]=D[n][j][i]-(float)(RHO*H[j+1][i+1]*kappa0*(dpdx2+dpdy2)*invDX2*p1[n][j+1][i+1]/(c[n][j+1][i+1]*c[n][j+1][i+1]));
-								#else
-									D[n][j][i]=D[n][j][i]-(float)(RHO*H[j+1][i+1]*kappa*((p1[n][j+1][i+2]-2*p1[n][j+1][i+1]+p1[n][j+1][i])
-										+(p1[n][j+2][i+1]-2*p1[n][j+1][i+1]+p1[n][j][i+1]))*invDX2*p1[n][j+1][i+1]/(c[n][j+1][i+1]*c[n][j+1][i+1]));
-								#endif
+								D[n][j][i]=D[n][j][i]-(float)(RHO*H[j+1][i+1]*kappa0*(dpdx2+dpdy2)*invDX2*p1[n][j+1][i+1]/(c[n][j+1][i+1]*c[n][j+1][i+1]));							
 							#endif
 							
 							// Linear drag on pressure
@@ -437,34 +447,26 @@ void calc_forces(int Na)
 							// Only compute scattering if there is mode coupling.
 							#ifdef MODECOUPLE					
 								if (H[j+1][i+1]>H_MIN_COUPLE) {
-									
-									#ifdef NO_ANTARCTIC
-										if(lat[j+1]>-60*M_PI/180) { // Recall: lat is in radians
-									#endif
+									cn2=c[n][j+1][i+1]*c[n][j+1][i+1];
+									phi_n=phi_bott[n][j+1][i+1];
+										
+									for(m=0; m<NM; m++){									
+										if (m!=n){
+											cm2=c[m][j+1][i+1]*c[m][j+1][i+1];
+											phi_m=phi_bott[m][j+1][i+1];
 							
-											cn2=c[n][j+1][i+1]*c[n][j+1][i+1];
-											phi_n=phi_bott[n][j+1][i+1];
-												
-											for(m=0; m<NM; m++){									
-												if (m!=n){
-													cm2=c[m][j+1][i+1]*c[m][j+1][i+1];
-													phi_m=phi_bott[m][j+1][i+1];
-									
-													Cn[n][j][i]=Cn[n][j][i]
-														+(float)(0.5*RHO*(
-														cm2/(cn2-cm2)*phi_m*phi_n
-														*p1[n][j+1][i+1]
-														*((U[m][j+1][i+1]+U[m][j+1][i+2])*dHdx[j][i]+(V[m][j+1][i+1]+V[m][j+2][i+1])*dHdy[j][i])
-														-cn2/(cm2-cn2)*phi_n*phi_m
-														*p1[m][j+1][i+1]
-														*((U[n][j+1][i+1]+U[n][j+1][i+2])*dHdx[j][i]+(V[n][j+1][i+1]+V[n][j+2][i+1])*dHdy[j][i]))
-														/H[j+1][i+1]); 
-														//the factor of 1/2 comes from averaging U and V
-												}										
-											}
-									#ifdef NO_ANTARCTIC
-										}
-									#endif
+											Cn[n][j][i]=Cn[n][j][i]
+												+(float)(0.5*RHO*(
+												cm2/(cn2-cm2)*phi_m*phi_n
+												*p1[n][j+1][i+1]
+												*((U[m][j+1][i+1]+U[m][j+1][i+2])*dHdx[j][i]+(V[m][j+1][i+1]+V[m][j+2][i+1])*dHdy[j][i])
+												-cn2/(cm2-cn2)*phi_n*phi_m
+												*p1[m][j+1][i+1]
+												*((U[n][j+1][i+1]+U[n][j+1][i+2])*dHdx[j][i]+(V[n][j+1][i+1]+V[n][j+2][i+1])*dHdy[j][i]))
+												/H[j+1][i+1]); 
+												//the factor of 1/2 comes from averaging U and V
+										}										
+									}									
 								}							
 							#endif 
 
@@ -482,7 +484,7 @@ void calc_forces(int Na)
 		for(n=0; n<NMW; n++){
 			for(j=0; j<NY; j++){
 				for(i=0; i<NX; i++){
-					if(p1[n][j+1][i+1]>SSH_amp[n][j][i]) {
+					if (p1[n][j+1][i+1]>SSH_amp[n][j][i]) {
 						SSH_amp[n][j][i]=p1[n][j+1][i+1];
 						SSH_phase[n][j][i]=Na;
 					}
@@ -499,13 +501,13 @@ void calc_forces(int Na)
 				for(i=0; i<NX; i++){
 
 					tmp_ave=(float)((U[n][j+1][i+1]+U[n][j+1][i+2])/2);
-					if(tmp_ave>U_amp[n][j][i]) {
+					if (tmp_ave>U_amp[n][j][i]) {
 						U_amp[n][j][i]=tmp_ave;
 						U_phase[n][j][i]=Na;
 					}
 
 					tmp_ave=(float)((V[n][j+1][i+1]+V[n][j+2][i+1])/2);
-					if(tmp_ave>V_amp[n][j][i]) {
+					if (tmp_ave>V_amp[n][j][i]) {
 						V_amp[n][j][i]=tmp_ave;
 						V_phase[n][j][i]=Na;
 
