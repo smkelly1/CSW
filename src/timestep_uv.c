@@ -16,6 +16,8 @@ void timestep_uv(void)
 				if (H[j+1][i]>H_MIN && H[j+1][i+1]>H_MIN && -70<(lat[j+1])*180/M_PI) {	
 	
 					// Save the current data
+					U3[n][j+1][i+1]=U2[n][j+1][i+1];
+					U2[n][j+1][i+1]=U1[n][j+1][i+1];
 					U1[n][j+1][i+1]=U[n][j+1][i+1];
 	
 					// Integrate to find the new data
@@ -31,8 +33,10 @@ void timestep_uv(void)
 				if (H[j][i+1]>H_MIN && H[j+1][i+1]>H_MIN && -70<(lat[j+1])*180/M_PI) {
 
 					// Save the current data
-					V1[n][j+1][i+1]=V[n][j+1][i+1];
-					
+					V3[n][j+1][i+1]=V2[n][j+1][i+1];
+					V2[n][j+1][i+1]=V1[n][j+1][i+1];
+					V1[n][j+1][i+1]=V[n][j+1][i+1];	
+									
 					// Integrate to find the new data
 					V[n][j+1][i+1]=V[n][j+1][i+1]+gamma*(55*Fv[n][j][i]-59*Fv_1[n][j][i]+37*Fv_2[n][j][i]-9*Fv_3[n][j][i]);
 					

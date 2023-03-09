@@ -49,11 +49,15 @@ int main(int argc, char *argv[])
 		#endif
 
 		////////////////////////////////////////////////////////////////
+		// Divergence calls
+		calc_divergence();
+
+		// Trade p at boundaries 
+		pass_p(rank);
+
+		////////////////////////////////////////////////////////////////
 		// Momentum calls
 		calc_forces(Na); 
-
-		// Update momentum 
-		timestep_uv();
 
 		// Trade U & V at boundaries
 		pass_uv(rank);
@@ -77,21 +81,7 @@ int main(int argc, char *argv[])
 			++Na; // Increase the averaging counter
 		#endif
 		
-		////////////////////////////////////////////////////////////////
-		// Divergence calls
-		calc_divergence();
-
-		// Add internal-tide generating force
-		#ifdef TIDE_FORCING
-			calc_ITGF(t);
-		#endif
-
-		// Update pressure 
-		timestep_p();
-
-		// Trade p at boundaries 
-		pass_p(rank);
-
+		
 		////////////////////////////////////////////////////////////////
 		// Update time
 		t=s*DT; // U, V, and (p+p1)/2 now correspond to this time

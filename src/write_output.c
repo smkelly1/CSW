@@ -85,7 +85,8 @@ void write_output(int sW, double t, int rank)
 		for(n=0; n<NMW; n++){
 			for(j=0; j<NY; j++){
 				for(i=0; i<NX; i++){
-					tmp[n][j][i]=(float)((U[n][j+1][i+1]+U[n][j+1][i+2])/(2*H[j+1][i+1]));
+					//tmp[n][j][i]=(float)((U[n][j+1][i+1]+U[n][j+1][i+2])/(2*H[j+1][i+1]));
+					tmp[n][j][i]=(float)((UE[n][j+1][i+1]+UE[n][j+1][i+2])/2);
 				}
 			}
 		}
@@ -100,7 +101,8 @@ void write_output(int sW, double t, int rank)
 		for(n=0; n<NMW; n++){
 			for(j=0; j<NY; j++){
 				for(i=0; i<NX; i++){
-					tmp[n][j][i]=(float)((V[n][j+1][i+1]+V[n][j+2][i+1])/(2*H[j+1][i+1]));
+					//tmp[n][j][i]=(float)((V[n][j+1][i+1]+V[n][j+2][i+1])/(2*H[j+1][i+1]));
+					tmp[n][j][i]=(float)((VE[n][j+1][i+1]+VE[n][j+1][i+2])/2);
 				}
 			}
 		}
@@ -120,7 +122,7 @@ void write_output(int sW, double t, int rank)
 		for(n=0; n<NMW; n++){
 			for(j=0; j<NY; j++){
 				for(i=0; i<NX; i++){
-					tmp[n][j][i]=(float)(p1[n][j+1][i+1]*phi_surf[n][j+1][i+1]/9.81);
+					tmp[n][j][i]=(float)(pE[n][j+1][i+1]*phi_surf[n][j+1][i+1]/9.81);
 				}
 			}
 		}

@@ -25,17 +25,20 @@
 //#define GAMMA 0.25                // Mixing efficiency
 
 // Time steps
-#define DT          600            // Model time step [sec].  
+#define DT          1200            // Model time step [sec].  
 									// Try: 5th deg = 1200 sec, 10th deg = 600 sec, 25th deg = 200                                   
 #define DT_W        (3*3600)        // Snapshot time step
 #define DT_D        (24*3600)       // Diagnostics averaging time step
-#define NT          (1*24*3600/DT) // Simulation duration (time steps)
+#define NT          (31*24*3600/DT) // Simulation duration (time steps)
+
+#define BETA        0.281105        // time step parameter for maximum stability (5/12 reduces to AB3)
+#define GAMMA		0.088
+#define EPSILON     0.013
 
 // Dissipation (commenting these parameters removes the relevant code)
-//#define CD        0.0025          // Constant quadratic bottom drag (CD=0.0025 is standard)
-#define R        (1.0/(64*24*3600)) // Constant linear "Rayleigh" damping (or minimum value) will be divided by c^2 for each mode.
-#define KAPPA       50.0            // Constant horizontal diffusivity (or minimum value)
-#define NU          50.0            // Constant horizontal viscosity (or minimum value). Bryan (1975) uses NU=u*DX/2 
+#define CD        0.0025          // Constant quadratic bottom drag (CD=0.0025 is standard)
+#define R        (0.0/(32*24*3600)) // Constant linear "Rayleigh" damping (or minimum value) will be divided by c^2 for each mode.
+#define NU          100.0            // Constant horizontal viscosity (or minimum value). Bryan (1975) uses NU=u*DX/2 
                                     // Quick reference for U=1 cm/s (but can use x10 bigger): 
                                     // 1/5  deg = 100 (for 100 km wavelength tau = 29 days)
                                     // 1/10 deg = 50  (tau = 59 days)
@@ -43,6 +46,7 @@
 #define R_MAX      (1.0/(12*3600)) 
 //#define NU_MAX      50.0            // Constant horizontal diffusivity (or minimum value)                              
 //#define KAPPA_MAX   50.0            // Constant horizontal diffusivity (or minimum value)   
+//#define KAPPA       100.0            // Constant horizontal diffusivity (or minimum value)
                            
 // Set minimum depths for dynamics, forcing, and topographic coupling
 #define H_MIN        100.0          // Minimum depth to solve equations
@@ -225,6 +229,9 @@ double phi_surf[NM][NY+2][NX+2];
 // Variables and forces
 double U[NM][NY+2][NX+2];
 double U1[NM][NY+2][NX+2];
+double U2[NM][NY+2][NX+2];
+double U3[NM][NY+2][NX+2];
+double UE[NM][NY+2][NX+2];
 double Fu[NM][NY][NX]; 
 double Fu_1[NM][NY][NX];
 double Fu_2[NM][NY][NX];
@@ -234,6 +241,9 @@ double dHdx_u[NY][NX+1];
 
 double V[NM][NY+2][NX+2];
 double V1[NM][NY+2][NX+2];
+double V2[NM][NY+2][NX+2];
+double V3[NM][NY+2][NX+2];
+double VE[NM][NY+2][NX+2];
 double Fv[NM][NY][NX]; 
 double Fv_1[NM][NY][NX]; 
 double Fv_2[NM][NY][NX];
@@ -243,6 +253,9 @@ double dHdy_v[NY+1][NX];
 
 double p[NM][NY+2][NX+2]; 
 double p1[NM][NY+2][NX+2];
+double p2[NM][NY+2][NX+2];
+double p3[NM][NY+2][NX+2];
+double pE[NM][NY+2][NX+2];
 double Fp[NM][NY][NX];
 double Fp_1[NM][NY][NX];
 double Fp_2[NM][NY][NX];
