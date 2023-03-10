@@ -11,7 +11,7 @@ void write_diagnostics(int sD, int Na, int rank)
 	size_t start[]={sD-1, 0, 0, 0};
 	size_t count[]={1, NMW, NY, NX};
 
-	size_t start2D[]={sD, 0, 0};
+	size_t start2D[]={sD-1, 0, 0};
 	size_t count2D[]={1, NY, NX};
 	
 	// Get file name
@@ -26,10 +26,10 @@ void write_diagnostics(int sD, int Na, int rank)
 			ERR(status);
 			
 		// Create dimensions  
-		if ((status = nc_def_dim(ncid, "longitude", NX, &dimid[3])))
+		if ((status = nc_def_dim(ncid, "x", NX, &dimid[3])))
 			ERR(status);
 
-		if ((status = nc_def_dim(ncid, "latitude", NY, &dimid[2])))
+		if ((status = nc_def_dim(ncid, "y", NY, &dimid[2])))
 			ERR(status);
 
 		if ((status = nc_def_dim(ncid, "mode", NMW, &dimid[1])))
@@ -43,6 +43,9 @@ void write_diagnostics(int sD, int Na, int rank)
 			ERR(status);
 
 		#if defined(DAMP_GROWTH) 
+			dimid2D[0]=dimid[0];
+			dimid2D[1]=dimid[2];
+			dimid2D[2]=dimid[3];
 			if ((status = nc_def_var(ncid, "flag_growth", NC_FLOAT, 2, dimid2D, &varid)))
 				ERR(status);
 		#endif

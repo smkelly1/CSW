@@ -315,7 +315,7 @@ for i=1:Nx
                 %phi_stress(1,j,1:Nm_ij)=sum(dZdz(1:ind_z)'.*PHI)'*dz; 
 
                 % The average value through the mixed layer (useful for calculating surface aka mixed-layer velocity)
-                keep=z<=H_mix(i,j);                
+                keep=z(1:ind_z)<=H_mix(i,j);                
                 phi_surf(1,j,1:Nm_ij)=mean(PHI(keep,:))';
                 
                 % The un-weighted bottom value
