@@ -5,12 +5,15 @@
 void write_output(int sW, double t, int rank)
 {
 	int i, j, n; 
-	int ncid, status, varid, dimid[4];
+	int ncid, status, varid, dimid[4], dimid2D[3];
 	char name[100];
 	double day;
 
 	size_t start[]={sW, 0, 0, 0};
 	size_t count[]={1, NMW, NY, NX};
+
+	size_t start2D[]={sW, 0, 0};
+	size_t count2D[]={1, NY, NX};
 
 	// Get file name
 	sprintf(name,FILE_OUT ".%03d.nc",rank);    
@@ -25,10 +28,10 @@ void write_output(int sW, double t, int rank)
 			ERR(status);
 
 		// Create dimensions  
-		if ((status = nc_def_dim(ncid, "longitude", NX, &dimid[3])))
+		if ((status = nc_def_dim(ncid, "x", NX, &dimid[3])))
 			ERR(status);
 
-		if ((status = nc_def_dim(ncid, "latitude", NY, &dimid[2])))
+		if ((status = nc_def_dim(ncid, "y", NY, &dimid[2])))
 			ERR(status);
 
 		if ((status = nc_def_dim(ncid, "mode", NMW, &dimid[1])))
@@ -43,12 +46,29 @@ void write_output(int sW, double t, int rank)
 
 		#ifdef WRITE_ETA
 			if ((status = nc_def_var(ncid, "eta", NC_FLOAT, 4, dimid, &varid)))
+				ERR(status);			
+		#endif
+		
+		#ifdef DAMP_GROWTH
+			dimid2D[0]=dimid[0];
+			dimid2D[1]=dimid[2];
+			dimid2D[2]=dimid[3];
+			
+			if ((status = nc_def_var(ncid, "eta_high", NC_FLOAT, 3, dimid2D, &varid)))
 				ERR(status);
 				
-			#if defined(FLAG_GROWTH) || defined(HIGH_PASS)
-				if ((status = nc_def_var(ncid, "eta_low", NC_FLOAT, 4, dimid, &varid)))
-					ERR(status);
-			#endif
+			if ((status = nc_def_var(ncid, "eta_low", NC_FLOAT, 3, dimid2D, &varid)))
+				ERR(status);
+				
+			if ((status = nc_def_var(ncid, "flag_growth", NC_FLOAT, 3, dimid2D, &varid)))
+				ERR(status);
+		#endif
+
+		#ifdef WRITE_MIX
+			if ((status = nc_def_var(ncid, "u_mix", NC_FLOAT, 3, dimid2D, &varid)))
+				ERR(status);
+			if ((status = nc_def_var(ncid, "v_mix", NC_FLOAT, 3, dimid2D, &varid)))
+				ERR(status);			
 		#endif
 
 		#ifdef WRITE_VELOCITY
@@ -60,10 +80,10 @@ void write_output(int sW, double t, int rank)
 		#endif
 
 		#ifdef WRITE_WIND
-			if ((status = nc_def_var(ncid, "TAUX", NC_FLOAT, 4, dimid, &varid)))
+			if ((status = nc_def_var(ncid, "TAUX", NC_FLOAT, 3, dimid2D, &varid)))
 				ERR(status);
 				
-			if ((status = nc_def_var(ncid, "TAUY", NC_FLOAT, 4, dimid, &varid)))
+			if ((status = nc_def_var(ncid, "TAUY", NC_FLOAT, 3, dimid2D, &varid)))
 				ERR(status);
 		#endif
 				
@@ -80,13 +100,11 @@ void write_output(int sW, double t, int rank)
 		ERR(status);
 
 	#ifdef WRITE_VELOCITY
-
 		// Write u velocity
 		for(n=0; n<NMW; n++){
 			for(j=0; j<NY; j++){
 				for(i=0; i<NX; i++){
-					//tmp[n][j][i]=(float)((U[n][j+1][i+1]+U[n][j+1][i+2])/(2*H[j+1][i+1]));
-					tmp[n][j][i]=(float)((UE[n][j+1][i+1]+UE[n][j+1][i+2])/2);
+					tmp[n][j][i]=(float)((U[n][j+1][i+1]+U[n][j+1][i+2])/(2*H[j+1][i+1]));
 				}
 			}
 		}
@@ -101,8 +119,7 @@ void write_output(int sW, double t, int rank)
 		for(n=0; n<NMW; n++){
 			for(j=0; j<NY; j++){
 				for(i=0; i<NX; i++){
-					//tmp[n][j][i]=(float)((V[n][j+1][i+1]+V[n][j+2][i+1])/(2*H[j+1][i+1]));
-					tmp[n][j][i]=(float)((VE[n][j+1][i+1]+VE[n][j+1][i+2])/2);
+					tmp[n][j][i]=(float)((V[n][j+1][i+1]+V[n][j+2][i+1])/(2*H[j+1][i+1]));
 				}
 			}
 		}
@@ -112,17 +129,15 @@ void write_output(int sW, double t, int rank)
 
 		if ((status = nc_put_vara_float(ncid, varid, start, count, &tmp[0][0][0])))
 			ERR(status);
-
 	#endif // WRITE_VELOCITY
 
 
 	#ifdef WRITE_ETA
-
 		// Write pressure
 		for(n=0; n<NMW; n++){
 			for(j=0; j<NY; j++){
 				for(i=0; i<NX; i++){
-					tmp[n][j][i]=(float)(pE[n][j+1][i+1]*phi_surf[n][j+1][i+1]/9.81);
+					tmp[n][j][i]=(float)(p[n][j+1][i+1]*phi_surf[n][j+1][i+1]/9.81);
 				}
 			}
 		}
@@ -131,62 +146,112 @@ void write_output(int sW, double t, int rank)
 			ERR(status);
 
 		if ((status = nc_put_vara_float(ncid, varid, start, count, &tmp[0][0][0])))
-			ERR(status);
-		
-		#ifdef FLAG_GROWTH
-			// Write pressure
-			for(n=0; n<NMW; n++){
-				for(j=0; j<NY; j++){
-					for(i=0; i<NX; i++){
-						tmp[n][j][i]=(float)(p_low[n][j+1][i+1]*phi_surf[n][j+1][i+1]/9.81);												
-					}
-				}
-			}
-
-			if ((status = nc_inq_varid(ncid, "eta_low", &varid)))
-				ERR(status);
-
-			if ((status = nc_put_vara_float(ncid, varid, start, count, &tmp[0][0][0])))
-				ERR(status);		
-		#endif		
-
+			ERR(status);			
 	#endif // WRITE_ETA
+
+	#ifdef WRITE_MIX
+		// Write u_mix 
+		for(j=0; j<NY; j++){
+			for(i=0; i<NX; i++){
+				tmp2D[j][i]=0;
+				for(n=0; n<NMW; n++){
+					tmp2D[j][i]=tmp2D[j][i]+(float)((U[n][j+1][i+1]+U[n][j+2][i+1])*phi_surf[n][j][i]/(2*H[j+1][i+1]));	
+				}											
+			}
+		}
+
+		if ((status = nc_inq_varid(ncid, "u_mix", &varid)))
+			ERR(status);
+
+		if ((status = nc_put_vara_float(ncid, varid, start2D, count2D, &tmp2D[0][0])))
+			ERR(status);
+			
+		// Write v_mix	
+		for(j=0; j<NY; j++){
+			for(i=0; i<NX; i++){
+				tmp2D[j][i]=0;
+				for(n=0; n<NMW; n++){
+					tmp2D[j][i]=tmp2D[j][i]+(float)((V[n][j+1][i+1]+V[n][j+2][i+1])*phi_surf[n][j][i]/(2*H[j+1][i+1]));	
+				}											
+			}
+		}
+
+		if ((status = nc_inq_varid(ncid, "v_mix", &varid)))
+			ERR(status);
+
+		if ((status = nc_put_vara_float(ncid, varid, start2D, count2D, &tmp2D[0][0])))
+			ERR(status);		
+	#endif	
+	
+
+	#ifdef DAMP_GROWTH
+		// Write high frequency SSH
+		for(j=0; j<NY; j++){
+			for(i=0; i<NX; i++){
+				tmp2D[j][i]=(float)(eta[j][i]-eta1[j][i]-eta2[j][i]-eta3[j][i]);												
+			}
+		}
+
+		if ((status = nc_inq_varid(ncid, "eta_high", &varid)))
+			ERR(status);
+
+		if ((status = nc_put_vara_float(ncid, varid, start2D, count2D, &tmp2D[0][0])))
+			ERR(status);
+			
+		// Write low frequency SSH
+		for(j=0; j<NY; j++){
+			for(i=0; i<NX; i++){
+				tmp2D[j][i]=(float)(eta1[j][i]+eta2[j][i]+eta3[j][i]);												
+			}
+		}
+
+		if ((status = nc_inq_varid(ncid, "eta_low", &varid)))
+			ERR(status);
+
+		if ((status = nc_put_vara_float(ncid, varid, start2D, count2D, &tmp2D[0][0])))
+			ERR(status);
+			
+		// Write flag for extra damping
+		for(j=0; j<NY; j++){
+			for(i=0; i<NX; i++){
+				tmp2D[j][i]=(float)(flag_growth[j+1][i+1]);												
+			}
+		}
+
+		if ((status = nc_inq_varid(ncid, "flag_growth", &varid)))
+			ERR(status);
+
+		if ((status = nc_put_vara_float(ncid, varid, start2D, count2D, &tmp2D[0][0])))
+			ERR(status);		
+	#endif	
 
 
 	#ifdef WRITE_WIND
-
 		// Write TAUX
-		for(n=0; n<NMW; n++){
-			for(j=0; j<NY; j++){
-				for(i=0; i<NX; i++){
-					//tmp[n][j][i]=(float)(RHO*tau_x[j+1][i+1]*phi_surf[n][j+1][i+1]);
-					tmp[n][j][i]=(float)(tau_x[j+1][i+1]);
-				}
+		for(j=0; j<NY; j++){
+			for(i=0; i<NX; i++){
+				tmp2D[j][i]=(float)(tau_x[j+1][i+1]);
 			}
 		}
 
 		if ((status = nc_inq_varid(ncid, "TAUX", &varid)))
 			ERR(status);
 
-		if ((status = nc_put_vara_float(ncid, varid, start, count, &tmp[0][0][0])))
+		if ((status = nc_put_vara_float(ncid, varid, start2D, count2D, &tmp2D[0][0])))
 			ERR(status);
 			
 		// Write TAUY
-		for(n=0; n<NMW; n++){
-			for(j=0; j<NY; j++){
-				for(i=0; i<NX; i++){
-					//tmp[n][j][i]=(float)(RHO*tau_y[j+1][i+1]*phi_surf[n][j+1][i+1]);
-					tmp[n][j][i]=(float)(tau_y[j+1][i+1]);
-				}
+		for(j=0; j<NY; j++){
+			for(i=0; i<NX; i++){
+				tmp2D[j][i]=(float)(tau_y[j+1][i+1]);
 			}
 		}
 
 		if ((status = nc_inq_varid(ncid, "TAUY", &varid)))
 			ERR(status);
 
-		if ((status = nc_put_vara_float(ncid, varid, start, count, &tmp[0][0][0])))
+		if ((status = nc_put_vara_float(ncid, varid, start2D, count2D, &tmp2D[0][0])))
 			ERR(status);
-
 	#endif // WRITE_WIND
 
 

@@ -2,18 +2,27 @@
 clear
 
 fid.out='./diag';
-fid.grid='../../22-12_grid/5th_deg_OCT_grid.nc';
+fid.grid='../../22-12_grid/10th_deg_OCT_grid.nc';
 
 % Last cycle to analyze
 period=23;
 
 % Info about grid
-res=1/5;
-NM=16;
+res=10;
+NM=8;
 NPX=2;
 NPY=2;
-NX0=1800; % Get from csw.h
-NY0=730;
+
+if res==25
+	NX0=9000; % Get from csw.h
+    NY0=3650;
+elseif res==10
+	NX0=3600; % Get from csw.h
+    NY0=1460;
+ elseif res==5
+	NX0=1800; % Get from csw.h
+    NY0=730;
+end
 NX=NX0/NPX;
 NY=NY0/NPY;
 
@@ -23,18 +32,18 @@ lon=ncread(fid.grid,'lon');lon=lon(2:end-1);
 lat=ncread(fid.grid,'lat');lat=lat(1+[1:NY0]);
 
 a=6371e3;
-dx=res/180*pi*a*repmat(cos(lat'/180*pi),[NX*NPX 1]);
-dy=res/180*pi*a;
+dx=(1/res)/180*pi*a*repmat(cos(lat'/180*pi),[NX*NPX 1]);
+dy=(1/res)/180*pi*a;
 
 % Mask points where low-pass amplitude is more than 1 cm
-ssh0=zeros([NX*NPX NY*NPY]);
-for n=0:NPX*NPY-1
-    start.x=floor(n-floor(n/NPX)*NPX)*NX;
-    start.y=floor(n/NPX)*NY;
-    ssh0(start.x+[1:NX],start.y+[1:NY])=ncread([fid.out,'.',num2str(n,'%03d'),'.nc'],'eta_low',[1 1 1 period],[NX NY 1 1]);
-end
-out.mask=(H>1000 & ssh0<0.01);
-out.mask100=(H>100 & ssh0<0.01);
+% eta_low=zeros([NX*NPX NY*NPY]);
+% for n=0:NPX*NPY-1
+%     start.x=floor(n-floor(n/NPX)*NPX)*NX;
+%     start.y=floor(n/NPX)*NY;
+%     ssh0(start.x+[1:NX],start.y+[1:NY])=ncread([fid.out,'.',num2str(n,'%03d'),'.nc'],'flag_growth',[1 1 1 period],[NX NY 1 1]);
+% end
+out.mask=(H>1000);% & ssh0<0.01);
+out.mask100=(H>100);% & ssh0<0.01);
 
 % Extract
 clear int 
@@ -99,60 +108,54 @@ out.lat=lat;
 %plot(time,int100.C-int100.divF,time,int100.D)
 %plot(int.time,int.E)
 
-save(fid.out,'out','int','int100','-v7.3');
+%save(fid.out,'out','int','int100','-v7.3');
 
 %%
 KE=mean(int.KE,2);
 W=sum(int.KE,2);
 
-m=[1:NM]*pi/4000;
+GM=1./([1:NM].^2+3^2)/sum(1./([1:NM].^2+3^2));
 
 figure(1);clf;
 
 subplot(2,1,1)
-plot(log10(m),log10(W),'k+',log10(m),log10(1e-2*m.^-4),'r-')
+plot(1:NM,log10(W),'k-+',1:NM,log10(5e9*GM),'r-')
 
 subplot(2,1,2)
-plot(log10(m),log10(KE),'k+',log10(m),log10(4.5e-4*m.^-4),'r-')
+plot(1:NM,log10(KE),'k-+',1:NM,log10(1e8*GM),'r-')
 
 
-figure(2);clf;
 
-subplot(2,1,1)
-plot(log10(1:NM),log10(W),'k+',log10(1:NM),log10(2.5e10*[1:NM].^-4),'r-')
-
-subplot(2,1,2)
-plot(log10(1:NM),log10(KE),'k+',log10(1:NM),log10(1.2e9*[1:NM].^-4),'r-')
 %%
 
-W=sum(int.W,2)*(32*3600)*1e-6;
-D=sum(int.D,2)*(32*3600)*1e-6;
-Cn=sum(int.Cn,2)*(32*3600)*1e-6;
-divF=sum(int.divF,2)*(32*3600)*1e-6;
-E=int.E(:,end)*1e-6;
-res=W+Cn-D-divF-E;
+W=sum(int.W(:,1:10),2)*(32*3600)*1e-6;
+D=sum(int.D(:,1:10),2)*(32*3600)*1e-6;
+Cn=sum(int.Cn(:,1:10),2)*(32*3600)*1e-6;
+divF=sum(int.divF(:,1:10),2)*(32*3600)*1e-6;
+E=int.E(:,10)*1e-6;
+residual=W+Cn-D-divF-E;
 
 figure(1);clf;
 
 subplot(3,1,1)
 n=1;
-bar(1:6,[W(n) D(n) Cn(n) divF(n) E(n) res(1)],'k')
+bar(1:6,[W(n) D(n) Cn(n) divF(n) E(n) residual(n)],'k')
 ylabel('PJ')
 
 subplot(3,1,2)
 n=2;
-bar(1:6,[W(n) D(n) Cn(n) divF(n) E(n) res(1)],'k')
+bar(1:6,[W(n) D(n) Cn(n) divF(n) E(n) residual(n)],'k')
 ylabel('PJ')
 
 subplot(3,1,3)
-n=3:16;
-bar(1:6,[sum(W(n)) sum(D(n)) sum(Cn(n)) sum(divF(n)) sum(E(n)) sum(res(1))],'k')
+n=3:8;
+bar(1:6,[sum(W(n)) sum(D(n)) sum(Cn(n)) sum(divF(n)) sum(E(n)) sum(residual(n))],'k')
 ylabel('PJ')
 set(gca,'xtick',[1:6],'xticklabel',{'Wind Work','Dissipation','Topo. scattering','Coastal dissipation','Remaining energy','Residual'})
+
 %%
 
-bar(1:5,[W D Cn divF E],'stacked')
+bar(1:6,[W D Cn divF E residual],'stacked')
+set(gca,'xtick',[1:6],'xticklabel',{'Wind Work','Dissipation','Topo. scattering','Coastal dissipation','Remaining energy','Residual'})
 
 
-
-Wave=mean(int.W,2)

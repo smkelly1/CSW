@@ -5,16 +5,16 @@
 ////////////////////////////////////////////////////////////////////////
 
 // Resolution
-#define RES 5				        // Grid cells per degree
-#define NM  2                       // Number of modes
-#define NMW 2                       // Number of modes to write
+#define RES 10				        // Grid cells per degree
+#define NM  8                       // Number of modes
+#define NMW 8                       // Number of modes to write
 
 // Processor layout
 #define NPX 2                       // Number of processors in X
 #define NPY 2                       // Number of processors in X
 
 // Input/output files
-#define FILE_GRID  "../../22-12_grid/5th_deg_OCT_grid.nc" // Grid file
+#define FILE_GRID  "../../22-12_grid/10th_deg_OCT_grid.nc" // Grid file
 #define FILE_WIND  "../ocean_storms_CSW.nc" // Wind forcing file
 #define FILE_OUT   "out"			// Snapshot output file
 #define FILE_DIAG  "diag"			// Diagnostic average output file
@@ -22,10 +22,10 @@
 //#define FILE_R     "../r.nc"      // Spatially variable linear damping
 //#define FILE_NU    "../nu.nc"     // Spatially variable horizontal viscosity
 //#define FILE_KAPPA "../kappa.nc"  // Spatially variable horizontal diffusivity
-//#define GAMMA 0.25                // Mixing efficiency
+//#define EFFICIENCY 0.25                // Mixing efficiency
 
 // Time steps
-#define DT          1200            // Model time step [sec].  
+#define DT          600            // Model time step [sec].  
 									// Try: 5th deg = 1200 sec, 10th deg = 600 sec, 25th deg = 200                                   
 #define DT_W        (3*3600)        // Snapshot time step
 #define DT_D        (24*3600)       // Diagnostics averaging time step
@@ -34,23 +34,28 @@
 #define BETA        0.281105        // time step parameter for maximum stability (5/12 reduces to AB3)
 #define GAMMA		0.088
 #define EPSILON     0.013
+//#define AB4						// Original time step routine (comment for AB3-AM4, the ROMS barotropic algorithm).
 
 // Dissipation (commenting these parameters removes the relevant code)
-#define CD        0.0025          // Constant quadratic bottom drag (CD=0.0025 is standard)
-#define R        (0.0/(32*24*3600)) // Constant linear "Rayleigh" damping (or minimum value) will be divided by c^2 for each mode.
+#define CD          0.0025          // Constant quadratic bottom drag (CD=0.0025 is standard)
+#define R          (1.0/(32*24*3600)) // Constant linear "Rayleigh" damping (or minimum value) will be divided by c^2 for each mode.
+#define R_MAX      (1.0/(12*3600)) 
 #define NU          100.0            // Constant horizontal viscosity (or minimum value). Bryan (1975) uses NU=u*DX/2 
                                     // Quick reference for U=1 cm/s (but can use x10 bigger): 
                                     // 1/5  deg = 100 (for 100 km wavelength tau = 29 days)
                                     // 1/10 deg = 50  (tau = 59 days)
                                     // 1/25 deg = 20  (tau = 147 days)
-#define R_MAX      (1.0/(12*3600)) 
-//#define NU_MAX      50.0            // Constant horizontal diffusivity (or minimum value)                              
-//#define KAPPA_MAX   50.0            // Constant horizontal diffusivity (or minimum value)   
-//#define KAPPA       100.0            // Constant horizontal diffusivity (or minimum value)
+#define NU_MAX      1000.0
+#define KAPPA      	100.0            // Constant horizontal diffusivity (or minimum value)
+#define KAPPA_MAX   1000.0
+
+// Pest control
+#define DAMP_GROWTH                 // Compute the triple exponential running average to identify exponential growth, also write snapshots.
+#define NUM_PERIODS       2         // Number of inertial periods for the running average
+#define GROWTH_THRESHOLD  0.01      // SSH in m of bad signals (1 cm is a good start)
                            
 // Set minimum depths for dynamics, forcing, and topographic coupling
 #define H_MIN        100.0          // Minimum depth to solve equations
-#define H_MIN_FORCE  100.0          // Minimum depth to force internal tides (applied in read_tides.c)
 #define H_MIN_COUPLE 100.0          // Minimum depth to couple modes (applied in read_grid.c)
 #define DH_MAX       0.25           // Maximum fractional change in depth between grid points 
 
@@ -60,13 +65,13 @@
 
 // Flags to write Output
 //#define WRITE_VELOCITY            // Write snapshots of velocity 
-#define WRITE_ETA                   // Write snapshots of SSH 
-//#define WRITE_WIND                // Write snapshots of wind stress
-//#define FLAG_GROWTH                 // Compute the exponential running average to identify exponential growth
-//#define NUM_PERIODS  2              // Number of inertial periods for the running average
-//#define ENERGY                    // Compute and write energy 
-//#define FLUX                      // Compute and write energy flux
-//#define WORK                      // Compute and write wind work, tidal generation, and scattering
+//#define WRITE_ETA                   // Write snapshots of modal SSH 
+#define WRITE_WIND                  // Write snapshots of wind stress
+#define WRITE_MIX					// Write snapshots of mixed layer velocity
+
+#define ENERGY                    // Compute and write energy 
+#define FLUX                      // Compute and write energy flux
+#define WORK                      // Compute and write wind work, tidal generation, and scattering
 //#define WRITE_SSH                 // Compute and write the amplitude and phase of SSH (for tides)
 //#define WRITE_TRANSPORT           // Compute and write the amplitude and phase of transport (for tides)
 
@@ -100,6 +105,7 @@
 // Tidal forcing 
 #ifdef FILE_TIDES
 	#define TIDE_FORCING            // Use an Internal-Tide Generating Function
+	#define H_MIN_FORCE  100.0          // Minimum depth to force internal tides (applied in read_tides.c)
 	#define NC  1                   // Number of tidal frequencies
 #endif
 
@@ -173,8 +179,9 @@ void init_output(int);
 void write_output(int, double, int);
 void write_diagnostics(int, int, int);
 
-void calc_forces(int);
 void calc_divergence(void);
+void calc_forces(void);
+void calc_diagnostics(int);
 
 void calc_ITGF(double);
 
@@ -190,6 +197,7 @@ void timestep_uv(void);
 
 // Temporary place to writing data 
 float tmp[NMW][NY][NX];
+float tmp2D[NY][NX];
 
 // For trading boundary data via MPI
 struct type_BOUNDARY BOUNDARY;
@@ -228,43 +236,57 @@ double phi_surf[NM][NY+2][NX+2];
 
 // Variables and forces
 double U[NM][NY+2][NX+2];
-double U1[NM][NY+2][NX+2];
-double U2[NM][NY+2][NX+2];
-double U3[NM][NY+2][NX+2];
 double UE[NM][NY+2][NX+2];
 double Fu[NM][NY][NX]; 
-double Fu_1[NM][NY][NX];
-double Fu_2[NM][NY][NX];
-double Fu_3[NM][NY][NX];
 double Fu_eps[NM][NY][NX];
 double dHdx_u[NY][NX+1];
+#ifdef AB4
+	double Fu1[NM][NY][NX];
+	double Fu2[NM][NY][NX]; 
+	double Fu3[NM][NY][NX]; 
+#else
+	double U1[NM][NY+2][NX+2];
+	double U2[NM][NY+2][NX+2];
+	double U3[NM][NY+2][NX+2];	
+#endif
 
 double V[NM][NY+2][NX+2];
-double V1[NM][NY+2][NX+2];
-double V2[NM][NY+2][NX+2];
-double V3[NM][NY+2][NX+2];
 double VE[NM][NY+2][NX+2];
 double Fv[NM][NY][NX]; 
-double Fv_1[NM][NY][NX]; 
-double Fv_2[NM][NY][NX];
-double Fv_3[NM][NY][NX];
 double Fv_eps[NM][NY][NX]; 
 double dHdy_v[NY+1][NX];
+#ifdef AB4
+	double Fv1[NM][NY][NX]; 
+	double Fv2[NM][NY][NX]; 
+	double Fv3[NM][NY][NX]; 
+#else
+	double V1[NM][NY+2][NX+2];
+	double V2[NM][NY+2][NX+2];
+	double V3[NM][NY+2][NX+2];	
+#endif
 
 double p[NM][NY+2][NX+2]; 
-double p1[NM][NY+2][NX+2];
-double p2[NM][NY+2][NX+2];
-double p3[NM][NY+2][NX+2];
 double pE[NM][NY+2][NX+2];
 double Fp[NM][NY][NX];
-double Fp_1[NM][NY][NX];
-double Fp_2[NM][NY][NX];
-double Fp_3[NM][NY][NX];
+double Fp_eps[NM][NY][NX];
 double dHdx[NY][NX];
 double dHdy[NY][NX];
+#ifdef AB4
+	double Fp1[NM][NY][NX]; 
+	double Fp2[NM][NY][NX]; 
+	double Fp3[NM][NY][NX]; 
+#else
+	double p1[NM][NY+2][NX+2];
+	double p2[NM][NY+2][NX+2];
+	double p3[NM][NY+2][NX+2];	
+#endif
 
-#ifdef FLAG_GROWTH
-	double p_low[NM][NY+2][NX+2];
+#ifdef DAMP_GROWTH
+	double eta[NY][NX];
+	double eta1[NY][NX];
+	double eta2[NY][NX];
+	double eta3[NY][NX];
+	int flag_growth[NY+2][NX+2];
 #endif
 
 // Energy diagnostics and temporary storage for writing output

@@ -20,7 +20,7 @@
 clear
 
 % User-defined inputs
-season=3; % 0 for annual mean, 1 for NH winter, 2 for NH summer, 3 for June, 4 for October 
+season=4; % 0 for annual mean, 1 for NH winter, 2 for NH summer, 3 for June, 4 for October 
 Nm=16;
 Nm0=128; % 128 seems good
 dz=1;
@@ -42,7 +42,7 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Load World Ocean Atlas (1/4 degree)
-if 0
+if 1
     if season==0
         load('strat.mat');
     elseif season==1
@@ -250,6 +250,7 @@ nccreate(fid.grid,'H_mix','Dimensions',{'x',Nx,'y',Ny});
 ncwrite(fid.grid,'H_mix',H_mix);
 
 nccreate(fid.grid,'c','Dimensions',{'x',Nx,'y',Ny,'n',Nm});
+nccreate(fid.grid,'phi_stress','Dimensions',{'x',Nx,'y',Ny,'n',Nm});
 nccreate(fid.grid,'phi_surf','Dimensions',{'x',Nx,'y',Ny,'n',Nm});
 nccreate(fid.grid,'phi_bott','Dimensions',{'x',Nx,'y',Ny,'n',Nm});
 end
@@ -263,6 +264,7 @@ Nz=size(strat.z);
 
 for i=1:Nx    
     c=zeros([1 Ny Nm]);
+    phi_stress=zeros([1 Ny Nm]);
     phi_surf=zeros([1 Ny Nm]);
     phi_bott=zeros([1 Ny Nm]);
         
@@ -303,20 +305,27 @@ for i=1:Nx
                 dZdz(keep)=2/(alpha*zT(i,j))*(1-z(keep)/zT(i,j));
 
                 keep=z<=H_mix(i,j);
-                dZdz(keep)=2/(zT(i,j)+H_mix(i,j));                
+                dZdz(keep)=2/(zT(i,j)+H_mix(i,j));                                            
+                
+                phi_stress(1,j,1:Nm_ij)=sum(dZdz(1:ind_z)'.*PHI)'*dz; % This is the projection of the surface stress divergence onto the mode
                 
                 % % Legacy code: Just a mixed layer
                 %dZdz2=z*0; 
                 %dZdz2(z<=H_mix(i,j))=1/H_mix(i,j);
+                %phi_stress(1,j,1:Nm_ij)=sum(dZdz(1:ind_z)'.*PHI)'*dz; 
+
+                % The average value through the mixed layer (useful for calculating surface aka mixed-layer velocity)
+                keep=z<=H_mix(i,j);                
+                phi_surf(1,j,1:Nm_ij)=mean(PHI(keep,:))';
                 
-                phi_surf(1,j,1:Nm_ij)=sum(dZdz(1:ind_z)'.*PHI)'*dz; % This is the projection of the surface stress divergence onto the mode
-                %phi_surf(1,j,1:Nm_ij)=PHI(1,:)'; % Legacy code: This is the un-weighted surface value
+                % The un-weighted bottom value
                 phi_bott(1,j,1:Nm_ij)=PHI(end,:)';
             end
             
         end
     end
     ncwrite(fid.grid,'c',c,[i 1 1]);
+    ncwrite(fid.grid,'phi_stress',phi_stress,[i 1 1]);
     ncwrite(fid.grid,'phi_surf',phi_surf,[i 1 1]);
     ncwrite(fid.grid,'phi_bott',phi_bott,[i 1 1]);
    

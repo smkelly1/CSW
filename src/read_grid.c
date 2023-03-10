@@ -6,7 +6,11 @@ void read_grid(int rank)
 {
 
 	int x0, y0, ncid, varid, status;
-	int i, j, n;
+	int i, j;
+	
+	#if defined(FILE_R) || defined(FILE_NU) || defined(FILE_KAPPA)
+		int n;
+	#endif
 
 	// Define start points 
 	y0=(int)(floor(rank/NPX)*NY); // y start
@@ -149,11 +153,13 @@ void read_grid(int rank)
 			dHdx[j][i]=(H[j+1][i+2]-H[j+1][i])/(2*A*cos(lat[j+1])*DX);
 			dHdy[j][i]=(H[j+2][i+1]-H[j][i+1])/(2*A*DX);
 
-			if((H[j+1][i+2]-H[j+1][i])/(2*H[j+1][i+1]) > DH_MAX){dHdx[j][i]=DH_MAX*H[j+1][i+1]/(A*cos(lat[j+1])*DX);}
-			if((H[j+1][i+2]-H[j+1][i])/(2*H[j+1][i+1]) < -DH_MAX){dHdx[j][i]=-DH_MAX*H[j+1][i+1]/(A*cos(lat[j+1])*DX);}
-
-			if((H[j+2][i+1]-H[j][i+1])/(2*H[j+1][i+1]) > DH_MAX){dHdy[j][i]=DH_MAX*H[j+1][i+1]/(A*DX);}
-			if((H[j+2][i+1]-H[j][i+1])/(2*H[j+1][i+1]) < -DH_MAX){dHdy[j][i]=-DH_MAX*H[j+1][i+1]/(A*DX);}
+			#ifdef DH_MAX
+				if((H[j+1][i+2]-H[j+1][i])/(2*H[j+1][i+1]) > DH_MAX){dHdx[j][i]=DH_MAX*H[j+1][i+1]/(A*cos(lat[j+1])*DX);}
+				if((H[j+1][i+2]-H[j+1][i])/(2*H[j+1][i+1]) < -DH_MAX){dHdx[j][i]=-DH_MAX*H[j+1][i+1]/(A*cos(lat[j+1])*DX);}
+	
+				if((H[j+2][i+1]-H[j][i+1])/(2*H[j+1][i+1]) > DH_MAX){dHdy[j][i]=DH_MAX*H[j+1][i+1]/(A*DX);}
+				if((H[j+2][i+1]-H[j][i+1])/(2*H[j+1][i+1]) < -DH_MAX){dHdy[j][i]=-DH_MAX*H[j+1][i+1]/(A*DX);}
+			#endif
 		}
 	}
 	
@@ -161,16 +167,21 @@ void read_grid(int rank)
 		for(i=0; i<NX+1; i++){
 			dHdx_u[j][i]=(H[j+1][i+1]-H[j+1][i])/(A*cos(lat[j+1])*DX);
 
-			if((H[j+1][i+1]-H[j+1][i])/((H[j+1][i]+H[j+1][i+1])/2) > DH_MAX){dHdx_u[j][i]=DH_MAX*((H[j+1][i]+H[j+1][i+1])/2)/(A*DX);}
-			if((H[j+1][i+1]-H[j+1][i])/((H[j+1][i]+H[j+1][i+1])/2) < -DH_MAX){dHdx_u[j][i]=-DH_MAX*((H[j+1][i]+H[j+1][i+1])/2)/(A*DX);}
+			#ifdef DH_MAX
+				if((H[j+1][i+1]-H[j+1][i])/((H[j+1][i]+H[j+1][i+1])/2) > DH_MAX){dHdx_u[j][i]=DH_MAX*((H[j+1][i]+H[j+1][i+1])/2)/(A*DX);}
+				if((H[j+1][i+1]-H[j+1][i])/((H[j+1][i]+H[j+1][i+1])/2) < -DH_MAX){dHdx_u[j][i]=-DH_MAX*((H[j+1][i]+H[j+1][i+1])/2)/(A*DX);}
+			#endif
 		}
 	}
 	
 	for(j=0; j<NY+1; j++){
 		for(i=0; i<NX; i++){
 			dHdy_v[j][i]=(H[j+1][i+1]-H[j][i+1])/(A*DX);
-			if((H[j+1][i+1]-H[j][i+1])/((H[j][i+1]+H[j+1][i+1])/2) > DH_MAX){dHdy_v[j][i]=DH_MAX*((H[j][i+1]+H[j+1][i+1])/2)/(A*DX);}
-			if((H[j+1][i+1]-H[j][i+1])/((H[j][i+1]+H[j+1][i+1])/2) < -DH_MAX){dHdy_v[j][i]=-DH_MAX*((H[j][i+1]+H[j+1][i+1])/2)/(A*DX);}		
+			
+			#ifdef DH_MAX
+				if((H[j+1][i+1]-H[j][i+1])/((H[j][i+1]+H[j+1][i+1])/2) > DH_MAX){dHdy_v[j][i]=DH_MAX*((H[j][i+1]+H[j+1][i+1])/2)/(A*DX);}
+				if((H[j+1][i+1]-H[j][i+1])/((H[j][i+1]+H[j+1][i+1])/2) < -DH_MAX){dHdy_v[j][i]=-DH_MAX*((H[j][i+1]+H[j+1][i+1])/2)/(A*DX);}	
+			#endif
 		}
 	}
 

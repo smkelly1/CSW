@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
 	// Read grid
 	read_grid(rank);
 
-	// Read forcing data
+	// Read tidal forcing 
 	#ifdef TIDE_FORCING
 		read_tides(rank);
 	#endif
@@ -40,6 +40,7 @@ int main(int argc, char *argv[])
 	// Begin forward integration
 	for(s=1; s<(NT+1); s++) {
 
+		////////////////////////////////////////////////////////////////
 		// Read WIND data
 		#ifdef WIND_FORCING
 			if (t >= (sF*DT_F)) {
@@ -55,12 +56,14 @@ int main(int argc, char *argv[])
 		// Trade p at boundaries 
 		pass_p(rank);
 
-		////////////////////////////////////////////////////////////////
 		// Momentum calls
-		calc_forces(Na); 
+		calc_forces(); 
 
 		// Trade U & V at boundaries
 		pass_uv(rank);
+
+		// Update time
+		t=s*DT; // U, V, p now correspond to this time
 
 		////////////////////////////////////////////////////////////////
 		// Write output
@@ -71,8 +74,12 @@ int main(int argc, char *argv[])
 			}
 		#endif
 		
-		// Write diagnostics
+		////////////////////////////////////////////////////////////////		
 		#if defined(ENERGY) || defined(FLUX) || defined(WORK) || defined(WRITE_SSH) || defined(WRITE_TRANSPORT)
+			// Calculate diagnostics
+			calc_diagnostics(Na);
+
+			// Write diagnostics
 			if (t >= (sD*DT_D)) {
 				write_diagnostics(sD,Na,rank);
 				++sD;
@@ -80,11 +87,6 @@ int main(int argc, char *argv[])
 			}
 			++Na; // Increase the averaging counter
 		#endif
-		
-		
-		////////////////////////////////////////////////////////////////
-		// Update time
-		t=s*DT; // U, V, and (p+p1)/2 now correspond to this time
 
 		// Print progress
 		if (rank == 0) {

@@ -5,12 +5,15 @@
 void write_diagnostics(int sD, int Na, int rank)
 {
 	int i, j, n; 
-	int ncid, status, varid, dimid[4];
+	int ncid, status, varid, dimid[4], dimid2D[3];
 	char name[100];
 
 	size_t start[]={sD-1, 0, 0, 0};
 	size_t count[]={1, NMW, NY, NX};
 
+	size_t start2D[]={sD, 0, 0};
+	size_t count2D[]={1, NY, NX};
+	
 	// Get file name
 	sprintf(name,FILE_DIAG ".%03d.nc",rank); 
 
@@ -39,8 +42,8 @@ void write_diagnostics(int sD, int Na, int rank)
 		if ((status = nc_def_var(ncid, "period", NC_DOUBLE, 1, &dimid[0], &varid)))
 			ERR(status);
 
-		#if defined(FLAG_GROWTH) 
-			if ((status = nc_def_var(ncid, "eta_low", NC_FLOAT, 4, dimid, &varid)))
+		#if defined(DAMP_GROWTH) 
+			if ((status = nc_def_var(ncid, "flag_growth", NC_FLOAT, 2, dimid2D, &varid)))
 				ERR(status);
 		#endif
 
@@ -114,20 +117,18 @@ void write_diagnostics(int sD, int Na, int rank)
 	if ((status = nc_open(name, NC_WRITE, &ncid)))
 		ERR(status);
 
-	// Write Flag for exponential growth
-	#ifdef FLAG_GROWTH
-		for(i=0; i<NX; i++){
-			for(j=0; j<NY; j++){
-				for(n=0; n<NMW; n++){					
-					tmp[n][j][i]=(float)(p_low[n][j+1][i+1]*phi_surf[n][j+1][i+1]/9.81);					
-				}
+	// Write Flag for low frequency growth
+	#ifdef DAMP_GROWTH
+		for(j=0; j<NY; j++){
+			for(i=0; i<NX; i++){
+				tmp2D[j][i]=(float)(flag_growth[j+1][i+1]);												
 			}
-		}
+		}  
 
-		if ((status = nc_inq_varid(ncid, "eta_low", &varid)))
+		if ((status = nc_inq_varid(ncid, "flag_growth", &varid)))
 			ERR(status);
 
-		if ((status = nc_put_vara_float(ncid, varid, start, count, &tmp[0][0][0])))
+		if ((status = nc_put_vara_float(ncid, varid, start2D, count2D, &tmp2D[0][0])))
 			ERR(status);		
 	#endif
 

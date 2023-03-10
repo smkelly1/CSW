@@ -66,7 +66,7 @@ void read_tides(int rank)
 						if(H[j+1][i+1]>H_MIN_FORCE) {
 					#endif
 							
-							ITGF.F[k][j][i]=(((double)(ITGF.Ur[k][j][i])+I*(double)(ITGF.Ui[k][j][i]))*dHdx[j][i]+((double)(ITGF.Vr[k][j][i])+I*(double)(ITGF.Vi[k][j][i]))*dHdy[j][i])/H[j+1][i+1];
+							ITGF.F[k][j][i]=(((double)(ITGF.Ur[k][j][i])+I*(double)(ITGF.Ui[k][j][i]))*dHdx[j][i]+((double)(ITGF.Vr[k][j][i])+I*(double)(ITGF.Vi[k][j][i]))*dHdy[j][i]);
 
 					#ifdef H_MIN_FORCE
 						}
