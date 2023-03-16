@@ -42,11 +42,12 @@ void write_diagnostics(int sD, int Na, int rank)
 		if ((status = nc_def_var(ncid, "period", NC_DOUBLE, 1, &dimid[0], &varid)))
 			ERR(status);
 
-		#if defined(DAMP_GROWTH) 
+		#ifdef DAMP_GROWTH 
 			dimid2D[0]=dimid[0];
 			dimid2D[1]=dimid[2];
 			dimid2D[2]=dimid[3];
-			if ((status = nc_def_var(ncid, "flag_growth", NC_FLOAT, 2, dimid2D, &varid)))
+			
+			if ((status = nc_def_var(ncid, "flag_growth", NC_FLOAT, 3, dimid2D, &varid)))
 				ERR(status);
 		#endif
 

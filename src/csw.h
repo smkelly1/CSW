@@ -15,7 +15,7 @@
 
 // Input/output files
 #define FILE_GRID  "../../22-12_grid/10th_deg_OCT_grid.nc" // Grid file
-#define FILE_WIND  "../ocean_storms_CSW.nc" // Wind forcing file
+#define FILE_WIND  "../OS_wind.nc" // Wind forcing file
 #define FILE_OUT   "out"			// Snapshot output file
 #define FILE_DIAG  "diag"			// Diagnostic average output file
 //#define FILE_TIDES "../TPXO.nc"   // Tidal forcing file

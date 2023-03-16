@@ -40,6 +40,10 @@ void write_output(int sW, double t, int rank)
 		if ((status = nc_def_dim(ncid, "time", NC_UNLIMITED, &dimid[0])))
 			ERR(status);
 
+		dimid2D[0]=dimid[0];
+		dimid2D[1]=dimid[2];
+		dimid2D[2]=dimid[3];
+
 		// Define the variables						
 		if ((status = nc_def_var(ncid, "yday", NC_DOUBLE, 1, &dimid[0], &varid)))
 			ERR(status);
@@ -49,11 +53,7 @@ void write_output(int sW, double t, int rank)
 				ERR(status);			
 		#endif
 		
-		#ifdef DAMP_GROWTH
-			dimid2D[0]=dimid[0];
-			dimid2D[1]=dimid[2];
-			dimid2D[2]=dimid[3];
-			
+		#ifdef DAMP_GROWTH			
 			if ((status = nc_def_var(ncid, "eta_high", NC_FLOAT, 3, dimid2D, &varid)))
 				ERR(status);
 				

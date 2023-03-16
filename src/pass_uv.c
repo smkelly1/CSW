@@ -14,10 +14,10 @@ void pass_uv(int rank)
 	#if NPX==1 //The simple case when NPX==1
 		for(m=0; m<NM; m++) {		
 			for (j=0; j<NY; j++) {
-				U[m][j+1][NX+1]=U[m][j+1][1]; //Second point -> last point
-				U[m][j+1][0]=U[m][j+1][NX]; //Second to last point -> first point				
-				V[m][j+1][NX+1]=V[m][j+1][1]; //Second point -> last point
-				V[m][j+1][0]=V[m][j+1][NX];   //Second to last point -> first point 
+				U[m][j+1][NX+1]=U[m][j+1][1];    //Second point -> last point
+				U[m][j+1][0]   =U[m][j+1][NX];   //Second to last point -> first point				
+				V[m][j+1][NX+1]=V[m][j+1][1];    //Second point -> last point
+				V[m][j+1][0]   =V[m][j+1][NX];   //Second to last point -> first point 
 			}				
 		}
 	#endif
@@ -84,46 +84,34 @@ void pass_uv(int rank)
 
 		// First send data east, odd ranks send first to avoid deadlock
 		if (rank % 2) {
-			if (rank_e > -1) {
-				MPI_Send(BOUNDARY.u_Se,NM*NY,MPI_DOUBLE,rank_e,11,MPI_COMM_WORLD);
-				MPI_Send(BOUNDARY.v_Se,NM*NY,MPI_DOUBLE,rank_e,12,MPI_COMM_WORLD);
-			}
-			if (rank_w > -1) {
-				MPI_Recv(BOUNDARY.u_Re,NM*NY,MPI_DOUBLE,rank_w,11,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-				MPI_Recv(BOUNDARY.v_Re,NM*NY,MPI_DOUBLE,rank_w,12,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-			}			
+			MPI_Send(BOUNDARY.u_Se,NM*NY,MPI_DOUBLE,rank_e,11,MPI_COMM_WORLD);
+			MPI_Send(BOUNDARY.v_Se,NM*NY,MPI_DOUBLE,rank_e,12,MPI_COMM_WORLD);
+			
+			MPI_Recv(BOUNDARY.u_Re,NM*NY,MPI_DOUBLE,rank_w,11,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+			MPI_Recv(BOUNDARY.v_Re,NM*NY,MPI_DOUBLE,rank_w,12,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
 		}
 		else {
-			if (rank_w > -1) {
-				MPI_Recv(BOUNDARY.u_Re,NM*NY,MPI_DOUBLE,rank_w,11,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-				MPI_Recv(BOUNDARY.v_Re,NM*NY,MPI_DOUBLE,rank_w,12,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-			}
-			if (rank_e > -1) {
-				MPI_Send(BOUNDARY.u_Se,NM*NY,MPI_DOUBLE,rank_e,11,MPI_COMM_WORLD);
-				MPI_Send(BOUNDARY.v_Se,NM*NY,MPI_DOUBLE,rank_e,12,MPI_COMM_WORLD);
-			}			
+			MPI_Recv(BOUNDARY.u_Re,NM*NY,MPI_DOUBLE,rank_w,11,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+			MPI_Recv(BOUNDARY.v_Re,NM*NY,MPI_DOUBLE,rank_w,12,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+			
+			MPI_Send(BOUNDARY.u_Se,NM*NY,MPI_DOUBLE,rank_e,11,MPI_COMM_WORLD);
+			MPI_Send(BOUNDARY.v_Se,NM*NY,MPI_DOUBLE,rank_e,12,MPI_COMM_WORLD);
 		}
 		
 		// Second send data west, odd ranks send first to avoid deadlock
 		if (rank % 2) {
-			if (rank_w > -1) {
-				MPI_Send(BOUNDARY.u_Sw,NM*NY,MPI_DOUBLE,rank_w,21,MPI_COMM_WORLD);
-				MPI_Send(BOUNDARY.v_Sw,NM*NY,MPI_DOUBLE,rank_w,22,MPI_COMM_WORLD);
-			}
-			if (rank_e > -1) {
-				MPI_Recv(BOUNDARY.u_Rw,NM*NY,MPI_DOUBLE,rank_e,21,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-				MPI_Recv(BOUNDARY.v_Rw,NM*NY,MPI_DOUBLE,rank_e,22,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-			}			
+			MPI_Send(BOUNDARY.u_Sw,NM*NY,MPI_DOUBLE,rank_w,21,MPI_COMM_WORLD);
+			MPI_Send(BOUNDARY.v_Sw,NM*NY,MPI_DOUBLE,rank_w,22,MPI_COMM_WORLD);
+			
+			MPI_Recv(BOUNDARY.u_Rw,NM*NY,MPI_DOUBLE,rank_e,21,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+			MPI_Recv(BOUNDARY.v_Rw,NM*NY,MPI_DOUBLE,rank_e,22,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
 		}
 		else {	
-			if (rank_e > -1) {
-				MPI_Recv(BOUNDARY.u_Rw,NM*NY,MPI_DOUBLE,rank_e,21,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-				MPI_Recv(BOUNDARY.v_Rw,NM*NY,MPI_DOUBLE,rank_e,22,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-			}
-			if (rank_w > -1) {
-				MPI_Send(BOUNDARY.u_Sw,NM*NY,MPI_DOUBLE,rank_w,21,MPI_COMM_WORLD);
-				MPI_Send(BOUNDARY.v_Sw,NM*NY,MPI_DOUBLE,rank_w,22,MPI_COMM_WORLD);
-			}			
+			MPI_Recv(BOUNDARY.u_Rw,NM*NY,MPI_DOUBLE,rank_e,21,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+			MPI_Recv(BOUNDARY.v_Rw,NM*NY,MPI_DOUBLE,rank_e,22,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+			
+			MPI_Send(BOUNDARY.u_Sw,NM*NY,MPI_DOUBLE,rank_w,21,MPI_COMM_WORLD);
+			MPI_Send(BOUNDARY.v_Sw,NM*NY,MPI_DOUBLE,rank_w,22,MPI_COMM_WORLD);
 		}	
 			
 	#endif // Done with East-west messages
@@ -180,22 +168,14 @@ void pass_uv(int rank)
 	
 	#if NPX>1 // Only bother if there are multiple tiles in the X direction
 		// Unload points going east and west
-		if (rank_w > -1) {
-			for (m=0; m<NM; m++) {						
-				for (j=0; j<NY; j++) {
-					U[m][j+1][0]=BOUNDARY.u_Re[m*NY+j];     // Data moving east lands in first slot
-					V[m][j+1][0]=BOUNDARY.v_Re[m*NY+j];     // Data moving east lands in first slot
-				}				
-			}
-		}	
-		
-		if (rank_e > -1) {
-			for (m=0; m<NM; m++) {						
-				for (j=0; j<NY; j++) {
-					U[m][j+1][NX+1]=BOUNDARY.u_Rw[m*NY+j];   // Data moving west lands in last slot
-					V[m][j+1][NX+1]=BOUNDARY.v_Rw[m*NY+j];     // Data moving west lands in last slot
-				}				
-			}
+		for (m=0; m<NM; m++) {						
+			for (j=0; j<NY; j++) {
+				U[m][j+1][0]   =BOUNDARY.u_Re[m*NY+j];   // Data moving east lands in first slot
+				U[m][j+1][NX+1]=BOUNDARY.u_Rw[m*NY+j];   // Data moving west lands in last slot
+
+				V[m][j+1][0]   =BOUNDARY.v_Re[m*NY+j];   // Data moving east lands in first slot		
+				V[m][j+1][NX+1]=BOUNDARY.v_Rw[m*NY+j];   // Data moving west lands in last slot
+			}				
 		}		
 	#endif
 

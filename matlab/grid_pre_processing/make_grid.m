@@ -231,7 +231,7 @@ zT(isnan(zT) | zT<10)=10;
 disp('Writing grid');
 [Nx Ny]=size(H);
 
-if 0
+if 1
 mode = netcdf.getConstant('CLOBBER');
 mode = bitor(mode,netcdf.getConstant('NETCDF4'));
 temp=netcdf.create(fid.grid,mode);

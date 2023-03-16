@@ -39,7 +39,12 @@ void calc_divergence(void)
 					VE[n][j][i]=(1.5+BETA)*V[n][j][i]-(0.5+2.0*BETA)*V1[n][j][i]+BETA*V2[n][j][i];
 					#if defined(R) || defined(R_MAX) || defined(KAPPA)
 						pE[n][j][i]=(1.5+BETA)*p[n][j][i]-(0.5+2.0*BETA)*p1[n][j][i]+BETA*p2[n][j][i]; 
-					#endif
+					#endif	
+					
+					// Shift old pressures to make room for new p calculation
+					p3[n][j][i]=p2[n][j][i];
+					p2[n][j][i]=p1[n][j][i];
+					p1[n][j][i]=p[n][j][i];						
 				#endif
 			}
 		}
@@ -107,28 +112,6 @@ void calc_divergence(void)
 					// Frictional forces (do not divide by c_n^2/H)
 					Fp_eps[n][j][i]=0;
 
-					// Linear drag
-					#if (defined(R) || defined(R_MAX) || defined(FILE_R))
-						r0=0;
-						
-						#ifdef FILE_R
-							r0=fmin(r[n][j+1][i+1],R_MAX);
-						#endif
-						
-						#ifdef R
-							r0=fmin(R/cn2,R_MAX);
-						#endif
-						
-						#ifdef DAMP_GROWTH 	// If killing growth, use R_MAX and don't count drag in F_eps
-							if (0<flag_growth[j+1][i+1]) {
-								Fp[n][j][i]=Fp[n][j][i]-R_MAX*pE[n][j+1][i+1];
-								r0=0;
-							}
-						#endif					
-					
-						Fp_eps[n][j][i]=Fp_eps[n][j][i]-r0*pE[n][j+1][i+1];						
-					#endif
-
 					// Diffusion
 					#if (defined(KAPPA) || defined(KAPPA_MAX) || defined(FILE_KAPPA))
 						dpdx2=1/(A*A*cos1*cos1)*(pE[n][j+1][i+2]-2*pE[n][j+1][i+1]+pE[n][j+1][i]);	
@@ -156,6 +139,28 @@ void calc_divergence(void)
 
 						Fp_eps[n][j][i]=Fp_eps[n][j][i]+kappa0*(dpdx2+dpdy2)/(DX*DX);						
 					#endif
+
+					// Linear drag
+					#if (defined(R) || defined(R_MAX) || defined(FILE_R))
+						r0=0;
+						
+						#ifdef FILE_R
+							r0=fmin(r[n][j+1][i+1],R_MAX);
+						#endif
+						
+						#ifdef R
+							r0=fmin(R/cn2,R_MAX);
+						#endif
+						
+						#ifdef DAMP_GROWTH 	// If killing growth, use R_MAX and don't count drag in F_eps
+							if (0<flag_growth[j+1][i+1]) {
+								Fp[n][j][i]=Fp[n][j][i]-R_MAX*pE[n][j+1][i+1];
+								r0=0;
+							}
+						#endif					
+					
+						Fp_eps[n][j][i]=Fp_eps[n][j][i]-r0*pE[n][j+1][i+1];						
+					#endif
 					
 					// Add the frictional forces to the other forces
 					Fp[n][j][i]=Fp[n][j][i]+Fp_eps[n][j][i];
@@ -170,7 +175,7 @@ void calc_divergence(void)
 	// Time step pressure 
 	for(j=0; j<NY; j++){
 		for(i=0; i<NX; i++){
-			if (H[j+1][i+1]>H_MIN && -70<(lat[j+1]*180/M_PI)) {	
+			//if (H[j+1][i+1]>H_MIN && -70<(lat[j+1]*180/M_PI)) {	
 				
 				for(n=0; n<NM; n++){
 					#ifdef AB4
@@ -179,10 +184,7 @@ void calc_divergence(void)
 						Fp3[n][j][i]=Fp2[n][j][i];
 						Fp2[n][j][i]=Fp1[n][j][i];				
 						Fp1[n][j][i]=Fp[n][j][i];	
-					#else
-						p3[n][j+1][i+1]=p2[n][j+1][i+1];
-						p2[n][j+1][i+1]=p1[n][j+1][i+1];
-						p1[n][j+1][i+1]=p[n][j+1][i+1];				
+					#else								
 						p[n][j+1][i+1]=p[n][j+1][i+1]+DT*Fp[n][j][i];						
 					#endif				
 				}
@@ -238,7 +240,7 @@ void calc_divergence(void)
 					//}					
 				#endif
 				
-			} // end-if: land mask
+			//} // end-if: land mask
 		} // end-for: i
 	} // end-for: j
 	

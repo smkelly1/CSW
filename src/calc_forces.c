@@ -37,8 +37,17 @@ void calc_forces(void)
 					UE[n][j][i]=U[n][j][i];
 					VE[n][j][i]=V[n][j][i];
 				#else
-					// ROMS
-					pE[n][j][i]=(0.5+GAMMA+2.0*EPSILON)*p[n][j][i]+(0.5-2.0*GAMMA-3.0*EPSILON)*p1[n][j][i]+GAMMA*p2[n][j][i]+EPSILON*p3[n][j][i];	
+					// ROMS					
+					pE[n][j][i]=(0.5+GAMMA+2.0*EPSILON)*p[n][j][i]+(0.5-2.0*GAMMA-3.0*EPSILON)*p1[n][j][i]+GAMMA*p2[n][j][i]+EPSILON*p3[n][j][i];
+					
+					// Shift old velocities to make room for new velocity calculations 
+					U3[n][j][i]=U2[n][j][i];
+					U2[n][j][i]=U1[n][j][i];
+					U1[n][j][i]=U[n][j][i];	
+					
+					V3[n][j][i]=V2[n][j][i];
+					V2[n][j][i]=V1[n][j][i];
+					V1[n][j][i]=V[n][j][i];
 				#endif
 			}
 		}
@@ -323,7 +332,7 @@ void calc_forces(void)
 		for(i=0; i<NX; i++){					
 				
 			// Update U
-			if (H[j+1][i]>H_MIN && H[j+1][i+1]>H_MIN && -70<(lat[j+1]*180/M_PI)) {	
+			//if (H[j+1][i]>H_MIN && H[j+1][i+1]>H_MIN && -70<(lat[j+1]*180/M_PI)) {	
 				for(n=0; n<NM; n++){
 					#ifdef AB4
 						UE[n][j+1][i+1]=U[n][j+1][i+1];
@@ -332,16 +341,13 @@ void calc_forces(void)
 						Fu2[n][j][i]=Fu1[n][j][i];
 						Fu1[n][j][i]=Fu[n][j][i];						
 					#else
-						U3[n][j+1][i+1]=U2[n][j+1][i+1];
-						U2[n][j+1][i+1]=U1[n][j+1][i+1];
-						U1[n][j+1][i+1]=U[n][j+1][i+1];
 						U[n][j+1][i+1]=U[n][j+1][i+1]+DT*Fu[n][j][i];
 					#endif		
 				}
-			}
+			//}
 			
 			// Update V
-			if (H[j][i+1]>H_MIN && H[j+1][i+1]>H_MIN && -70<(lat[j+1]*180/M_PI)) {
+			//if (H[j][i+1]>H_MIN && H[j+1][i+1]>H_MIN && -70<(lat[j+1]*180/M_PI)) {
 				for(n=0; n<NM; n++){
 					#ifdef AB4
 						VE[n][j+1][i+1]=V[n][j+1][i+1];
@@ -349,14 +355,11 @@ void calc_forces(void)
 						Fv3[n][j][i]=Fv2[n][j][i];
 						Fv2[n][j][i]=Fv1[n][j][i];
 						Fv1[n][j][i]=Fv[n][j][i];						
-					#else
-						V3[n][j+1][i+1]=V2[n][j+1][i+1];
-						V2[n][j+1][i+1]=V1[n][j+1][i+1];
-						V1[n][j+1][i+1]=V[n][j+1][i+1];
+					#else						
 						V[n][j+1][i+1]=V[n][j+1][i+1]+DT*Fv[n][j][i];
 					#endif
 				}
-			}
+			//}
 						
 		}	// end i-loop	
 	} // end j-loop

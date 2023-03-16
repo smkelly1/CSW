@@ -78,7 +78,7 @@ void calc_diagnostics(int Na)
 							// Compute dissipation
 							D[n][j][i]=D[n][j][i]-(float)(RHO*0.25*((Fu_eps[n][j][i]+Fu_eps[n][j][i+1])*(UE[n][j+1][i+1]+UE[n][j+1][i+2])
 								+(Fv_eps[n][j][i]+Fv_eps[n][j+1][i])*(VE[n][j+1][i+1]+VE[n][j+2][i+1]))/H[j+1][i+1])
-								+(float)(RHO*H[j+1][i+1]*Fp_eps[n][j][i]*pE[n][j+1][i+1]/(c[n][j+1][i+1]*c[n][j+1][i+1]));	
+								-(float)(RHO*H[j+1][i+1]*Fp_eps[n][j][i]*pE[n][j+1][i+1]/(c[n][j+1][i+1]*c[n][j+1][i+1]));	
 
 							// Only compute scattering if there is mode coupling.
 							#ifdef MODECOUPLE					

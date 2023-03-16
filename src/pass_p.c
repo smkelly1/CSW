@@ -17,7 +17,7 @@ void pass_p(int rank)
 		for(m=0; m<NM; m++) {
 			for (j=0; j<NY; j++) {
 				p[m][j+1][NX+1]=p[m][j+1][1];   //Second point -> last point
-				p[m][j+1][0]=p[m][j+1][NX];     //Second to last point -> first point
+				p[m][j+1][0]   =p[m][j+1][NX];     //Second to last point -> first point
 			}
 		}
 	#endif
@@ -80,38 +80,22 @@ void pass_p(int rank)
 	
 		// First send data east, Odd ranks send first to avoid deadlock
 		if (rank % 2) {
-			if (rank_e > -1) {
-				MPI_Send(BOUNDARY.p_Se,NM*NY,MPI_DOUBLE,rank_e,1,MPI_COMM_WORLD);
-			}
-			if (rank_w > -1) {
-				MPI_Recv(BOUNDARY.p_Re,NM*NY,MPI_DOUBLE,rank_w,1,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-			}
+			MPI_Send(BOUNDARY.p_Se,NM*NY,MPI_DOUBLE,rank_e,1,MPI_COMM_WORLD);
+			MPI_Recv(BOUNDARY.p_Re,NM*NY,MPI_DOUBLE,rank_w,1,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
 		}
 		else {
-			if (rank_w > -1) {
-				MPI_Recv(BOUNDARY.p_Re,NM*NY,MPI_DOUBLE,rank_w,1,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-			}
-			if (rank_e > -1) {
-				MPI_Send(BOUNDARY.p_Se,NM*NY,MPI_DOUBLE,rank_e,1,MPI_COMM_WORLD);
-			}
+			MPI_Recv(BOUNDARY.p_Re,NM*NY,MPI_DOUBLE,rank_w,1,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+			MPI_Send(BOUNDARY.p_Se,NM*NY,MPI_DOUBLE,rank_e,1,MPI_COMM_WORLD);
 		}
 		
 		// Second send data west, Odd ranks send first to avoid deadlock
 		if (rank % 2) {
-			if (rank_w > -1) {
-				MPI_Send(BOUNDARY.p_Sw,NM*NY,MPI_DOUBLE,rank_w,2,MPI_COMM_WORLD);
-			}
-			if (rank_e > -1) {
-				MPI_Recv(BOUNDARY.p_Rw,NM*NY,MPI_DOUBLE,rank_e,2,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-			}
+			MPI_Send(BOUNDARY.p_Sw,NM*NY,MPI_DOUBLE,rank_w,2,MPI_COMM_WORLD);
+			MPI_Recv(BOUNDARY.p_Rw,NM*NY,MPI_DOUBLE,rank_e,2,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
 		}
 		else {
-			if (rank_e > -1) {
-				MPI_Recv(BOUNDARY.p_Rw,NM*NY,MPI_DOUBLE,rank_e,2,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-			}
-			if (rank_w > -1) {
-				MPI_Send(BOUNDARY.p_Sw,NM*NY,MPI_DOUBLE,rank_w,2,MPI_COMM_WORLD);
-			}
+			MPI_Recv(BOUNDARY.p_Rw,NM*NY,MPI_DOUBLE,rank_e,2,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+			MPI_Send(BOUNDARY.p_Sw,NM*NY,MPI_DOUBLE,rank_w,2,MPI_COMM_WORLD);
 		}
 		
 	#endif // Done with East-west messages
@@ -158,19 +142,10 @@ void pass_p(int rank)
 
 	#if NPX>1 // Only bother if there are multiple tiles in the X direction
 		// Unload points going east and west
-		if (rank_w > -1) {
-			for (m=0; m<NM; m++) {
-				for (j=0; j<NY; j++) {
-					p[m][j+1][0]=BOUNDARY.p_Re[m*NY+j];	// Data moving east lands in first slot
-				}
-			}
-		}
-		
-		if (rank_e > -1) {
-			for (m=0; m<NM; m++) {
-				for (j=0; j<NY; j++) {
-					p[m][j+1][NX+1]=BOUNDARY.p_Rw[m*NY+j];	// Data moving west lands in last slot
-				}
+		for (m=0; m<NM; m++) {
+			for (j=0; j<NY; j++) {
+				p[m][j+1][0]   =BOUNDARY.p_Re[m*NY+j];	// Data moving east lands in first slot
+				p[m][j+1][NX+1]=BOUNDARY.p_Rw[m*NY+j];	// Data moving west lands in last slot
 			}
 		}
 	#endif
