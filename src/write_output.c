@@ -54,6 +54,9 @@ void write_output(int sW, double t, int rank)
 		#endif
 		
 		#ifdef DAMP_GROWTH			
+			if ((status = nc_def_var(ncid, "eta_amp", NC_FLOAT, 3, dimid2D, &varid)))
+				ERR(status);
+				
 			if ((status = nc_def_var(ncid, "eta_high", NC_FLOAT, 3, dimid2D, &varid)))
 				ERR(status);
 				
@@ -185,10 +188,23 @@ void write_output(int sW, double t, int rank)
 	
 
 	#ifdef DAMP_GROWTH
+		// Write total SSH
+		for(j=0; j<NY; j++){
+			for(i=0; i<NX; i++){
+				tmp2D[j][i]=(float)(etaA[j+1][i+1]);												
+			}
+		}
+
+		if ((status = nc_inq_varid(ncid, "eta_amp", &varid)))
+			ERR(status);
+
+		if ((status = nc_put_vara_float(ncid, varid, start2D, count2D, &tmp2D[0][0])))
+			ERR(status);
+			
 		// Write high frequency SSH
 		for(j=0; j<NY; j++){
 			for(i=0; i<NX; i++){
-				tmp2D[j][i]=(float)(eta[j][i]-eta1[j][i]-eta2[j][i]-eta3[j][i]);												
+				tmp2D[j][i]=(float)(eta[j+1][i+1]-etaG[j+1][i+1]);												
 			}
 		}
 
@@ -201,7 +217,7 @@ void write_output(int sW, double t, int rank)
 		// Write low frequency SSH
 		for(j=0; j<NY; j++){
 			for(i=0; i<NX; i++){
-				tmp2D[j][i]=(float)(eta1[j][i]+eta2[j][i]+eta3[j][i]);												
+				tmp2D[j][i]=(float)(etaG[j+1][i+1]);												
 			}
 		}
 

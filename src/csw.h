@@ -14,50 +14,53 @@
 #define NPY 2                       // Number of processors in X
 
 // Input/output files
-#define FILE_GRID  "../../22-12_grid/10th_deg_OCT_grid.nc" // Grid file
-#define FILE_WIND  "../OS_wind.nc" // Wind forcing file
+#define FILE_GRID  "/home/smkelly/experiments/NISKINE/CSW/22-12_grid/10th_deg_JUN_grid.nc" // Grid file
+#define FILE_WIND  "../ONEDAY.nc"   // Wind forcing file
 #define FILE_OUT   "out"			// Snapshot output file
 #define FILE_DIAG  "diag"			// Diagnostic average output file
 //#define FILE_TIDES "../TPXO.nc"   // Tidal forcing file
 //#define FILE_R     "../r.nc"      // Spatially variable linear damping
 //#define FILE_NU    "../nu.nc"     // Spatially variable horizontal viscosity
 //#define FILE_KAPPA "../kappa.nc"  // Spatially variable horizontal diffusivity
-//#define EFFICIENCY 0.25                // Mixing efficiency
+//#define EFFICIENCY 0.25           // Mixing efficiency
 
 // Time steps
-#define DT          600            // Model time step [sec].  
+#define DT          600             // Model time step [sec].  
 									// Try: 5th deg = 1200 sec, 10th deg = 600 sec, 25th deg = 200                                   
 #define DT_W        (3*3600)        // Snapshot time step
 #define DT_D        (24*3600)       // Diagnostics averaging time step
-#define NT          (31*24*3600/DT) // Simulation duration (time steps)
+#define NT          (132*24*3600/DT) // Simulation duration (time steps)
 
-#define BETA        0.281105        // time step parameter for maximum stability (5/12 reduces to AB3)
+#define BETA        0.281105        // time step parameter for maximum stability (5/12 reduces to AB3) CSW uses AB3-AM4, the ROMS barotropic algorithm
 #define GAMMA		0.088
 #define EPSILON     0.013
-//#define AB4						// Original time step routine (comment for AB3-AM4, the ROMS barotropic algorithm).
 
 // Dissipation (commenting these parameters removes the relevant code)
-#define CD          0.0025          // Constant quadratic bottom drag (CD=0.0025 is standard)
-#define R          (1.0/(32*24*3600)) // Constant linear "Rayleigh" damping (or minimum value) will be divided by c^2 for each mode.
-#define R_MAX      (1.0/(12*3600)) 
-#define NU          100.0            // Constant horizontal viscosity (or minimum value). Bryan (1975) uses NU=u*DX/2 
+//#define CD          0.0025        // Constant quadratic bottom drag (CD=0.0025 is standard)
+//#define R          (1.0/(32*24*3600)) // Constant linear "Rayleigh" damping (or minimum value).
+//#define RC2        (1.0/(32*24*3600)) // Constant linear "Rayleigh" damping (or minimum value) will be divided by c^2 for each mode.
+//#define R_MAX      (1.0/(12*3600)) 
+#define NU          200.0            // Constant horizontal viscosity (or minimum value). Bryan (1975) uses NU=u*DX/2 
                                     // Quick reference for U=1 cm/s (but can use x10 bigger): 
                                     // 1/5  deg = 100 (for 100 km wavelength tau = 29 days)
                                     // 1/10 deg = 50  (tau = 59 days)
                                     // 1/25 deg = 20  (tau = 147 days)
-#define NU_MAX      1000.0
-#define KAPPA      	100.0            // Constant horizontal diffusivity (or minimum value)
-#define KAPPA_MAX   1000.0
+#define NU_MAX      2000.0
+#define KAPPA      	200.0            // Constant horizontal diffusivity (or minimum value)
+#define KAPPA_MAX   2000.0
 
-// Pest control
+// Controlling exponential growth
 #define DAMP_GROWTH                 // Compute the triple exponential running average to identify exponential growth, also write snapshots.
 #define NUM_PERIODS       2         // Number of inertial periods for the running average
-#define GROWTH_THRESHOLD  0.01      // SSH in m of bad signals (1 cm is a good start)
-                           
+#define GROWTH_THRESHOLD  0.002     // SSH in m of bad signals (0.2 cm is a good start)
+#define GROWTH_MAX        0.01      // SSH in m of bad signals (1 cm is a good start)
+#define AMP_THRESHOLD     0.02      // SSH in m of bad signals (2 cm is a good start)
+#define AMP_MAX           0.04      // SSH in m of bad signals (4 cm is a good start)
+
 // Set minimum depths for dynamics, forcing, and topographic coupling
-#define H_MIN        100.0          // Minimum depth to solve equations
+#define H_MIN        16.0           // Minimum depth to solve equations
 #define H_MIN_COUPLE 100.0          // Minimum depth to couple modes (applied in read_grid.c)
-#define DH_MAX       0.25           // Maximum fractional change in depth between grid points 
+#define DH_MAX       0.25           // Maximum fractional change in depth between grid points (0.25 is good)
 
 // Flags for dynamics 
 #define CORIOLIS                    // Include the Coriolis force
@@ -65,13 +68,13 @@
 
 // Flags to write Output
 //#define WRITE_VELOCITY            // Write snapshots of velocity 
-//#define WRITE_ETA                   // Write snapshots of modal SSH 
-#define WRITE_WIND                  // Write snapshots of wind stress
-#define WRITE_MIX					// Write snapshots of mixed layer velocity
+//#define WRITE_ETA                 // Write snapshots of modal SSH 
+//#define WRITE_WIND                // Write snapshots of wind stress
+//#define WRITE_MIX					// Write snapshots of mixed layer velocity
 
-#define ENERGY                    // Compute and write energy 
-#define FLUX                      // Compute and write energy flux
-#define WORK                      // Compute and write wind work, tidal generation, and scattering
+//#define ENERGY                    // Compute and write energy 
+//#define FLUX                      // Compute and write energy flux
+//#define WORK                      // Compute and write wind work, tidal generation, and scattering
 //#define WRITE_SSH                 // Compute and write the amplitude and phase of SSH (for tides)
 //#define WRITE_TRANSPORT           // Compute and write the amplitude and phase of transport (for tides)
 
@@ -96,22 +99,22 @@
 
 // MERRA2 wind (don't edit unless you change wind products)
 #ifdef FILE_WIND
-	#define WIND_FORCING              // Use wind forcing
-	#define NXW  576                  // Wind file grid size, this must be an integer
-	#define NYW  361                  // This must be an integer
-	#define DT_F 3600                 // Wind forcing interval
+	#define WIND_FORCING            // Use wind forcing
+	#define NXW  576                // Wind file grid size, this must be an integer
+	#define NYW  361                // This must be an integer
+	#define DT_F 3600               // Wind forcing interval
 #endif
 
 // Tidal forcing 
 #ifdef FILE_TIDES
 	#define TIDE_FORCING            // Use an Internal-Tide Generating Function
-	#define H_MIN_FORCE  100.0          // Minimum depth to force internal tides (applied in read_tides.c)
+	#define H_MIN_FORCE  100.0      // Minimum depth to force internal tides (applied in read_tides.c)
 	#define NC  1                   // Number of tidal frequencies
 #endif
 
 // Constants 
-#define A   6371000.0             // radius of Earth
-#define RHO 1000.0                // Reference density
+#define A   6371000.0               // radius of Earth
+#define RHO 1000.0                  // Reference density
 
 // NetCDF stuff
 #define ERRCODE 2
@@ -222,16 +225,16 @@ double c[NM][NY+2][NX+2];
 double phi_bott[NM][NY+2][NX+2];
 double phi_surf[NM][NY+2][NX+2];
 
-#ifdef FILE_R
+#ifdef FILE_R 
 	double r[NM][NY+2][NX+2];
 #endif
 
-#ifdef FILE_NU
-	double nu[NM][NY+2][NX+2];
+#if defined(FILE_NU) || defined(DAMP_GROWTH) 
+	double nu[NY+2][NX+2];
 #endif
 
-#ifdef FILE_KAPPA
-	double kappa[NM][NY+2][NX+2];
+#if defined(FILE_KAPPA) || defined(DAMP_GROWTH) 
+	double kappa[NY+2][NX+2];
 #endif
 
 // Variables and forces
@@ -240,30 +243,18 @@ double UE[NM][NY+2][NX+2];
 double Fu[NM][NY][NX]; 
 double Fu_eps[NM][NY][NX];
 double dHdx_u[NY][NX+1];
-#ifdef AB4
-	double Fu1[NM][NY][NX];
-	double Fu2[NM][NY][NX]; 
-	double Fu3[NM][NY][NX]; 
-#else
-	double U1[NM][NY+2][NX+2];
-	double U2[NM][NY+2][NX+2];
-	double U3[NM][NY+2][NX+2];	
-#endif
+double U1[NM][NY+2][NX+2];
+double U2[NM][NY+2][NX+2];
+double U3[NM][NY+2][NX+2];	
 
 double V[NM][NY+2][NX+2];
 double VE[NM][NY+2][NX+2];
 double Fv[NM][NY][NX]; 
 double Fv_eps[NM][NY][NX]; 
 double dHdy_v[NY+1][NX];
-#ifdef AB4
-	double Fv1[NM][NY][NX]; 
-	double Fv2[NM][NY][NX]; 
-	double Fv3[NM][NY][NX]; 
-#else
-	double V1[NM][NY+2][NX+2];
-	double V2[NM][NY+2][NX+2];
-	double V3[NM][NY+2][NX+2];	
-#endif
+double V1[NM][NY+2][NX+2];
+double V2[NM][NY+2][NX+2];
+double V3[NM][NY+2][NX+2];	
 
 double p[NM][NY+2][NX+2]; 
 double pE[NM][NY+2][NX+2];
@@ -271,22 +262,18 @@ double Fp[NM][NY][NX];
 double Fp_eps[NM][NY][NX];
 double dHdx[NY][NX];
 double dHdy[NY][NX];
-#ifdef AB4
-	double Fp1[NM][NY][NX]; 
-	double Fp2[NM][NY][NX]; 
-	double Fp3[NM][NY][NX]; 
-#else
-	double p1[NM][NY+2][NX+2];
-	double p2[NM][NY+2][NX+2];
-	double p3[NM][NY+2][NX+2];	
-#endif
+double p1[NM][NY+2][NX+2];
+double p2[NM][NY+2][NX+2];
+double p3[NM][NY+2][NX+2];	
 
 #ifdef DAMP_GROWTH
-	double eta[NY][NX];
-	double eta1[NY][NX];
-	double eta2[NY][NX];
-	double eta3[NY][NX];
-	int flag_growth[NY+2][NX+2];
+	double eta[NY+2][NX+2];
+	double eta1[NY+2][NX+2];
+	double eta2[NY+2][NX+2];
+	double eta3[NY+2][NX+2];
+	double etaG[NY+2][NX+2];
+	double etaA[NY+2][NX+2];
+	double flag_growth[NY+2][NX+2];
 #endif
 
 // Energy diagnostics and temporary storage for writing output

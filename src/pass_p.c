@@ -17,7 +17,7 @@ void pass_p(int rank)
 		for(m=0; m<NM; m++) {
 			for (j=0; j<NY; j++) {
 				p[m][j+1][NX+1]=p[m][j+1][1];   //Second point -> last point
-				p[m][j+1][0]   =p[m][j+1][NX];     //Second to last point -> first point
+				p[m][j+1][0]   =p[m][j+1][NX];  //Second to last point -> first point
 			}
 		}
 	#endif

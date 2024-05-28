@@ -6,46 +6,30 @@ void calc_divergence(void)
 	int i, j, m, n;
 	double cos01, cos1, cos12;
 	double cm2, cn2, phi_m, phi_n, tmp2;
-
-	#ifdef DAMP_GROWTH
-		double alpha;
-	#endif 	
 	
 	#if (defined(R) || defined(R_MAX) || defined(FILE_R))
 		double r0;
 	#endif
 	
 	#if (defined(KAPPA) || defined(KAPPA_MAX) || defined(FILE_KAPPA))
-		double kappa0, dpdy[2], dpdx2, dpdy2;
+		double kappaX[2], kappaY[2], Fdx[2], Fdy[2];
 	#endif
 	
 	////////////////////////////////////////////////////////////////////
 	// Extrapolate U and V to t+dt/2 using 3rd Order Adams Bashforth 
 	for(n=0; n<NM; n++){
 		for(j=0; j<NY+2; j++){
-			for(i=0; i<NX+2; i++){
-				#ifdef AB4
-					// Staggered AB4
-					#if (!defined(ENERGY) && !defined(FLUX) && !defined(WORK) && !defined(WRITE_SSH) && !defined(WRITE_TRANSPORT))	// Otherwise this was already done in calc_diagnostics.c	
-						UE[n][j][i]=(U[n][j][i]+UE[n][j][i])/2;
-						VE[n][j][i]=(V[n][j][i]+VE[n][j][i])/2;
-						#if defined(R) || defined(R_MAX) || defined(KAPPA)
-							pE[n][j][i]=p[n][j][i]; 
-						#endif
-					#endif
-				#else							
-					// ROMS
-					UE[n][j][i]=(1.5+BETA)*U[n][j][i]-(0.5+2.0*BETA)*U1[n][j][i]+BETA*U2[n][j][i];
-					VE[n][j][i]=(1.5+BETA)*V[n][j][i]-(0.5+2.0*BETA)*V1[n][j][i]+BETA*V2[n][j][i];
-					#if defined(R) || defined(R_MAX) || defined(KAPPA)
-						pE[n][j][i]=(1.5+BETA)*p[n][j][i]-(0.5+2.0*BETA)*p1[n][j][i]+BETA*p2[n][j][i]; 
-					#endif	
-					
-					// Shift old pressures to make room for new p calculation
-					p3[n][j][i]=p2[n][j][i];
-					p2[n][j][i]=p1[n][j][i];
-					p1[n][j][i]=p[n][j][i];						
-				#endif
+			for(i=0; i<NX+2; i++){										
+				UE[n][j][i]=(1.5+BETA)*U[n][j][i]-(0.5+2.0*BETA)*U1[n][j][i]+BETA*U2[n][j][i];
+				VE[n][j][i]=(1.5+BETA)*V[n][j][i]-(0.5+2.0*BETA)*V1[n][j][i]+BETA*V2[n][j][i];
+				#if defined(R) || defined(R_MAX) || defined(KAPPA)
+					pE[n][j][i]=(1.5+BETA)*p[n][j][i]-(0.5+2.0*BETA)*p1[n][j][i]+BETA*p2[n][j][i]; 
+				#endif	
+				
+				// Shift old pressures to make room for new p calculation
+				p3[n][j][i]=p2[n][j][i];
+				p2[n][j][i]=p1[n][j][i];
+				p1[n][j][i]=p[n][j][i];						
 			}
 		}
 	}
@@ -113,47 +97,56 @@ void calc_divergence(void)
 					Fp_eps[n][j][i]=0;
 
 					// Diffusion
-					#if (defined(KAPPA) || defined(KAPPA_MAX) || defined(FILE_KAPPA))
-						dpdx2=1/(A*A*cos1*cos1)*(pE[n][j+1][i+2]-2*pE[n][j+1][i+1]+pE[n][j+1][i]);	
-
-						dpdy[0]=cos01*(pE[n][j+1][i+1]-pE[n][j][i+1]);
-						dpdy[1]=cos12*(pE[n][j+2][i+1]-pE[n][j+1][i+1]);
-						dpdy2=1/(A*A*cos1)*(dpdy[1]-dpdy[0]);
-						
-						kappa0=0;
-						
-						#ifdef FILE_KAPPA
-							kappa0=fmin(GAMMA*kappa[n][j+1][i+1],KAPPA_MAX);
+					#if (defined(KAPPA) || defined(DAMP_GROWTH) || defined(FILE_KAPPA))				
+											
+						#if defined(FILE_KAPPA) || defined(DAMP_GROWTH)
+							kappaX[0]=(kappa[j+1][i]+kappa[j+1][i+1])/2;
+							kappaX[1]=(kappa[j+1][i+1]+kappa[j+1][i+2])/2;
+							kappaY[0]=(kappa[j][i+1]+kappa[j+1][i+1])/2;
+							kappaY[1]=(kappa[j+1][i+1]+kappa[j+2][i+1])/2;
+						#else
+							kappaX[0]=fmin(KAPPA,KAPPA_MAX);
+							kappaX[1]=fmin(KAPPA,KAPPA_MAX);
+							kappaY[0]=fmin(KAPPA,KAPPA_MAX);
+							kappaY[1]=fmin(KAPPA,KAPPA_MAX);
 						#endif
+					
+						// Compute diffusive fluxes
+						Fdx[0]=-kappaX[0]*(pE[n][j+1][i+1]-pE[n][j+1][i])/(A*cos1*DX);
+						Fdx[1]=-kappaX[1]*(pE[n][j+1][i+2]-pE[n][j+1][i+1])/(A*cos1*DX);
+
+						Fdy[0]=-kappaY[0]*(pE[n][j+1][i+1]-pE[n][j][i+1])/(A*DX);
+						Fdy[1]=-kappaY[1]*(pE[n][j+2][i+1]-pE[n][j+1][i+1])/(A*DX);
 						
-						#ifdef KAPPA
-							kappa0=fmin(KAPPA,KAPPA_MAX);
-						#endif
-
-						#ifdef DAMP_GROWTH 	// If killing growth, use KAPPA_MAX and don't count drag in F_eps
-							if (0<flag_growth[j+1][i+1]) {
-								Fp[n][j][i]=Fp[n][j][i]+KAPPA_MAX*(dpdx2+dpdy2)/(DX*DX);
-								kappa0=0;
-							}
-						#endif
-
-						Fp_eps[n][j][i]=Fp_eps[n][j][i]+kappa0*(dpdx2+dpdy2)/(DX*DX);						
+						// Compute diffusive flux convergence
+						Fp_eps[n][j][i]=Fp_eps[n][j][i]-((Fdx[1]-Fdx[0])+(cos12*Fdy[1]-cos01*Fdy[0]))/(A*cos1*DX);											
 					#endif
 
 					// Linear drag
 					#if (defined(R) || defined(R_MAX) || defined(FILE_R))
-						r0=0;
-						
+									
 						#ifdef FILE_R
 							r0=fmin(r[n][j+1][i+1],R_MAX);
 						#endif
 						
 						#ifdef R
+							r0=R;
+						#endif	
+						
+						#ifdef RC2
 							r0=fmin(R/cn2,R_MAX);
 						#endif
 						
-						#ifdef DAMP_GROWTH 	// If killing growth, use R_MAX and don't count drag in F_eps
-							if (0<flag_growth[j+1][i+1]) {
+						#ifdef DAMP_GROWTH							
+							// set r0 to increase linearly from background value to R_MAX over the SSH range THRESHOLD to MAX 
+							if ((etaA[j+1][i+1]>AMP_THRESHOLD) || (fabs(etaG[j+1][i+1])>GROWTH_THRESHOLD)) {
+								r0=r0+fmax(
+									(etaA[j+1][i+1]-AMP_THRESHOLD)*(R_MAX-r0)/(AMP_MAX-AMP_THRESHOLD),
+									(fabs(etaG[j+1][i+1])-GROWTH_THRESHOLD)*(R_MAX-r0)/(GROWTH_MAX-GROWTH_THRESHOLD)); 
+							} 			
+														
+							// If r0 is bigger than R_MAX, use R_MAX and don't count dissipation
+							if (r0>R_MAX){ 
 								Fp[n][j][i]=Fp[n][j][i]-R_MAX*pE[n][j+1][i+1];
 								r0=0;
 							}
@@ -175,72 +168,9 @@ void calc_divergence(void)
 	// Time step pressure 
 	for(j=0; j<NY; j++){
 		for(i=0; i<NX; i++){
-			//if (H[j+1][i+1]>H_MIN && -70<(lat[j+1]*180/M_PI)) {	
-				
-				for(n=0; n<NM; n++){
-					#ifdef AB4
-						pE[n][j+1][i+1]=p[n][j+1][i+1];					
-						p[n][j+1][i+1]=p[n][j+1][i+1]+DT*(55*Fp[n][j][i]-59*Fp1[n][j][i]+37*Fp2[n][j][i]-9*Fp3[n][j][i])/24;
-						Fp3[n][j][i]=Fp2[n][j][i];
-						Fp2[n][j][i]=Fp1[n][j][i];				
-						Fp1[n][j][i]=Fp[n][j][i];	
-					#else								
-						p[n][j+1][i+1]=p[n][j+1][i+1]+DT*Fp[n][j][i];						
-					#endif				
-				}
-				
-				#ifdef DAMP_GROWTH				
-					// Sum the modes
-					eta[j][i]=0;
-					for(n=0; n<NM; n++){
-						eta[j][i]=eta[j][i]+p[n][j+1][i+1]*phi_surf[n][j][i]/9.81;
-					}
-								
-					// Low pass filter (triple running average)
-					alpha=fabs(DT/(NUM_PERIODS*2*M_PI/f[j]));
-					eta1[j][i]=alpha*eta[j][i]+(1-alpha)*eta1[j][i];
-					eta2[j][i]=alpha*(eta[j][i]-eta1[j][i])+(1-alpha)*eta2[j][i];
-					eta3[j][i]=alpha*(eta[j][i]-eta1[j][i]-eta2[j][i])+(1-alpha)*eta3[j][i];
-					
-					// Flag the baddies 
-					if (0==flag_growth[j+1][i+1] && GROWTH_THRESHOLD<fabs(eta1[j][i]+eta2[j][i]+eta3[j][i])) {
-						flag_growth[j+0][i+0]=1;
-						flag_growth[j+1][i+0]=1;
-						flag_growth[j+2][i+0]=1;
-						flag_growth[j+0][i+1]=1;
-						flag_growth[j+1][i+1]=1;
-						flag_growth[j+2][i+1]=1;
-						flag_growth[j+0][i+2]=1;
-						flag_growth[j+1][i+2]=1;
-						flag_growth[j+2][i+2]=1;
-						if (0<i) {
-							flag_growth[j+0][i-1]=1;
-							flag_growth[j+1][i-1]=1;
-							flag_growth[j+2][i-1]=1;
-						}
-						if (i<(NX-1)) {
-							flag_growth[j+0][i+3]=1;
-							flag_growth[j+1][i+3]=1;
-							flag_growth[j+2][i+3]=1;
-						}
-						if (0<j) {
-							flag_growth[j-1][i+0]=1;
-							flag_growth[j-1][i+1]=1;
-							flag_growth[j-1][i+2]=1;
-						}
-						if (j<(NY-1)) {
-							flag_growth[j+3][i+0]=1;
-							flag_growth[j+3][i+1]=1;
-							flag_growth[j+3][i+2]=1;
-						}
-					}
-					// Let the bad boys back out to play after rehab? Not so fast, most growth is in problem areas.
-					//if (0<flag_growth[j+1][i+1] && fabs(eta1[j][i]+eta2[j][i]+eta3[j][i])<0.01*GROWTH_THRESHOLD) {
-					//	flag_growth[j+1][i+1]=0;
-					//}					
-				#endif
-				
-			//} // end-if: land mask
+			for(n=0; n<NM; n++){				
+				p[n][j+1][i+1]=p[n][j+1][i+1]+DT*Fp[n][j][i];
+			} // end-for: n		
 		} // end-for: i
 	} // end-for: j
 	

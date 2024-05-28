@@ -19,15 +19,9 @@ void calc_diagnostics(int Na)
 	for(n=0; n<NM; n++){
 		for(j=0; j<NY+2; j++){
 			for(i=0; i<NX+2; i++){
-				#ifdef AB4
-					UE[n][j][i]=(U[n][j][i]+UE[n][j][i])/2;	
-					VE[n][j][i]=(V[n][j][i]+VE[n][j][i])/2;	
-					pE[n][j][i]=p[n][j][i];
-				#else
-					UE[n][j][i]=(U[n][j][i]+U1[n][j][i])/2;	
-					VE[n][j][i]=(V[n][j][i]+V1[n][j][i])/2;		
-					pE[n][j][i]=(p[n][j][i]+p1[n][j][i])/2;		
-				#endif
+				UE[n][j][i]=(U[n][j][i]+U1[n][j][i])/2;	
+				VE[n][j][i]=(V[n][j][i]+V1[n][j][i])/2;		
+				pE[n][j][i]=(p[n][j][i]+p1[n][j][i])/2;	
 			}
 		}
 	}

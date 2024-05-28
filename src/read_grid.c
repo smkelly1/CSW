@@ -78,7 +78,7 @@ void read_grid(int rank)
 	
 	for(j=0; j<NY+2; j++){
 		lat[j]=lat[j]*M_PI/180;
-		f[j]=2*(2*M_PI)/(24*3600)*sin(lat[j]);	
+		f[j]=2*7.292E-5*sin(lat[j]);	
 	}
 		
 	// Open the damping file
@@ -118,7 +118,7 @@ void read_grid(int rank)
 				for(n=0; n<NM; n++){
 					for(j=0; j<NY+2; j++){
 						for(i=0; i<NX+2; i++){
-							nu[n][j][i]=fmax(nu[n][j][i],NU);
+							nu[n][j][i]=fmax(EFFICIENCY*nu[n][j][i],NU);
 						}
 					}
 				}
@@ -140,7 +140,7 @@ void read_grid(int rank)
 				for(n=0; n<NM; n++){
 					for(j=0; j<NY+2; j++){
 						for(i=0; i<NX+2; i++){
-							kappa[n][j][i]=fmax(kappa[n][j][i],KAPPA);
+							kappa[n][j][i]=fmax(EFFICIENCY*kappa[n][j][i],KAPPA);
 						}
 					}
 				}

@@ -67,7 +67,7 @@ int main(int argc, char *argv[])
 
 		////////////////////////////////////////////////////////////////
 		// Write output
-		#if defined(WRITE_ETA) || defined(WRITE_VELOCITY) || defined(WRITE_WIND)
+		#if defined(WRITE_ETA) || defined(WRITE_VELOCITY) || defined(WRITE_WIND) || defined(DAMP_GROWTH)
 			if (t >= (sW*DT_W)) {
 				write_output(sW,t,rank);
 				++sW;
