@@ -122,6 +122,7 @@
 
 #if defined(ENERGY) || defined(FLUX) || defined(WORK) || defined(WRITE_SSH) || defined(WRITE_TRANSPORT)
 	#define WRITE_DIAGNOSTICS
+	
 #endif
 
 // NetCDF stuff

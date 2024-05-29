@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
 	
 	#ifdef WRITE_DIAGNOSTICS
 		int sD=1; // Diagnostic index (start writing after one period)
-		int Na=1; // Number of points for diagnostic average (must define)
+		Na=1; // Number of points for diagnostic average (global, must initiate)
 	#endif
 	
 	#ifdef WIND_FORCING
@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
 
 	//////////////////////////////////////////////////////////////
 	// Begin forward integration
-	t=0; // initiate time 
+	t=0; // initiate time (global, must initiate)
 	for(s=1; s<(NT+1); s++) {
 
 		////////////////////////////////////////////////////////////////
