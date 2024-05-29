@@ -1,10 +1,14 @@
 #include <math.h>
 #include "csw.h"
 
-void calc_diagnostics(int Na)
+#ifdef WRITE_DIAGNOSTICS
+void calc_diagnostics(void)
 {
-	int i, j, m, n;
-	double cos01, cos1, cos12, cn2, cm2, phi_n, phi_m;
+	int i, j, n;
+	#if defined(ENERGY) || defined(FLUX) || defined(WORK) 
+		int m;
+		double cos01, cos1, cos12, cn2, cm2, phi_n, phi_m;
+	#endif
 
 	#ifdef WORK
 		double dFdx, dFdy;
@@ -117,8 +121,8 @@ void calc_diagnostics(int Na)
 		for(n=0; n<NMW; n++){
 			for(j=0; j<NY; j++){
 				for(i=0; i<NX; i++){
-					if (p[n][j+1][i+1]>SSH_amp[n][j][i]) {
-						SSH_amp[n][j][i]=p[n][j+1][i+1];
+					if (pE[n][j+1][i+1]>SSH_amp[n][j][i]) {
+						SSH_amp[n][j][i]=pE[n][j+1][i+1];
 						SSH_phase[n][j][i]=Na;
 					}
 				}
@@ -133,13 +137,13 @@ void calc_diagnostics(int Na)
 			for(j=0; j<NY; j++){
 				for(i=0; i<NX; i++){
 
-					tmpf=(float)((U[n][j+1][i+1]+U[n][j+1][i+2])/2);
+					tmpf=(float)((UE[n][j+1][i+1]+UE[n][j+1][i+2])/2);
 					if (tmpf>U_amp[n][j][i]) {
 						U_amp[n][j][i]=tmpf;
 						U_phase[n][j][i]=Na;
 					}
 
-					tmpf=(float)((V[n][j+1][i+1]+V[n][j+2][i+1])/2);
+					tmpf=(float)((VE[n][j+1][i+1]+VE[n][j+2][i+1])/2);
 					if (tmpf>V_amp[n][j][i]) {
 						V_amp[n][j][i]=tmpf;
 						V_phase[n][j][i]=Na;
@@ -150,3 +154,4 @@ void calc_diagnostics(int Na)
 	#endif
 
 }
+#endif

@@ -2,10 +2,9 @@
 #include <netcdf.h>
 #include "csw.h"
 
+#ifdef TIDE_FORCING
 void read_tides(int rank)
 {
-#ifdef TIDE_FORCING
-
 	int i, j, k, x0, y0, ncid, varid, status;
 
 	// Define start points
@@ -77,5 +76,5 @@ void read_tides(int rank)
 		}
 	}
 	
-#endif	
 }
+#endif	

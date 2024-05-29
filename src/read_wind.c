@@ -2,6 +2,7 @@
 #include <netcdf.h>
 #include "csw.h"
 
+#ifdef WIND_FORCING
 void read_wind(int sF, int rank)
 {
 	int i, j, ncid, varid, status;
@@ -203,3 +204,4 @@ void read_wind(int sF, int rank)
 	}
 	
 }
+#endif

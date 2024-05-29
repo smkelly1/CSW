@@ -7,18 +7,19 @@ warning off;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Set input parameters 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-res=10;
+res=100;
 
 tide_list={'TPXO','GOT','HAMTIDE','FES'};
 
 for i=1 %1:length(tide_list)
 	% Choose the inputs
 	tide.name=tide_list{i}; % can be TPXO, GOT, HAMTIDE, or FES
-	tide.folder='../../../22-12_grid/';
+	tide.folder='../../';
+	%fid.bathy=['../../',num2str(res),'th_deg_grid.nc'];
+	fid.bathy=['/home/smkelly/experiments/NISKINE/CSW/22-12_grid/',num2str(res),'th_deg_grid.nc'];
 	
 	% Output files
-	fid.bathy=['../../../22-12_grid/',num2str(res),'th_deg_grid.nc'];
-	fid.tides=['../../',tide.name,'.nc'];
+	fid.tides=['../../',num2str(res),'th_deg_',tide.name,'.nc'];
 	
 	Nc=1;       % Number of tidal constituents 
 	H_min=16;	% Set minimum depth for tides

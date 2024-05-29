@@ -14,12 +14,19 @@ int main(int argc, char *argv[])
 {
 
 	int rank, nrank, s;
-	double t=0; // time
 
-	int sW=0; // Write index
-	int sF=0; // Index for wind forcing
-	int sD=1; // Diagnostic index (start writing after one period)
-	int Na=1; // Number of points for diagnostic average (must define)
+	#ifdef WRITE_OUTPUT
+		int sW=0; // Write index
+	#endif
+	
+	#ifdef WRITE_DIAGNOSTICS
+		int sD=1; // Diagnostic index (start writing after one period)
+		int Na=1; // Number of points for diagnostic average (must define)
+	#endif
+	
+	#ifdef WIND_FORCING
+		int sF=0; // Index for wind forcing
+	#endif
 
 	////////////////////////////////////////////////////////////////
 	// Start the MPI enviornment 
@@ -38,6 +45,7 @@ int main(int argc, char *argv[])
 
 	//////////////////////////////////////////////////////////////
 	// Begin forward integration
+	t=0; // initiate time 
 	for(s=1; s<(NT+1); s++) {
 
 		////////////////////////////////////////////////////////////////
@@ -67,21 +75,21 @@ int main(int argc, char *argv[])
 
 		////////////////////////////////////////////////////////////////
 		// Write output
-		#if defined(WRITE_ETA) || defined(WRITE_VELOCITY) || defined(WRITE_WIND) || defined(DAMP_GROWTH)
+		#ifdef WRITE_OUTPUT
 			if (t >= (sW*DT_W)) {
-				write_output(sW,t,rank);
+				write_output(sW,rank);
 				++sW;
 			}
 		#endif
 		
 		////////////////////////////////////////////////////////////////		
-		#if defined(ENERGY) || defined(FLUX) || defined(WORK) || defined(WRITE_SSH) || defined(WRITE_TRANSPORT)
+		#ifdef WRITE_DIAGNOSTICS
 			// Calculate diagnostics
-			calc_diagnostics(Na);
+			calc_diagnostics();
 
 			// Write diagnostics
 			if (t >= (sD*DT_D)) {
-				write_diagnostics(sD,Na,rank);
+				write_diagnostics(sD,rank);
 				++sD;
 				Na=0; // Reset averaging counter
 			}

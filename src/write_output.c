@@ -1,8 +1,8 @@
 #include <netcdf.h>
 #include "csw.h"
 
-
-void write_output(int sW, double t, int rank)
+#ifdef WRITE_OUTPUT
+void write_output(int sW, int rank)
 {
 	int i, j, n; 
 	int ncid, status, varid, dimid[4], dimid2D[3];
@@ -285,3 +285,4 @@ void write_output(int sW, double t, int rank)
 	if ((status = nc_close(ncid)))
 		ERR(status);
 }
+#endif

@@ -2,17 +2,21 @@
 #include <math.h>
 #include "csw.h"
 
-void write_diagnostics(int sD, int Na, int rank)
+#ifdef WRITE_DIAGNOSTICS
+void write_diagnostics(int sD, int rank)
 {
 	int i, j, n; 
-	int ncid, status, varid, dimid[4], dimid2D[3];
+	int ncid, status, varid, dimid[4];
 	char name[100];
 
 	size_t start[]={sD-1, 0, 0, 0};
 	size_t count[]={1, NMW, NY, NX};
 
-	size_t start2D[]={sD-1, 0, 0};
-	size_t count2D[]={1, NY, NX};
+	#ifdef DAMP_GROWTH
+		int dimid2D[3];
+		size_t start2D[]={sD-1, 0, 0};
+		size_t count2D[]={1, NY, NX};
+	#endif
 	
 	// Get file name
 	sprintf(name,FILE_DIAG ".%03d.nc",rank); 
@@ -336,3 +340,4 @@ void write_diagnostics(int sD, int Na, int rank)
 
 
 }
+#endif

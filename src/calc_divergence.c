@@ -82,7 +82,7 @@ void calc_divergence(void)
 					#endif 
 					
 					// Barotropic tidal forcing (at t+DT/2)
-					#ifdef TIDAL_FORCING
+					#ifdef TIDE_FORCING
 						for(m=0; m<NC; m++){  // Cycle through tidal frequencies 
 							Fp[n][j][i]=Fp[n][j][i]-phi_n*creal(ITGF.F[m][j][i]*cexp(I*ITGF.omega[m]*(t+DT/2)));
 						}

@@ -2,14 +2,14 @@
 clear
 
 % Variables that define the grid
-res=5; % Degrees, want 1/100 at some point
+res=100; % Degrees, want 1/100 at some point
 
 % Define the base grid
-fid_in='./grid_pre_processing/SS_WOA_winter_grid.nc';
+fid_in='/home/smkelly/experiments/NISKINE/CSW/22-12_grid/SS_WOA_grid.nc';
 
 % Define the new grid goes
-folder='./grid_pre_processing/';
-filename=[num2str(res),'th_deg_winter_grid.nc'];
+folder='/home/smkelly/experiments/NISKINE/CSW/22-12_grid/';
+filename=[num2str(res),'th_deg_grid.nc'];
 fid_out=[folder,filename]; 
 
 % Grid parameters (probably leave these alone)

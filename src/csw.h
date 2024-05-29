@@ -5,31 +5,30 @@
 ////////////////////////////////////////////////////////////////////////
 
 // Resolution
-#define RES 10				        // Grid cells per degree
-#define NM  8                       // Number of modes
-#define NMW 8                       // Number of modes to write
+#define RES 25				        // Grid cells per degree
+#define NM  1                       // Number of modes
+#define NMW 1                       // Number of modes to write
 
 // Processor layout
 #define NPX 2                       // Number of processors in X
 #define NPY 2                       // Number of processors in X
 
 // Input/output files
-#define FILE_GRID  "/home/smkelly/experiments/NISKINE/CSW/22-12_grid/10th_deg_JUN_grid.nc" // Grid file
-#define FILE_WIND  "../ONEDAY.nc"   // Wind forcing file
+#define FILE_GRID  "../25th_deg_grid.nc" // Grid file
+//#define FILE_WIND  "../ONEDAY.nc" // Wind forcing file
 #define FILE_OUT   "out"			// Snapshot output file
 #define FILE_DIAG  "diag"			// Diagnostic average output file
-//#define FILE_TIDES "../TPXO.nc"   // Tidal forcing file
+#define FILE_TIDES "../TPXO.nc"     // Tidal forcing file
 //#define FILE_R     "../r.nc"      // Spatially variable linear damping
 //#define FILE_NU    "../nu.nc"     // Spatially variable horizontal viscosity
 //#define FILE_KAPPA "../kappa.nc"  // Spatially variable horizontal diffusivity
-//#define EFFICIENCY 0.25           // Mixing efficiency
 
 // Time steps
-#define DT          600             // Model time step [sec].  
+#define DT          178.848         // Model time step [sec].  
 									// Try: 5th deg = 1200 sec, 10th deg = 600 sec, 25th deg = 200                                   
-#define DT_W        (3*3600)        // Snapshot time step
-#define DT_D        (24*3600)       // Diagnostics averaging time step
-#define NT          (132*24*3600/DT) // Simulation duration (time steps)
+#define DT_W        (12.42*3600)    // Snapshot time step
+#define DT_D        (12.42*3600)    // Diagnostics averaging time step
+#define NT          (30*12.42*3600/DT) // Simulation duration (time steps)
 
 #define BETA        0.281105        // time step parameter for maximum stability (5/12 reduces to AB3) CSW uses AB3-AM4, the ROMS barotropic algorithm
 #define GAMMA		0.088
@@ -37,25 +36,25 @@
 
 // Dissipation (commenting these parameters removes the relevant code)
 //#define CD          0.0025        // Constant quadratic bottom drag (CD=0.0025 is standard)
-//#define R          (1.0/(32*24*3600)) // Constant linear "Rayleigh" damping (or minimum value).
+#define R          (1.0/(10*24*3600)) // Constant linear "Rayleigh" damping (or minimum value).
 //#define RC2        (1.0/(32*24*3600)) // Constant linear "Rayleigh" damping (or minimum value) will be divided by c^2 for each mode.
 //#define R_MAX      (1.0/(12*3600)) 
-#define NU          200.0            // Constant horizontal viscosity (or minimum value). Bryan (1975) uses NU=u*DX/2 
+//#define NU          20.0            // Constant horizontal viscosity (or minimum value). Bryan (1975) uses NU=u*DX/2 
                                     // Quick reference for U=1 cm/s (but can use x10 bigger): 
                                     // 1/5  deg = 100 (for 100 km wavelength tau = 29 days)
                                     // 1/10 deg = 50  (tau = 59 days)
                                     // 1/25 deg = 20  (tau = 147 days)
-#define NU_MAX      2000.0
-#define KAPPA      	200.0            // Constant horizontal diffusivity (or minimum value)
-#define KAPPA_MAX   2000.0
+//#define NU_MAX      2000.0
+//#define KAPPA      	20.0            // Constant horizontal diffusivity (or minimum value)
+//#define KAPPA_MAX   2000.0
 
 // Controlling exponential growth
-#define DAMP_GROWTH                 // Compute the triple exponential running average to identify exponential growth, also write snapshots.
-#define NUM_PERIODS       2         // Number of inertial periods for the running average
-#define GROWTH_THRESHOLD  0.002     // SSH in m of bad signals (0.2 cm is a good start)
-#define GROWTH_MAX        0.01      // SSH in m of bad signals (1 cm is a good start)
-#define AMP_THRESHOLD     0.02      // SSH in m of bad signals (2 cm is a good start)
-#define AMP_MAX           0.04      // SSH in m of bad signals (4 cm is a good start)
+//#define DAMP_GROWTH                 // Compute the triple exponential running average to identify exponential growth, also write snapshots.
+//#define NUM_PERIODS       2         // Number of inertial periods for the running average
+//#define GROWTH_THRESHOLD  0.002     // SSH in m of bad signals (0.2 cm is a good start)
+//#define GROWTH_MAX        0.01      // SSH in m of bad signals (1 cm is a good start)
+//#define AMP_THRESHOLD     0.02      // SSH in m of bad signals (2 cm is a good start)
+//#define AMP_MAX           0.04      // SSH in m of bad signals (4 cm is a good start)
 
 // Set minimum depths for dynamics, forcing, and topographic coupling
 #define H_MIN        16.0           // Minimum depth to solve equations
@@ -64,7 +63,7 @@
 
 // Flags for dynamics 
 #define CORIOLIS                    // Include the Coriolis force
-#define MODECOUPLE                  // Include topographic coupling 
+//#define MODECOUPLE                  // Include topographic coupling 
 
 // Flags to write Output
 //#define WRITE_VELOCITY            // Write snapshots of velocity 
@@ -75,7 +74,7 @@
 //#define ENERGY                    // Compute and write energy 
 //#define FLUX                      // Compute and write energy flux
 //#define WORK                      // Compute and write wind work, tidal generation, and scattering
-//#define WRITE_SSH                 // Compute and write the amplitude and phase of SSH (for tides)
+#define WRITE_SSH                 // Compute and write the amplitude and phase of SSH (for tides)
 //#define WRITE_TRANSPORT           // Compute and write the amplitude and phase of transport (for tides)
 
 
@@ -115,6 +114,15 @@
 // Constants 
 #define A   6371000.0               // radius of Earth
 #define RHO 1000.0                  // Reference density
+
+// Define generic flags
+#if defined(WRITE_ETA) || defined(WRITE_VELOCITY) || defined(WRITE_WIND) || defined(DAMP_GROWTH)
+	#define WRITE_OUTPUT
+#endif
+
+#if defined(ENERGY) || defined(FLUX) || defined(WORK) || defined(WRITE_SSH) || defined(WRITE_TRANSPORT)
+	#define WRITE_DIAGNOSTICS
+#endif
 
 // NetCDF stuff
 #define ERRCODE 2
@@ -177,26 +185,25 @@ void read_tides(int);
 void read_grid(int);
 void read_wind(int, int);
 
-void init_output(int);
-
-void write_output(int, double, int);
-void write_diagnostics(int, int, int);
+void write_output(int, int);
+void write_diagnostics(int, int);
 
 void calc_divergence(void);
 void calc_forces(void);
-void calc_diagnostics(int);
-
-void calc_ITGF(double);
+void calc_diagnostics(void);
 
 void pass_p(int);
 void pass_uv(int);
 
-void timestep_p(void);
-void timestep_uv(void);
-
-
 ////////////////////////////////////////////////////////////////////////
 // Declare variables (we're using global variables here, because the biguns wont fit on the stack. This is a bummer because the size has to be written in the header as a macro instead of read off the grid file during runtime)
+
+// Time
+double t;
+
+#ifdef WRITE_DIAGNOSTICS
+	int Na;
+#endif
 
 // Temporary place to writing data 
 float tmp[NMW][NY][NX];
